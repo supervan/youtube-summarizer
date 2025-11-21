@@ -252,10 +252,9 @@ def _get_youtube_transcript_with_cookies(video_id):
     
     raise Exception(f"Failed to extract transcript. {error_details}")
             
-    finally:
-        # Clean up temporary cookie file
-        if cookies_file and os.path.exists(cookies_file):
-            os.unlink(cookies_file)
+    # Cleanup is handled by tempfile context managers, but we need to clean up cookies
+    if cookies_file and os.path.exists(cookies_file):
+        os.unlink(cookies_file)
 
 @app.route('/api/extract-transcript', methods=['POST'])
 def extract_transcript():
