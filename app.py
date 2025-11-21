@@ -128,7 +128,18 @@ def extract_transcript():
         except VideoUnavailable:
             return jsonify({'error': 'Video is unavailable'}), 400
         except Exception as e:
-            return jsonify({'error': f'Error fetching transcript: {str(e)}'}), 500
+            # Check if it's the specific "Sign in to confirm you're not a bot" error
+            error_msg = str(e)
+            if "Sign in to confirm you're not a bot" in error_msg:
+                error_msg = "YouTube is asking for a sign-in verification. Your cookies might be expired or invalid."
+            
+            # Add debug info about cookies
+            cookies_content = os.getenv('YOUTUBE_COOKIES')
+            cookie_status = "✅ Present" if cookies_content else "❌ Missing (Env var not set)"
+            
+            return jsonify({
+                'error': f"{error_msg}\n\n[Debug Info] Cookies Configured: {cookie_status}"
+            }), 500
             
     except Exception as e:
         return jsonify({'error': f'Server error: {str(e)}'}), 500
