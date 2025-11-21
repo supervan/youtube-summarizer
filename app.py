@@ -136,9 +136,11 @@ def _get_youtube_transcript_with_cookies(video_id):
     
     try:
         import youtube_transcript_api
-        print(f"📦 youtube-transcript-api version: {getattr(youtube_transcript_api, '__version__', 'unknown')}")
+        print(f"📦 youtube-transcript-api file: {youtube_transcript_api.__file__}")
+        print(f"📦 youtube-transcript-api dir: {dir(youtube_transcript_api)}")
+        print(f"📦 YouTubeTranscriptApi class dir: {dir(YouTubeTranscriptApi)}")
     except Exception as e:
-        print(f"⚠️ Could not check youtube-transcript-api version: {e}")
+        print(f"⚠️ Could not inspect youtube-transcript-api: {e}")
 
     url = f"https://www.youtube.com/watch?v={video_id}"
     pre_check_info = "Pre-check not run"
@@ -198,7 +200,8 @@ def _get_youtube_transcript_with_cookies(video_id):
                 print("⚠️ youtube-transcript-api: No English transcript found")
                 yta_error = "No English transcript found"
                 
-        except AttributeError:
+        except AttributeError as ae:
+            print(f"⚠️ AttributeError details: {ae}")
             # Fallback for older versions that don't have list_transcripts
             print("⚠️ list_transcripts not found, trying get_transcript...")
             fetched_transcript = YouTubeTranscriptApi.get_transcript(video_id, cookies=cookies_file)
@@ -225,7 +228,7 @@ def _get_youtube_transcript_with_cookies(video_id):
                 'quiet': False, # Enable logs
                 'verbose': True,
                 'force_ipv4': True, # Force IPv4 to avoid potential IPv6 blocks
-                'format': 'bestaudio/best', # Safer format selection for audio/subs
+                # 'format': 'bestaudio/best', # Relax format constraint to avoid "Requested format not available"
                 'extractor_args': {'youtube': {'player_client': ['web']}}, # Switch to WEB client (matches requests)
                 'cookiefile': cookies_file if cookies_file else None,
                 'outtmpl': f"{temp_dir}/%(id)s.%(ext)s",
@@ -312,6 +315,7 @@ def _get_youtube_transcript_with_cookies(video_id):
                             
                             try:
                                 cap_response = session.get(vtt_url)
+                                print(f"📡 VTT Status: {cap_response.status_code}, Headers: {cap_response.headers}")
                                 cap_response.raise_for_status()
                                 raw_vtt = cap_response.text
                                 
@@ -331,6 +335,7 @@ def _get_youtube_transcript_with_cookies(video_id):
                             print(f"🔗 Trying XML: {xml_url}")
                             
                             xml_response = session.get(xml_url)
+                            print(f"📡 XML Status: {xml_response.status_code}, Headers: {xml_response.headers}")
                             xml_response.raise_for_status()
                             xml_content = xml_response.text
                             
@@ -369,7 +374,7 @@ def _get_youtube_transcript_with_cookies(video_id):
         error_details += f"[Manual fallback error: {manual_error}] "
     
     # Add Deployment ID to verify code version
-    DEPLOYMENT_ID = "v2025.11.21.04"
+    DEPLOYMENT_ID = "v2025.11.21.05"
     error_details += f"[Deployment ID: {DEPLOYMENT_ID}]"
     
     raise Exception(f"Failed to extract transcript. {error_details}")
