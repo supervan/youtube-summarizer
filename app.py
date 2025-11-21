@@ -155,31 +155,41 @@ def _get_youtube_transcript_with_cookies(video_id):
     try:
         print("🚀 Attempting to fetch transcript with youtube-transcript-api...")
         # Use the cookies file we created
-        transcript_list = YouTubeTranscriptApi.list_transcripts(video_id, cookies=cookies_file)
-        
-        # Try to find English transcript (manual or generated)
-        transcript = None
         try:
-            transcript = transcript_list.find_manually_created_transcript(['en'])
-        except:
+            transcript_list = YouTubeTranscriptApi.list_transcripts(video_id, cookies=cookies_file)
+            
+            # Try to find English transcript (manual or generated)
+            transcript = None
             try:
-                transcript = transcript_list.find_generated_transcript(['en'])
+                transcript = transcript_list.find_manually_created_transcript(['en'])
             except:
-                pass
-        
-        if transcript:
-            fetched_transcript = transcript.fetch()
-            # Join text parts
+                try:
+                    transcript = transcript_list.find_generated_transcript(['en'])
+                except:
+                    pass
+            
+            if transcript:
+                fetched_transcript = transcript.fetch()
+                # Join text parts
+                full_text = " ".join([t['text'] for t in fetched_transcript])
+                # Basic cleaning of whitespace
+                full_text = " ".join(full_text.split())
+                
+                print("✅ youtube-transcript-api success!")
+                return full_text, loaded_cookie_count
+            else:
+                print("⚠️ youtube-transcript-api: No English transcript found")
+                yta_error = "No English transcript found"
+                
+        except AttributeError:
+            # Fallback for older versions that don't have list_transcripts
+            print("⚠️ list_transcripts not found, trying get_transcript...")
+            fetched_transcript = YouTubeTranscriptApi.get_transcript(video_id, cookies=cookies_file)
             full_text = " ".join([t['text'] for t in fetched_transcript])
-            # Basic cleaning of whitespace
             full_text = " ".join(full_text.split())
-            
-            print("✅ youtube-transcript-api success!")
+            print("✅ youtube-transcript-api (get_transcript) success!")
             return full_text, loaded_cookie_count
-        else:
-            print("⚠️ youtube-transcript-api: No English transcript found")
-            yta_error = "No English transcript found"
-            
+
     except Exception as e:
         print(f"⚠️ youtube-transcript-api failed: {e}")
         yta_error = str(e)
@@ -281,6 +291,8 @@ def _get_youtube_transcript_with_cookies(video_id):
                             # Append &fmt=vtt to get VTT format instead of XML
                             if '&fmt=' not in caption_url:
                                 caption_url += '&fmt=vtt'
+                            
+                            print(f"🔗 Caption URL: {caption_url}")
                                 
                             cap_response = session.get(caption_url)
                             cap_response.raise_for_status()
