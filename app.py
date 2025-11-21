@@ -217,68 +217,84 @@ class FreeProxyManager:
 proxy_manager = FreeProxyManager()
 
 def _get_youtube_transcript_with_cookies(video_id):
-    """Extract transcript from YouTube video using youtube-transcript-api with free proxy rotation."""
+    """Extract transcript from YouTube video using yt-dlp with free proxy rotation."""
     
-    # Log library version for debugging
-    try:
-        import youtube_transcript_api
-        version = getattr(youtube_transcript_api, '__version__', 'unknown')
-        print(f"📦 youtube-transcript-api version: {version}")
-    except Exception as e:
-        print(f"⚠️ Could not check library version: {e}")
-    
-    # Try up to 20 times with different proxies (quantity over quality approach)
+    # Try up to 20 times with different proxies
     max_retries = 20
     last_error = None
+    
+    video_url = f"https://www.youtube.com/watch?v={video_id}"
     
     for attempt in range(max_retries):
         # Get a proxy (first attempt can be direct if no working proxy known)
         proxies = proxy_manager.get_proxy() if attempt > 0 else None
         
-        proxy_msg = f"via proxy {proxies['http']}" if proxies else "direct connection"
+        proxy_url = proxies['http'] if proxies else None
+        proxy_msg = f"via proxy {proxy_url}" if proxy_url else "direct connection"
         print(f"🚀 Attempt {attempt+1}/{max_retries}: Fetching transcript {proxy_msg}")
         
-        try:
-            # Try to get transcript list
-            transcript_list = YouTubeTranscriptApi.list_transcripts(video_id, proxies=proxies)
-            
-            # Try to find English transcript
-            transcript = None
+        # Create a temporary directory for this attempt
+        with tempfile.TemporaryDirectory() as temp_dir:
             try:
-                transcript = transcript_list.find_manually_created_transcript(['en'])
-            except:
-                try:
-                    transcript = transcript_list.find_generated_transcript(['en'])
-                except:
-                    for t in transcript_list:
-                        transcript = t
-                        break
-            
-            if transcript:
-                fetched_transcript = transcript.fetch()
-                full_text = " ".join([entry['text'] for entry in fetched_transcript])
-                full_text = " ".join(full_text.split())
+                # Configure yt-dlp options
+                ydl_opts = {
+                    'skip_download': True,
+                    'writesubtitles': True,
+                    'writeautomaticsub': True,
+                    'subtitleslangs': ['en'],
+                    'subtitlesformat': 'vtt',
+                    'outtmpl': os.path.join(temp_dir, '%(id)s'),
+                    'quiet': True,
+                    'no_warnings': True,
+                }
                 
-                print(f"✅ Success! Extracted {len(full_text)} chars {proxy_msg}")
+                # Add proxy if available
+                if proxy_url:
+                    ydl_opts['proxy'] = proxy_url
                 
-                # Remember this working proxy for next time
-                if proxies:
-                    proxy_manager.working_proxy = proxies
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                    # Download subtitles
+                    ydl.extract_info(video_url, download=True)
                     
-                return full_text, 0
-            else:
-                raise Exception("No transcripts available")
+                    # Look for the downloaded VTT file
+                    vtt_file = None
+                    for filename in os.listdir(temp_dir):
+                        if filename.endswith('.vtt'):
+                            vtt_file = os.path.join(temp_dir, filename)
+                            break
+                    
+                    if vtt_file:
+                        print(f"✅ Success! Downloaded VTT file {proxy_msg}")
+                        
+                        # Read and parse the VTT file
+                        with open(vtt_file, 'r', encoding='utf-8') as f:
+                            vtt_content = f.read()
+                            
+                        full_text = _parse_vtt(vtt_content)
+                        
+                        if not full_text:
+                            raise Exception("Parsed transcript is empty")
+                            
+                        print(f"   Extracted {len(full_text)} chars")
+                        
+                        # Remember this working proxy for next time
+                        if proxies:
+                            proxy_manager.working_proxy = proxies
+                            
+                        return full_text, 0
+                    else:
+                        raise Exception("No subtitle file downloaded")
                 
-        except Exception as e:
-            print(f"❌ Attempt {attempt+1} failed: {str(e)}")
-            last_error = e
-            # If proxy failed, mark it
-            if proxies:
-                proxy_manager.mark_failed(proxies)
-            # If direct connection failed (and it was a block), force proxy next time
-            elif "Subtitles are disabled" in str(e) or "cookie" in str(e).lower():
-                print("⚠️ Direct connection blocked, switching to proxies...")
-                proxy_manager._refresh_proxies()
+            except Exception as e:
+                print(f"❌ Attempt {attempt+1} failed: {str(e)}")
+                last_error = e
+                # If proxy failed, mark it
+                if proxies:
+                    proxy_manager.mark_failed(proxies)
+                # If direct connection failed, force proxy next time
+                elif attempt == 0:
+                    print("⚠️ Direct connection failed, switching to proxies...")
+                    proxy_manager._refresh_proxies()
     
     raise Exception(f"Failed after {max_retries} attempts. Last error: {last_error}")
             
@@ -289,7 +305,7 @@ def _get_youtube_transcript_with_cookies(video_id):
 @app.route('/api/extract-transcript', methods=['POST'])
 def extract_transcript():
     """Extract transcript from YouTube video"""
-    DEPLOYMENT_ID = "v2025.11.21.13"
+    DEPLOYMENT_ID = "v2025.11.21.14"
     try:
         data = request.json
         youtube_url = data.get('url', '')
@@ -327,7 +343,7 @@ def diagnostics():
     scraperapi_key = os.getenv('SCRAPERAPI_KEY', '')
     
     diagnostics_info = {
-        'deployment_id': 'v2025.11.21.13',
+        'deployment_id': 'v2025.11.21.14',
         'cookies_configured': bool(cookies_content),
         'cookies_line_count': len(cookies_content.splitlines()) if cookies_content else 0,
         'cookies_has_header': cookies_content.startswith('# Netscape') if cookies_content else False,
