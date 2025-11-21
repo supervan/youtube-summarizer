@@ -50,16 +50,20 @@ def _get_youtube_transcript_with_cookies(video_id):
                 cookies_file = f.name
                 print(f"🍪 Using cookies for authentication (file: {cookies_file})")
         
+        # Create transcript API instance
+        transcript_api = YouTubeTranscriptApi()
+        
         # Fetch transcript with cookies if available
-        # Use static method get_transcript which supports cookies
-        transcript_list = YouTubeTranscriptApi.get_transcript(
+        # Use .fetch() method which is correct for v1.2.3+
+        transcript_list = transcript_api.fetch(
             video_id, 
             languages=['en'],
             cookies=cookies_file
         )
         
         # Combine transcript text
-        full_text = " ".join([item['text'] for item in transcript_list])
+        # fetch() returns FetchedTranscriptSnippet objects with .text attribute
+        full_text = " ".join([item.text for item in transcript_list])
         return full_text
             
     finally:
