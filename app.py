@@ -101,7 +101,26 @@ def _get_youtube_transcript_with_cookies(video_id):
         print(f"📽️ ffmpeg available: {ffmpeg_path}")
         print(f"📦 yt-dlp version: {yt_dlp.version.__version__}")
 
-        url = f"https://www.youtube.com/watch?v={video_id}"
+        # Pre-check: Fetch page content to see if we are blocked
+        try:
+            print(f"🔍 Pre-checking video page: {url}")
+            page_response = session.get(url)
+            page_content = page_response.text
+            
+            # Extract title
+            page_title_match = re.search(r'<title>(.*?)</title>', page_content)
+            page_title = page_title_match.group(1) if page_title_match else "Unknown Title"
+            print(f"📄 Page Title: {page_title}")
+            
+            # Check for common block messages
+            if "Sign in to confirm you’re not a bot" in page_content:
+                raise Exception("YouTube is blocking requests (Bot Verification). Cookies might be invalid or IP is flagged.")
+            if "Google Account" in page_title and "Sign in" in page_content:
+                 raise Exception("YouTube redirected to Sign-in page. Cookies are invalid or expired.")
+                 
+        except Exception as e:
+            print(f"⚠️ Pre-check warning: {e}")
+            # We don't stop here, we let yt-dlp try, but this log is crucial.
 
         # Use a temporary directory for the download
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -112,13 +131,12 @@ def _get_youtube_transcript_with_cookies(video_id):
                 'subtitleslangs': ['en'],
                 'quiet': False, # Enable logs
                 'verbose': True,
-                # 'force_ipv4': True, # Removed to test if IPv6 works better
-                # 'format': 'best', # Removed
-                'extractor_args': {'youtube': {'player_client': ['android', 'web']}}, # Try Android client
+                'force_ipv4': True, # Force IPv4 to avoid potential IPv6 blocks
+                'format': 'best', # Explicitly select best format
                 'cookiefile': cookies_file if cookies_file else None,
                 'outtmpl': f"{temp_dir}/%(id)s.%(ext)s",
                 'http_headers': {
-                    'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                     'Accept-Language': 'en-US,en;q=0.9',
                     'Referer': 'https://www.youtube.com/',
                 }
