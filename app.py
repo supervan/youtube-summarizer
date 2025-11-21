@@ -193,6 +193,21 @@ def _get_youtube_transcript_with_cookies(video_id):
         for cookie in session.cookies:
             print(f"  - {cookie.name}: {cookie.value[:20]}...")
         
+        # Check if we should use a proxy
+        scraperapi_key = os.getenv('SCRAPERAPI_KEY')
+        use_proxy = bool(scraperapi_key)
+        
+        if use_proxy:
+            print(f"🔄 Using ScraperAPI proxy to bypass IP blocking")
+            # ScraperAPI format: http://scraperapi:API_KEY@proxy-server.scraperapi.com:8001
+            proxy_url = f"http://scraperapi:{scraperapi_key}@proxy-server.scraperapi.com:8001"
+            session.proxies = {
+                'http': proxy_url,
+                'https': proxy_url
+            }
+        else:
+            print(f"⚠️ No proxy configured - using direct connection (may be blocked)")
+        
         # Try XML format (default)
         print(f"⬇️ Fetching XML captions from: {caption_url[:100]}...")
         
@@ -202,7 +217,7 @@ def _get_youtube_transcript_with_cookies(video_id):
             'Accept': '*/*',
         }
         
-        xml_response = session.get(caption_url, headers=caption_headers)
+        xml_response = session.get(caption_url, headers=caption_headers, timeout=30)
         print(f"📡 XML Status: {xml_response.status_code}")
         print(f"📡 XML Response headers: {dict(xml_response.headers)}")
         xml_response.raise_for_status()
@@ -222,7 +237,7 @@ def _get_youtube_transcript_with_cookies(video_id):
         # Try VTT format as fallback
         print("⚠️ XML failed, trying VTT format...")
         vtt_url = caption_url + '&fmt=vtt' if '&fmt=' not in caption_url else caption_url
-        vtt_response = session.get(vtt_url, headers=caption_headers)
+        vtt_response = session.get(vtt_url, headers=caption_headers, timeout=30)
         vtt_response.raise_for_status()
         vtt_content = vtt_response.text
         
@@ -233,8 +248,11 @@ def _get_youtube_transcript_with_cookies(video_id):
             if full_text and len(full_text) > 10:
                 print(f"✅ Successfully extracted {len(full_text)} characters from VTT")
                 return full_text, loaded_cookie_count
-                
-        raise Exception(f"Both XML and VTT formats returned insufficient content (XML: {len(xml_content)} bytes, VTT: {len(vtt_content)} bytes)")
+        
+        error_msg = f"Both XML and VTT formats returned insufficient content (XML: {len(xml_content)} bytes, VTT: {len(vtt_content)} bytes)"
+        if not use_proxy:
+            error_msg += " - Consider setting SCRAPERAPI_KEY to use proxy and bypass IP blocking"
+        raise Exception(error_msg)
         
     except Exception as e:
         raise Exception(f"Failed to fetch/parse captions: {e}")
@@ -250,7 +268,7 @@ def _get_youtube_transcript_with_cookies(video_id):
 @app.route('/api/extract-transcript', methods=['POST'])
 def extract_transcript():
     """Extract transcript from YouTube video"""
-    DEPLOYMENT_ID = "v2025.11.21.07"
+    DEPLOYMENT_ID = "v2025.11.21.08"
     try:
         data = request.json
         youtube_url = data.get('url', '')
@@ -285,13 +303,16 @@ def extract_transcript():
 def diagnostics():
     """Diagnostic endpoint to check configuration"""
     cookies_content = os.getenv('YOUTUBE_COOKIES', '')
+    scraperapi_key = os.getenv('SCRAPERAPI_KEY', '')
     
     diagnostics_info = {
-        'deployment_id': 'v2025.11.21.07',
+        'deployment_id': 'v2025.11.21.08',
         'cookies_configured': bool(cookies_content),
         'cookies_line_count': len(cookies_content.splitlines()) if cookies_content else 0,
         'cookies_has_header': cookies_content.startswith('# Netscape') if cookies_content else False,
         'gemini_api_configured': bool(os.getenv('GEMINI_API_KEY')),
+        'proxy_configured': bool(scraperapi_key),
+        'proxy_key_length': len(scraperapi_key) if scraperapi_key else 0,
     }
     
     return jsonify(diagnostics_info)
