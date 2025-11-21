@@ -7,6 +7,7 @@ import os
 import tempfile
 import requests
 from dotenv import load_dotenv
+from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled, NoTranscriptFound
 
 # Load environment variables from .env file
 load_dotenv()
@@ -149,7 +150,39 @@ def _get_youtube_transcript_with_cookies(video_id):
         print(f"⚠️ Pre-check warning: {e}")
         pre_check_info = f"Pre-check failed: {str(e)}"
 
-    # 4. Download Subtitles with yt-dlp
+    # 4. Attempt with youtube-transcript-api (Primary Method)
+    try:
+        print("🚀 Attempting to fetch transcript with youtube-transcript-api...")
+        # Use the cookies file we created
+        transcript_list = YouTubeTranscriptApi.list_transcripts(video_id, cookies=cookies_file)
+        
+        # Try to find English transcript (manual or generated)
+        transcript = None
+        try:
+            transcript = transcript_list.find_manually_created_transcript(['en'])
+        except:
+            try:
+                transcript = transcript_list.find_generated_transcript(['en'])
+            except:
+                pass
+        
+        if transcript:
+            fetched_transcript = transcript.fetch()
+            # Join text parts
+            full_text = " ".join([t['text'] for t in fetched_transcript])
+            # Basic cleaning of whitespace
+            full_text = " ".join(full_text.split())
+            
+            print("✅ youtube-transcript-api success!")
+            return full_text, loaded_cookie_count
+        else:
+            print("⚠️ youtube-transcript-api: No English transcript found")
+            
+    except Exception as e:
+        print(f"⚠️ youtube-transcript-api failed: {e}")
+        # Continue to yt-dlp as backup
+
+    # 5. Download Subtitles with yt-dlp (Backup Method)
     ydl_error = None
     try:
         # Use a temporary directory for the download
