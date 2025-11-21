@@ -44,6 +44,10 @@ def _get_youtube_transcript_with_cookies(video_id):
     
     try:
         if cookies_content:
+            # Ensure it has the Netscape header (MozillaCookieJar is strict)
+            if not cookies_content.startswith('# Netscape HTTP Cookie File'):
+                cookies_content = '# Netscape HTTP Cookie File\n# http://curl.haxx.se/rfc/cookie.html\n\n' + cookies_content
+
             # Create a temporary file for cookies
             with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
                 f.write(cookies_content)
@@ -55,6 +59,12 @@ def _get_youtube_transcript_with_cookies(video_id):
         import http.cookiejar
         
         session = requests.Session()
+        
+        # Set a real browser User-Agent (CRITICAL for bypassing blocks)
+        session.headers.update({
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        })
+
         if cookies_file:
             session.cookies = http.cookiejar.MozillaCookieJar(cookies_file)
             try:
@@ -62,6 +72,7 @@ def _get_youtube_transcript_with_cookies(video_id):
                 print(f"🍪 Cookies loaded successfully from {cookies_file}")
             except Exception as e:
                 print(f"⚠️ Failed to load cookies: {e}")
+                # If loading fails, we still try with the session (it has the User-Agent at least)
         
         # Create transcript API instance with the session
         # v1.2.3 accepts http_client in constructor
