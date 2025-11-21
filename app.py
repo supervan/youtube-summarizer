@@ -80,11 +80,12 @@ def _parse_vtt(vtt_content):
     return " ".join(text_lines)
 
 class FreeProxyManager:
-    """Manages a pool of free proxies for rotation"""
+    """Manages a pool of free proxies from multiple sources with validation"""
     def __init__(self):
         self.proxies = []
         self.last_update = 0
         self.working_proxy = None
+        self.verified_proxies = []
         
     def get_proxy(self):
         """Get a working proxy, refreshing pool if needed"""
@@ -92,40 +93,108 @@ class FreeProxyManager:
         if self.working_proxy:
             return self.working_proxy
             
-        # Update pool if empty or old (older than 1 hour)
-        if not self.proxies or time.time() - self.last_update > 3600:
+        # If we have verified proxies, return one
+        if self.verified_proxies:
+            proxy = random.choice(self.verified_proxies)
+            return {'http': proxy, 'https': proxy}
+            
+        # Update pool if empty or old (older than 30 minutes)
+        if not self.proxies or time.time() - self.last_update > 1800:
             self._refresh_proxies()
             
-        # Return a random proxy from the pool
+        # If we still have no verified proxies, try unverified ones as fallback
         if self.proxies:
-            import random
             proxy = random.choice(self.proxies)
             return {'http': proxy, 'https': proxy}
         return None
         
     def _refresh_proxies(self):
-        """Fetch fresh proxies from free sources"""
-        print("🔄 Refreshing free proxy list...")
+        """Fetch fresh proxies from multiple free sources"""
+        print("🔄 Refreshing free proxy list from multiple sources...")
         self.proxies = []
+        self.verified_proxies = []
+        
+        # Source 1: GitHub Proxy Lists (Raw Text)
+        github_sources = [
+            "https://raw.githubusercontent.com/TheSpeedX/SOCKS-List/master/http.txt",
+            "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/http.txt",
+            "https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list-raw.txt"
+        ]
+        
+        for url in github_sources:
+            try:
+                print(f"📥 Fetching from {url}...")
+                resp = requests.get(url, timeout=5)
+                if resp.status_code == 200:
+                    # Extract IP:Port patterns
+                    matches = re.findall(r'(\d+\.\d+\.\d+\.\d+:\d+)', resp.text)
+                    print(f"   Found {len(matches)} proxies")
+                    # Add valid looking proxies
+                    for proxy in matches:
+                        self.proxies.append(f"http://{proxy}")
+            except Exception as e:
+                print(f"⚠️ Failed to fetch from {url}: {e}")
+
+        # Source 2: sslproxies.org (Backup)
         try:
-            # Source 1: sslproxies.org (simple HTML parsing)
-            resp = requests.get('https://www.sslproxies.org/', timeout=10)
+            print("📥 Fetching from sslproxies.org...")
+            resp = requests.get('https://www.sslproxies.org/', timeout=5)
             matches = re.findall(r'(\d+\.\d+\.\d+\.\d+):(\d+)', resp.text)
-            for ip, port in matches[:20]:  # Take top 20
+            for ip, port in matches[:50]:
                 self.proxies.append(f"http://{ip}:{port}")
-                
-            print(f"✅ Found {len(self.proxies)} free proxies")
-            self.last_update = time.time()
+            print(f"   Found {len(matches)} proxies")
         except Exception as e:
-            print(f"⚠️ Failed to fetch free proxies: {e}")
+            print(f"⚠️ Failed to fetch from sslproxies.org: {e}")
+            
+        # Deduplicate
+        self.proxies = list(set(self.proxies))
+        print(f"✅ Total unique proxies found: {len(self.proxies)}")
+        
+        # Validate a subset to find working ones immediately
+        self._validate_initial_batch()
+        
+        self.last_update = time.time()
+
+    def _validate_initial_batch(self):
+        """Validate a batch of proxies to find some working ones quickly"""
+        print("🕵️ Validating random subset of proxies...")
+        
+        # Shuffle and take top 20 to test
+        test_batch = self.proxies[:]
+        random.shuffle(test_batch)
+        test_batch = test_batch[:20]
+        
+        for proxy_url in test_batch:
+            if self._check_proxy(proxy_url):
+                self.verified_proxies.append(proxy_url)
+                print(f"   ✅ Working proxy found: {proxy_url}")
+                if len(self.verified_proxies) >= 3: # Stop after finding 3 good ones to save time
+                    break
+        
+        print(f"🎉 Found {len(self.verified_proxies)} verified working proxies")
+
+    def _check_proxy(self, proxy_url):
+        """Check if a proxy actually works with YouTube"""
+        try:
+            proxies = {'http': proxy_url, 'https': proxy_url}
+            # Try to fetch a lightweight YouTube page
+            resp = requests.get('https://www.youtube.com/favicon.ico', proxies=proxies, timeout=3)
+            return resp.status_code == 200
+        except:
+            return False
 
     def mark_failed(self, proxy_dict):
-        """Mark a proxy as failed so we don't use it again immediately"""
+        """Mark a proxy as failed"""
         if not proxy_dict:
             return
         proxy_url = proxy_dict.get('http')
+        
+        if proxy_url in self.verified_proxies:
+            self.verified_proxies.remove(proxy_url)
+            
         if proxy_url in self.proxies:
             self.proxies.remove(proxy_url)
+            
         if self.working_proxy == proxy_dict:
             self.working_proxy = None
 
@@ -205,7 +274,7 @@ def _get_youtube_transcript_with_cookies(video_id):
 @app.route('/api/extract-transcript', methods=['POST'])
 def extract_transcript():
     """Extract transcript from YouTube video"""
-    DEPLOYMENT_ID = "v2025.11.21.11"
+    DEPLOYMENT_ID = "v2025.11.21.12"
     try:
         data = request.json
         youtube_url = data.get('url', '')
@@ -243,7 +312,7 @@ def diagnostics():
     scraperapi_key = os.getenv('SCRAPERAPI_KEY', '')
     
     diagnostics_info = {
-        'deployment_id': 'v2025.11.21.11',
+        'deployment_id': 'v2025.11.21.12',
         'cookies_configured': bool(cookies_content),
         'cookies_line_count': len(cookies_content.splitlines()) if cookies_content else 0,
         'cookies_has_header': cookies_content.startswith('# Netscape') if cookies_content else False,
