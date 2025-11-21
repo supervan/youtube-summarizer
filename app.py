@@ -188,10 +188,23 @@ def _get_youtube_transcript_with_cookies(video_id):
 
     # 5. Fetch captions (try XML first, then VTT)
     try:
+        # Debug: Show cookies being used
+        print(f"🍪 Session cookies: {len(session.cookies)} cookies")
+        for cookie in session.cookies:
+            print(f"  - {cookie.name}: {cookie.value[:20]}...")
+        
         # Try XML format (default)
-        print(f"⬇️ Fetching XML captions from: {caption_url}")
-        xml_response = session.get(caption_url)
+        print(f"⬇️ Fetching XML captions from: {caption_url[:100]}...")
+        
+        # Add headers that might be required for caption API
+        caption_headers = {
+            'Referer': url,  # Important: Tell YouTube where we came from
+            'Accept': '*/*',
+        }
+        
+        xml_response = session.get(caption_url, headers=caption_headers)
         print(f"📡 XML Status: {xml_response.status_code}")
+        print(f"📡 XML Response headers: {dict(xml_response.headers)}")
         xml_response.raise_for_status()
         xml_content = xml_response.text
         
@@ -209,7 +222,7 @@ def _get_youtube_transcript_with_cookies(video_id):
         # Try VTT format as fallback
         print("⚠️ XML failed, trying VTT format...")
         vtt_url = caption_url + '&fmt=vtt' if '&fmt=' not in caption_url else caption_url
-        vtt_response = session.get(vtt_url)
+        vtt_response = session.get(vtt_url, headers=caption_headers)
         vtt_response.raise_for_status()
         vtt_content = vtt_response.text
         
@@ -221,7 +234,7 @@ def _get_youtube_transcript_with_cookies(video_id):
                 print(f"✅ Successfully extracted {len(full_text)} characters from VTT")
                 return full_text, loaded_cookie_count
                 
-        raise Exception(f"Both XML and VTT formats returned insufficient content")
+        raise Exception(f"Both XML and VTT formats returned insufficient content (XML: {len(xml_content)} bytes, VTT: {len(vtt_content)} bytes)")
         
     except Exception as e:
         raise Exception(f"Failed to fetch/parse captions: {e}")
@@ -237,7 +250,7 @@ def _get_youtube_transcript_with_cookies(video_id):
 @app.route('/api/extract-transcript', methods=['POST'])
 def extract_transcript():
     """Extract transcript from YouTube video"""
-    DEPLOYMENT_ID = "v2025.11.21.06"
+    DEPLOYMENT_ID = "v2025.11.21.07"
     try:
         data = request.json
         youtube_url = data.get('url', '')
