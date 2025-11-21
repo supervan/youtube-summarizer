@@ -79,6 +79,15 @@ def _parse_vtt(vtt_content):
 def _get_youtube_transcript_with_cookies(video_id):
     """Extract transcript from YouTube video using youtube-transcript-api with optional proxy."""
     
+    # Log library version for debugging
+    try:
+        import youtube_transcript_api
+        version = getattr(youtube_transcript_api, '__version__', 'unknown')
+        print(f"📦 youtube-transcript-api version: {version}")
+        print(f"📦 Available methods: {[m for m in dir(YouTubeTranscriptApi) if not m.startswith('_')]}")
+    except Exception as e:
+        print(f"⚠️ Could not check library version: {e}")
+    
     # Check if we should use a proxy
     scraperapi_key = os.getenv('SCRAPERAPI_KEY')
     
@@ -153,7 +162,7 @@ def _get_youtube_transcript_with_cookies(video_id):
 @app.route('/api/extract-transcript', methods=['POST'])
 def extract_transcript():
     """Extract transcript from YouTube video"""
-    DEPLOYMENT_ID = "v2025.11.21.09"
+    DEPLOYMENT_ID = "v2025.11.21.10"
     try:
         data = request.json
         youtube_url = data.get('url', '')
