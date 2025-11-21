@@ -150,6 +150,7 @@ def _get_youtube_transcript_with_cookies(video_id):
         pre_check_info = f"Pre-check failed: {str(e)}"
 
     # 4. Download Subtitles with yt-dlp
+    ydl_error = None
     try:
         # Use a temporary directory for the download
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -161,7 +162,8 @@ def _get_youtube_transcript_with_cookies(video_id):
                 'quiet': False, # Enable logs
                 'verbose': True,
                 'force_ipv4': True, # Force IPv4 to avoid potential IPv6 blocks
-                'format': 'best', # Explicitly select best format
+                # 'format': 'best', # Removed format constraint
+                'extractor_args': {'youtube': {'player_client': ['web']}}, # Switch to WEB client (matches requests)
                 'cookiefile': cookies_file if cookies_file else None,
                 'outtmpl': f"{temp_dir}/%(id)s.%(ext)s",
                 'http_headers': {
@@ -172,7 +174,6 @@ def _get_youtube_transcript_with_cookies(video_id):
             }
 
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                ydl_error = None
                 # Download metadata and subtitles
                 try:
                     ydl.download([url])
@@ -187,39 +188,69 @@ def _get_youtube_transcript_with_cookies(video_id):
                 # Find the downloaded VTT file
                 vtt_files = [f for f in files if f.endswith('.vtt')]
                 
-                if not vtt_files:
-                    # Construct detailed error message
-                    error_details = f"Files found: {files}. "
-                    if not ffmpeg_path:
-                        error_details += "[WARNING: ffmpeg not found!] "
+                if vtt_files:
+                    # Read the first VTT file found
+                    vtt_path = os.path.join(temp_dir, vtt_files[0])
+                    file_size = os.path.getsize(vtt_path)
+                    print(f"📄 Reading subtitles from: {vtt_path} (Size: {file_size} bytes)")
                     
-                    error_details += f"[Pre-check: {pre_check_info}] "
+                    with open(vtt_path, 'r', encoding='utf-8') as f:
+                        vtt_content = f.read()
+                        
+                    print(f"📄 Raw VTT length: {len(vtt_content)}")
+                    full_text = _parse_vtt(vtt_content)
                     
-                    if ydl_error:
-                        error_details += f"[yt-dlp error: {ydl_error}] "
-                    
-                    raise Exception(f"No subtitle file downloaded. {error_details}")
-                
-                # Read the first VTT file found
-                vtt_path = os.path.join(temp_dir, vtt_files[0])
-                file_size = os.path.getsize(vtt_path)
-                print(f"📄 Reading subtitles from: {vtt_path} (Size: {file_size} bytes)")
-                
-                with open(vtt_path, 'r', encoding='utf-8') as f:
-                    vtt_content = f.read()
-                    
-                print(f"📄 Raw VTT length: {len(vtt_content)}")
-                full_text = _parse_vtt(vtt_content)
-                
-                if not full_text:
-                    # If empty, maybe it's just headers?
-                    print(f"⚠️ Parsed text is empty. Raw content first 500 chars:\n{vtt_content[:500]}")
-                    raise Exception(f"Parsed transcript is empty. Raw VTT length: {len(vtt_content)}")
-                    
-                return full_text, loaded_cookie_count
-
+                    if full_text:
+                        return full_text, loaded_cookie_count
     except Exception as e:
-        raise Exception(f"{str(e)} [Cookies Configured: {'Yes' if cookies_file else 'No'}]")
+        print(f"⚠️ yt-dlp block failed: {e}")
+
+    # 5. Manual Fallback (since pre-check worked)
+    print("⚠️ yt-dlp failed, attempting manual extraction from page content...")
+    try:
+        # We already have page_content from the pre-check
+        if 'page_content' in locals() and page_content:
+            import json
+            # Look for captionTracks in the HTML
+            match = re.search(r'"captionTracks":\s*(\[.*?\])', page_content)
+            if match:
+                tracks = json.loads(match.group(1))
+                caption_url = None
+                
+                # Find English track
+                for track in tracks:
+                    if track.get('languageCode') == 'en':
+                        caption_url = track.get('baseUrl')
+                        break
+                
+                if caption_url:
+                    print(f"⬇️ Manual fallback: Fetching captions from {caption_url}")
+                    # Append &fmt=vtt to get VTT format instead of XML
+                    if '&fmt=' not in caption_url:
+                        caption_url += '&fmt=vtt'
+                        
+                    cap_response = session.get(caption_url)
+                    cap_response.raise_for_status()
+                    
+                    full_text = _parse_vtt(cap_response.text)
+                    if full_text:
+                        print("✅ Manual fallback successful!")
+                        return full_text, loaded_cookie_count
+                    else:
+                        print("⚠️ Manual fallback fetched empty text")
+                else:
+                    print("⚠️ No English caption track found in HTML")
+            else:
+                print("⚠️ No captionTracks found in HTML")
+    except Exception as e:
+        print(f"⚠️ Manual fallback error: {e}")
+
+    # If we get here, everything failed
+    error_details = f"[Pre-check: {pre_check_info}] "
+    if ydl_error:
+        error_details += f"[yt-dlp error: {ydl_error}] "
+    
+    raise Exception(f"Failed to extract transcript. {error_details}")
             
     finally:
         # Clean up temporary cookie file
