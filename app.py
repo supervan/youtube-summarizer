@@ -1,11 +1,11 @@
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
-from youtube_transcript_api import YouTubeTranscriptApi
-from youtube_transcript_api._errors import TranscriptsDisabled, NoTranscriptFound, VideoUnavailable
+import yt_dlp
 import google.generativeai as genai
 import re
 import os
 import tempfile
+import requests
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -37,16 +37,51 @@ def serve_static(path):
     """Serve static files"""
     return send_from_directory('.', path)
 
+def _parse_vtt(vtt_content):
+    """Parse VTT subtitle content to extract plain text"""
+    lines = vtt_content.splitlines()
+    text_lines = []
+    
+    # Simple VTT parser: skip headers, timestamps, and empty lines
+    # VTT timestamps look like: 00:00:00.000 --> 00:00:00.000
+    timestamp_pattern = re.compile(r'\d{2}:\d{2}:\d{2}\.\d{3} --> \d{2}:\d{2}:\d{2}\.\d{3}')
+    
+    seen_lines = set() # Deduplicate lines
+    
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        if line.startswith('WEBVTT') or line.startswith('Kind:') or line.startswith('Language:'):
+            continue
+        if timestamp_pattern.match(line):
+            continue
+        if line.startswith('<c>'): # Skip color tags if any, though usually they are inside text
+            pass
+            
+        # Remove HTML-like tags (e.g. <c.colorE5E5E5>)
+        clean_line = re.sub(r'<[^>]+>', '', line)
+        clean_line = clean_line.strip()
+        
+        if clean_line and clean_line not in seen_lines:
+            text_lines.append(clean_line)
+            seen_lines.add(clean_line)
+            
+    return " ".join(text_lines)
+
 def _get_youtube_transcript_with_cookies(video_id):
-    """Extract transcript from YouTube video using youtube_transcript_api, with optional cookies."""
+    """Extract transcript from YouTube video using yt-dlp, with optional cookies."""
     cookies_content = os.getenv('YOUTUBE_COOKIES')
     cookies_file = None
+    loaded_cookie_count = 0
     
     try:
         if cookies_content:
-            # Ensure it has the Netscape header (MozillaCookieJar is strict)
+            # Ensure it has the Netscape header
             if not cookies_content.startswith('# Netscape HTTP Cookie File'):
                 cookies_content = '# Netscape HTTP Cookie File\n# http://curl.haxx.se/rfc/cookie.html\n\n' + cookies_content
+            
+            loaded_cookie_count = len(cookies_content.splitlines())
 
             # Create a temporary file for cookies
             with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
@@ -54,50 +89,44 @@ def _get_youtube_transcript_with_cookies(video_id):
                 cookies_file = f.name
                 print(f"🍪 Using cookies for authentication (file: {cookies_file})")
         
-        # Create session with cookies if available
-        import requests
-        import http.cookiejar
+        url = f"https://www.youtube.com/watch?v={video_id}"
         
-        session = requests.Session()
-        
-        # Set a real browser User-Agent and other headers
-        session.headers.update({
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "Accept-Language": "en-US,en;q=0.9",
-            "Referer": "https://www.youtube.com/",
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"
-        })
+        ydl_opts = {
+            'skip_download': True,
+            'writesubtitles': True,
+            'writeautomaticsub': True,
+            'subtitleslangs': ['en'],
+            'quiet': True,
+            'cookiefile': cookies_file if cookies_file else None,
+            'http_headers': {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept-Language': 'en-US,en;q=0.9',
+                'Referer': 'https://www.youtube.com/',
+            }
+        }
 
-        loaded_cookie_count = 0
-        if cookies_file:
-            session.cookies = http.cookiejar.MozillaCookieJar(cookies_file)
-            try:
-                session.cookies.load(ignore_discard=True, ignore_expires=True)
-                loaded_cookie_count = len(session.cookies)
-                print(f"🍪 Cookies loaded successfully from {cookies_file}. Count: {loaded_cookie_count}")
-            except Exception as e:
-                print(f"⚠️ Failed to load cookies: {e}")
-                # If loading fails, we still try with the session (it has the User-Agent at least)
-        
-        # Create transcript API instance with the session
-        # v1.2.3 accepts http_client in constructor
-        transcript_api = YouTubeTranscriptApi(http_client=session)
-        
-        # Fetch transcript
-        # Use .fetch() method which is correct for v1.2.3+
-        try:
-            transcript_list = transcript_api.fetch(
-                video_id, 
-                languages=['en']
-            )
-        except Exception as e:
-            # Re-raise with cookie count info
-            raise Exception(f"{str(e)} [Cookies Loaded: {loaded_cookie_count}]")
-        
-        # Combine transcript text
-        # fetch() returns FetchedTranscriptSnippet objects with .text attribute
-        full_text = " ".join([item.text for item in transcript_list])
-        return full_text, loaded_cookie_count
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=False)
+            
+            # Check for requested subtitles
+            if 'requested_subtitles' in info and 'en' in info['requested_subtitles']:
+                sub_info = info['requested_subtitles']['en']
+                sub_url = sub_info.get('url')
+                
+                if sub_url:
+                    print(f"⬇️ Fetching subtitles from: {sub_url}")
+                    response = requests.get(sub_url)
+                    response.raise_for_status()
+                    full_text = _parse_vtt(response.text)
+                    return full_text, loaded_cookie_count
+            
+            # Fallback: check automatic captions if manual not found/requested
+            # (yt-dlp puts auto caps in requested_subtitles if writeautomaticsub is True and no manual subs exist)
+            
+            raise Exception("No English subtitles found for this video.")
+
+    except Exception as e:
+        raise Exception(f"{str(e)} [Cookies Configured: {'Yes' if cookies_file else 'No'}]")
             
     finally:
         # Clean up temporary cookie file
@@ -130,40 +159,8 @@ def extract_transcript():
                 'length': len(full_transcript)
             })
             
-        except TranscriptsDisabled:
-            return jsonify({'error': 'Transcripts are disabled for this video'}), 400
-        except NoTranscriptFound:
-            return jsonify({'error': 'No transcript found for this video'}), 400
-        except VideoUnavailable:
-            return jsonify({'error': 'Video is unavailable'}), 400
         except Exception as e:
-            # Check if it's the specific "Sign in to confirm you're not a bot" error
-            error_msg = str(e)
-            if "Sign in to confirm you're not a bot" in error_msg:
-                error_msg = "YouTube is asking for a sign-in verification. Your cookies might be expired or invalid."
-            
-            # Add debug info about cookies
-            cookies_content = os.getenv('YOUTUBE_COOKIES')
-            cookie_status = "✅ Present" if cookies_content else "❌ Missing (Env var not set)"
-            
-            # Count loaded cookies if session exists (we can't easily access the local session variable here, 
-            # so we'll infer from the content for now, or we could move the session creation out)
-            # Actually, let's just check the content format
-            cookie_lines = len(cookies_content.splitlines()) if cookies_content else 0
-            
-            # We can't access loaded_cookie_count here easily because it's inside the try block of _get_youtube_transcript_with_cookies
-            # But we can try to re-parse or just rely on lines for now. 
-            # Wait, I changed the return signature of _get_youtube_transcript_with_cookies to return a tuple!
-            # So the exception handling needs to be aware of that? No, exception happens inside.
-            
-            debug_info = f"[Debug Info]\nCookies Configured: {cookie_status}\nCookie Content Lines: {cookie_lines}"
-            
-            if cookies_content and cookie_lines < 2:
-                 debug_info += "\n⚠️ WARNING: Cookie content has very few lines. Newlines might be missing in the Environment Variable!"
-            
-            return jsonify({
-                'error': f"{error_msg}\n\n{debug_info}"
-            }), 500
+            return jsonify({'error': f'Error fetching transcript: {str(e)}'}), 500
             
     except Exception as e:
         return jsonify({'error': f'Server error: {str(e)}'}), 500
