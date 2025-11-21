@@ -104,6 +104,7 @@ def _get_youtube_transcript_with_cookies(video_id):
         url = f"https://www.youtube.com/watch?v={video_id}"
 
         # Pre-check: Fetch page content to see if we are blocked
+        pre_check_info = "Pre-check not run"
         try:
             print(f"🔍 Pre-checking video page: {url}")
             page_response = session.get(url)
@@ -114,15 +115,19 @@ def _get_youtube_transcript_with_cookies(video_id):
             page_title = page_title_match.group(1) if page_title_match else "Unknown Title"
             print(f"📄 Page Title: {page_title}")
             
+            pre_check_info = f"Page Title: '{page_title}'"
+            
             # Check for common block messages
             if "Sign in to confirm you’re not a bot" in page_content:
-                raise Exception("YouTube is blocking requests (Bot Verification). Cookies might be invalid or IP is flagged.")
-            if "Google Account" in page_title and "Sign in" in page_content:
-                 raise Exception("YouTube redirected to Sign-in page. Cookies are invalid or expired.")
+                pre_check_info += " [DETECTED: Bot Verification Block]"
+            elif "Google Account" in page_title and "Sign in" in page_content:
+                 pre_check_info += " [DETECTED: Sign-in Redirect]"
+            else:
+                 pre_check_info += " [No obvious block detected]"
                  
         except Exception as e:
             print(f"⚠️ Pre-check warning: {e}")
-            # We don't stop here, we let yt-dlp try, but this log is crucial.
+            pre_check_info = f"Pre-check failed: {str(e)}"
 
         # Use a temporary directory for the download
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -164,11 +169,14 @@ def _get_youtube_transcript_with_cookies(video_id):
                     # Construct detailed error message
                     error_details = f"Files found: {files}. "
                     if not ffmpeg_path:
-                        error_details += "[WARNING: ffmpeg not found! This is likely the cause.] "
+                        error_details += "[WARNING: ffmpeg not found!] "
+                    
+                    error_details += f"[Pre-check: {pre_check_info}] "
+                    
                     if ydl_error:
                         error_details += f"[yt-dlp error: {ydl_error}] "
                     
-                    raise Exception(f"No subtitle file downloaded by yt-dlp. {error_details}")
+                    raise Exception(f"No subtitle file downloaded. {error_details}")
                 
                 # Read the first VTT file found
                 vtt_path = os.path.join(temp_dir, vtt_files[0])
