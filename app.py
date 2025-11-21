@@ -41,29 +41,35 @@ def _parse_vtt(vtt_content):
     """Parse VTT subtitle content to extract plain text"""
     lines = vtt_content.splitlines()
     text_lines = []
-    
-    # Simple VTT parser: skip headers, timestamps, and empty lines
-    # VTT timestamps look like: 00:00:00.000 --> 00:00:00.000
-    timestamp_pattern = re.compile(r'\d{2}:\d{2}:\d{2}\.\d{3} --> \d{2}:\d{2}:\d{2}\.\d{3}')
-    
     seen_lines = set() # Deduplicate lines
     
     for line in lines:
         line = line.strip()
         if not line:
             continue
+        
+        # Skip headers
         if line.startswith('WEBVTT') or line.startswith('Kind:') or line.startswith('Language:'):
             continue
-        if timestamp_pattern.match(line):
-            continue
-        if line.startswith('<c>'): # Skip color tags if any, though usually they are inside text
-            pass
             
-        # Remove HTML-like tags (e.g. <c.colorE5E5E5>)
+        # Skip timestamps (lines containing -->)
+        if '-->' in line:
+            continue
+            
+        # Skip sequence numbers (lines that are just digits)
+        if line.isdigit():
+            continue
+            
+        # Remove HTML-like tags (e.g. <c.colorE5E5E5>, <b>, etc.)
         clean_line = re.sub(r'<[^>]+>', '', line)
         clean_line = clean_line.strip()
         
-        if clean_line and clean_line not in seen_lines:
+        # Skip empty lines after cleaning
+        if not clean_line:
+            continue
+            
+        # Add to text if not duplicate (VTT often repeats lines for karaoke effect)
+        if clean_line not in seen_lines:
             text_lines.append(clean_line)
             seen_lines.add(clean_line)
             
@@ -117,7 +123,13 @@ def _get_youtube_transcript_with_cookies(video_id):
                     print(f"⬇️ Fetching subtitles from: {sub_url}")
                     response = requests.get(sub_url)
                     response.raise_for_status()
+                    
+                    print(f"📄 Raw VTT length: {len(response.text)}")
                     full_text = _parse_vtt(response.text)
+                    
+                    if not full_text:
+                        raise Exception(f"Parsed transcript is empty. Raw VTT length: {len(response.text)}")
+                        
                     return full_text, loaded_cookie_count
             
             # Fallback: check automatic captions if manual not found/requested
