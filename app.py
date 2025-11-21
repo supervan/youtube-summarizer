@@ -114,10 +114,14 @@ class FreeProxyManager:
         self.proxies = []
         self.verified_proxies = []
         
-        # Source 1: GitHub Proxy Lists (Raw Text)
+        # Source 1: GitHub Proxy Lists (Raw Text) - HTTP + SOCKS
         github_sources = [
             "https://raw.githubusercontent.com/TheSpeedX/SOCKS-List/master/http.txt",
+            "https://raw.githubusercontent.com/TheSpeedX/SOCKS-List/master/socks5.txt",
+            "https://raw.githubusercontent.com/TheSpeedX/SOCKS-List/master/socks4.txt",
             "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/http.txt",
+            "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/socks5.txt",
+            "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/socks4.txt",
             "https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list-raw.txt"
         ]
         
@@ -129,9 +133,17 @@ class FreeProxyManager:
                     # Extract IP:Port patterns
                     matches = re.findall(r'(\d+\.\d+\.\d+\.\d+:\d+)', resp.text)
                     print(f"   Found {len(matches)} proxies")
+                    
+                    # Determine protocol based on URL
+                    protocol = "http"
+                    if "socks5" in url:
+                        protocol = "socks5"
+                    elif "socks4" in url:
+                        protocol = "socks4"
+                        
                     # Add valid looking proxies
                     for proxy in matches:
-                        self.proxies.append(f"http://{proxy}")
+                        self.proxies.append(f"{protocol}://{proxy}")
             except Exception as e:
                 print(f"⚠️ Failed to fetch from {url}: {e}")
 
@@ -159,17 +171,20 @@ class FreeProxyManager:
         """Validate a batch of proxies to find some working ones quickly"""
         print("🕵️ Validating random subset of proxies...")
         
-        # Shuffle and take top 20 to test
+        # Shuffle and take top 100 to test (we need to find at least a few good ones)
         test_batch = self.proxies[:]
         random.shuffle(test_batch)
-        test_batch = test_batch[:20]
+        test_batch = test_batch[:100]
         
-        for proxy_url in test_batch:
+        for i, proxy_url in enumerate(test_batch):
             if self._check_proxy(proxy_url):
                 self.verified_proxies.append(proxy_url)
                 print(f"   ✅ Working proxy found: {proxy_url}")
-                if len(self.verified_proxies) >= 3: # Stop after finding 3 good ones to save time
+                if len(self.verified_proxies) >= 5: # Stop after finding 5 good ones
                     break
+            
+            if i % 10 == 0:
+                print(f"   Checked {i} proxies...")
         
         print(f"🎉 Found {len(self.verified_proxies)} verified working proxies")
 
@@ -177,8 +192,8 @@ class FreeProxyManager:
         """Check if a proxy actually works with YouTube"""
         try:
             proxies = {'http': proxy_url, 'https': proxy_url}
-            # Try to fetch a lightweight YouTube page
-            resp = requests.get('https://www.youtube.com/favicon.ico', proxies=proxies, timeout=3)
+            # Try to fetch a lightweight YouTube page with short timeout
+            resp = requests.get('https://www.youtube.com/favicon.ico', proxies=proxies, timeout=2)
             return resp.status_code == 200
         except:
             return False
@@ -212,8 +227,8 @@ def _get_youtube_transcript_with_cookies(video_id):
     except Exception as e:
         print(f"⚠️ Could not check library version: {e}")
     
-    # Try up to 5 times with different proxies
-    max_retries = 5
+    # Try up to 20 times with different proxies (quantity over quality approach)
+    max_retries = 20
     last_error = None
     
     for attempt in range(max_retries):
@@ -274,7 +289,7 @@ def _get_youtube_transcript_with_cookies(video_id):
 @app.route('/api/extract-transcript', methods=['POST'])
 def extract_transcript():
     """Extract transcript from YouTube video"""
-    DEPLOYMENT_ID = "v2025.11.21.12"
+    DEPLOYMENT_ID = "v2025.11.21.13"
     try:
         data = request.json
         youtube_url = data.get('url', '')
@@ -312,7 +327,7 @@ def diagnostics():
     scraperapi_key = os.getenv('SCRAPERAPI_KEY', '')
     
     diagnostics_info = {
-        'deployment_id': 'v2025.11.21.12',
+        'deployment_id': 'v2025.11.21.13',
         'cookies_configured': bool(cookies_content),
         'cookies_line_count': len(cookies_content.splitlines()) if cookies_content else 0,
         'cookies_has_header': cookies_content.startswith('# Netscape') if cookies_content else False,
