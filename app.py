@@ -111,6 +111,7 @@ def _get_youtube_transcript_with_cookies(video_id):
                 'subtitleslangs': ['en'],
                 'quiet': False, # Enable logs
                 'verbose': True,
+                'force_ipv4': True, # Force IPv4 to avoid potential IPv6 blocks
                 'cookiefile': cookies_file if cookies_file else None,
                 'outtmpl': f"{temp_dir}/%(id)s.%(ext)s",
                 'http_headers': {
