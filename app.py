@@ -76,9 +76,20 @@ def _parse_vtt(vtt_content):
             
     return " ".join(text_lines)
 
+def _parse_xml(xml_content):
+    """Parse XML transcript content to extract plain text"""
+    # Simple regex to extract text from <text> tags
+    # Example: <text start="0" dur="1.5">Hello world</text>
+    import html
+    text_parts = re.findall(r'<text.+?>(.+?)</text>', xml_content)
+    # Decode HTML entities (e.g. &amp; -> &)
+    decoded_parts = [html.unescape(t) for t in text_parts]
+    return " ".join(decoded_parts)
+
 def _get_youtube_transcript_with_cookies(video_id):
     """Extract transcript from YouTube video using yt-dlp, with optional cookies."""
     cookies_content = os.getenv('YOUTUBE_COOKIES')
+    # ... (rest of function setup) ...
     cookies_file = None
     loaded_cookie_count = 0
     
@@ -208,7 +219,7 @@ def _get_youtube_transcript_with_cookies(video_id):
                 'quiet': False, # Enable logs
                 'verbose': True,
                 'force_ipv4': True, # Force IPv4 to avoid potential IPv6 blocks
-                # 'format': 'best', # Removed format constraint
+                'format': 'best', # Ensure we select a valid format even if skipping download
                 'extractor_args': {'youtube': {'player_client': ['web']}}, # Switch to WEB client (matches requests)
                 'cookiefile': cookies_file if cookies_file else None,
                 'outtmpl': f"{temp_dir}/%(id)s.%(ext)s",
@@ -288,22 +299,39 @@ def _get_youtube_transcript_with_cookies(video_id):
 
                         if caption_url:
                             print(f"⬇️ Manual fallback: Fetching captions from {caption_url}")
-                            # Append &fmt=vtt to get VTT format instead of XML
-                            if '&fmt=' not in caption_url:
-                                caption_url += '&fmt=vtt'
+                            # Try VTT first
+                            vtt_url = caption_url + '&fmt=vtt' if '&fmt=' not in caption_url else caption_url
                             
-                            print(f"🔗 Caption URL: {caption_url}")
+                            print(f"🔗 Caption URL (VTT): {vtt_url}")
                                 
-                            cap_response = session.get(caption_url)
+                            cap_response = session.get(vtt_url)
                             cap_response.raise_for_status()
                             
                             raw_content = cap_response.text
                             print(f"📄 Manual raw content first 200 chars: {raw_content[:200]}")
                             
-                            full_text = _parse_vtt(raw_content)
-                            if full_text:
-                                print("✅ Manual fallback successful!")
-                                return full_text, loaded_cookie_count
+                            if len(raw_content) > 0:
+                                full_text = _parse_vtt(raw_content)
+                                if full_text:
+                                    print("✅ Manual fallback (VTT) successful!")
+                                    return full_text, loaded_cookie_count
+                            
+                            # If VTT failed or empty, try XML (original URL)
+                            print("⚠️ VTT fetch empty or failed, trying XML...")
+                            xml_url = caption_url # Original URL is usually XML
+                            print(f"🔗 Caption URL (XML): {xml_url}")
+                            
+                            xml_response = session.get(xml_url)
+                            xml_response.raise_for_status()
+                            xml_content = xml_response.text
+                            
+                            if len(xml_content) > 0:
+                                full_text = _parse_xml(xml_content)
+                                if full_text:
+                                    print("✅ Manual fallback (XML) successful!")
+                                    return full_text, loaded_cookie_count
+                                else:
+                                    manual_error = "Parsed XML content was empty"
                             else:
                                 manual_error = f"Fetched caption file was empty (Raw len: {len(raw_content)})"
                         else:
