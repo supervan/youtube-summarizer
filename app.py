@@ -83,10 +83,14 @@ def _get_youtube_transcript_with_cookies(video_id):
         
         # Fetch transcript
         # Use .fetch() method which is correct for v1.2.3+
-        transcript_list = transcript_api.fetch(
-            video_id, 
-            languages=['en']
-        )
+        try:
+            transcript_list = transcript_api.fetch(
+                video_id, 
+                languages=['en']
+            )
+        except Exception as e:
+            # Re-raise with cookie count info
+            raise Exception(f"{str(e)} [Cookies Loaded: {loaded_cookie_count}]")
         
         # Combine transcript text
         # fetch() returns FetchedTranscriptSnippet objects with .text attribute
