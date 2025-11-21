@@ -95,6 +95,25 @@ def _get_youtube_transcript_with_cookies(video_id):
                 cookies_file = f.name
                 print(f"🍪 Using cookies for authentication (file: {cookies_file})")
         
+        # Create session for fetching the actual subtitle file
+        # We need to use the same headers/cookies as yt-dlp to avoid blocks/empty responses
+        import requests
+        import http.cookiejar
+        
+        session = requests.Session()
+        session.headers.update({
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Referer': 'https://www.youtube.com/',
+        })
+        
+        if cookies_file:
+            session.cookies = http.cookiejar.MozillaCookieJar(cookies_file)
+            try:
+                session.cookies.load(ignore_discard=True, ignore_expires=True)
+            except Exception as e:
+                print(f"⚠️ Failed to load cookies into session: {e}")
+
         url = f"https://www.youtube.com/watch?v={video_id}"
         
         ydl_opts = {
@@ -104,11 +123,7 @@ def _get_youtube_transcript_with_cookies(video_id):
             'subtitleslangs': ['en'],
             'quiet': True,
             'cookiefile': cookies_file if cookies_file else None,
-            'http_headers': {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept-Language': 'en-US,en;q=0.9',
-                'Referer': 'https://www.youtube.com/',
-            }
+            'http_headers': session.headers # Use same headers
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -121,7 +136,8 @@ def _get_youtube_transcript_with_cookies(video_id):
                 
                 if sub_url:
                     print(f"⬇️ Fetching subtitles from: {sub_url}")
-                    response = requests.get(sub_url)
+                    # Use the session to fetch the URL
+                    response = session.get(sub_url)
                     response.raise_for_status()
                     
                     print(f"📄 Raw VTT length: {len(response.text)}")
