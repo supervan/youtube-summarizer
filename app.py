@@ -368,6 +368,10 @@ def _get_youtube_transcript_with_cookies(video_id):
     if manual_error:
         error_details += f"[Manual fallback error: {manual_error}] "
     
+    # Add Deployment ID to verify code version
+    DEPLOYMENT_ID = "v2025.11.21.04"
+    error_details += f"[Deployment ID: {DEPLOYMENT_ID}]"
+    
     raise Exception(f"Failed to extract transcript. {error_details}")
             
     # Cleanup is handled by tempfile context managers, but we need to clean up cookies
