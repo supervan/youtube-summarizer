@@ -50,15 +50,28 @@ def _get_youtube_transcript_with_cookies(video_id):
                 cookies_file = f.name
                 print(f"🍪 Using cookies for authentication (file: {cookies_file})")
         
-        # Create transcript API instance
-        transcript_api = YouTubeTranscriptApi()
+        # Create session with cookies if available
+        import requests
+        import http.cookiejar
         
-        # Fetch transcript with cookies if available
+        session = requests.Session()
+        if cookies_file:
+            session.cookies = http.cookiejar.MozillaCookieJar(cookies_file)
+            try:
+                session.cookies.load(ignore_discard=True, ignore_expires=True)
+                print(f"🍪 Cookies loaded successfully from {cookies_file}")
+            except Exception as e:
+                print(f"⚠️ Failed to load cookies: {e}")
+        
+        # Create transcript API instance with the session
+        # v1.2.3 accepts http_client in constructor
+        transcript_api = YouTubeTranscriptApi(http_client=session)
+        
+        # Fetch transcript
         # Use .fetch() method which is correct for v1.2.3+
         transcript_list = transcript_api.fetch(
             video_id, 
-            languages=['en'],
-            cookies=cookies_file
+            languages=['en']
         )
         
         # Combine transcript text
