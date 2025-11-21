@@ -1,10 +1,13 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, render_template
 from flask_cors import CORS
 import yt_dlp
 import google.generativeai as genai
-import re
 import os
+import re
 import tempfile
+import shutil
+import time
+import random
 import requests
 from dotenv import load_dotenv
 from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled, NoTranscriptFound
@@ -76,84 +79,124 @@ def _parse_vtt(vtt_content):
             
     return " ".join(text_lines)
 
+class FreeProxyManager:
+    """Manages a pool of free proxies for rotation"""
+    def __init__(self):
+        self.proxies = []
+        self.last_update = 0
+        self.working_proxy = None
+        
+    def get_proxy(self):
+        """Get a working proxy, refreshing pool if needed"""
+        # If we have a known working proxy, try it first
+        if self.working_proxy:
+            return self.working_proxy
+            
+        # Update pool if empty or old (older than 1 hour)
+        if not self.proxies or time.time() - self.last_update > 3600:
+            self._refresh_proxies()
+            
+        # Return a random proxy from the pool
+        if self.proxies:
+            import random
+            proxy = random.choice(self.proxies)
+            return {'http': proxy, 'https': proxy}
+        return None
+        
+    def _refresh_proxies(self):
+        """Fetch fresh proxies from free sources"""
+        print("🔄 Refreshing free proxy list...")
+        self.proxies = []
+        try:
+            # Source 1: sslproxies.org (simple HTML parsing)
+            resp = requests.get('https://www.sslproxies.org/', timeout=10)
+            matches = re.findall(r'(\d+\.\d+\.\d+\.\d+):(\d+)', resp.text)
+            for ip, port in matches[:20]:  # Take top 20
+                self.proxies.append(f"http://{ip}:{port}")
+                
+            print(f"✅ Found {len(self.proxies)} free proxies")
+            self.last_update = time.time()
+        except Exception as e:
+            print(f"⚠️ Failed to fetch free proxies: {e}")
+
+    def mark_failed(self, proxy_dict):
+        """Mark a proxy as failed so we don't use it again immediately"""
+        if not proxy_dict:
+            return
+        proxy_url = proxy_dict.get('http')
+        if proxy_url in self.proxies:
+            self.proxies.remove(proxy_url)
+        if self.working_proxy == proxy_dict:
+            self.working_proxy = None
+
+# Global proxy manager instance
+proxy_manager = FreeProxyManager()
+
 def _get_youtube_transcript_with_cookies(video_id):
-    """Extract transcript from YouTube video using youtube-transcript-api with optional proxy."""
+    """Extract transcript from YouTube video using youtube-transcript-api with free proxy rotation."""
     
     # Log library version for debugging
     try:
         import youtube_transcript_api
         version = getattr(youtube_transcript_api, '__version__', 'unknown')
         print(f"📦 youtube-transcript-api version: {version}")
-        print(f"📦 Available methods: {[m for m in dir(YouTubeTranscriptApi) if not m.startswith('_')]}")
     except Exception as e:
         print(f"⚠️ Could not check library version: {e}")
     
-    # Check if we should use a proxy
-    scraperapi_key = os.getenv('SCRAPERAPI_KEY')
+    # Try up to 5 times with different proxies
+    max_retries = 5
+    last_error = None
     
-    # Setup proxy if available
-    proxies = None
-    if scraperapi_key:
-        print(f"🔄 Using ScraperAPI proxy to bypass IP blocking")
-        proxy_url = f"http://scraperapi:{scraperapi_key}@proxy-server.scraperapi.com:8001"
-        proxies = {
-            'http': proxy_url,
-            'https': proxy_url
-        }
-    else:
-        print(f"⚠️ No proxy configured - attempting direct connection")
-    
-    try:
-        # Use youtube-transcript-api (simple and reliable)
-        print(f"🚀 Fetching transcript with youtube-transcript-api for video: {video_id}")
+    for attempt in range(max_retries):
+        # Get a proxy (first attempt can be direct if no working proxy known)
+        proxies = proxy_manager.get_proxy() if attempt > 0 else None
         
-        # Try to get transcript list first (supports language selection)
+        proxy_msg = f"via proxy {proxies['http']}" if proxies else "direct connection"
+        print(f"🚀 Attempt {attempt+1}/{max_retries}: Fetching transcript {proxy_msg}")
+        
         try:
+            # Try to get transcript list
             transcript_list = YouTubeTranscriptApi.list_transcripts(video_id, proxies=proxies)
             
-            # Try to find English transcript (manual or auto-generated)
+            # Try to find English transcript
             transcript = None
             try:
-                # Prefer manually created transcripts
                 transcript = transcript_list.find_manually_created_transcript(['en'])
-                print("✅ Found manually created English transcript")
             except:
                 try:
-                    # Fall back to auto-generated
                     transcript = transcript_list.find_generated_transcript(['en'])
-                    print("✅ Found auto-generated English transcript")
                 except:
-                    # Try any available transcript
                     for t in transcript_list:
                         transcript = t
-                        print(f"✅ Using available transcript: {t.language}")
                         break
             
             if transcript:
                 fetched_transcript = transcript.fetch()
                 full_text = " ".join([entry['text'] for entry in fetched_transcript])
-                full_text = " ".join(full_text.split())  # Clean whitespace
+                full_text = " ".join(full_text.split())
                 
-                print(f"✅ Successfully extracted {len(full_text)} characters")
+                print(f"✅ Success! Extracted {len(full_text)} chars {proxy_msg}")
+                
+                # Remember this working proxy for next time
+                if proxies:
+                    proxy_manager.working_proxy = proxies
+                    
                 return full_text, 0
             else:
-                raise Exception("No transcripts available for this video")
+                raise Exception("No transcripts available")
                 
-        except Exception as list_error:
-            # Fallback to simple get_transcript (older API)
-            print(f"⚠️ list_transcripts failed ({list_error}), trying get_transcript...")
-            fetched_transcript = YouTubeTranscriptApi.get_transcript(video_id, proxies=proxies)
-            full_text = " ".join([entry['text'] for entry in fetched_transcript])
-            full_text = " ".join(full_text.split())
-            
-            print(f"✅ Successfully extracted {len(full_text)} characters (via get_transcript)")
-            return full_text, 0
-            
-    except Exception as e:
-        error_msg = f"Failed to fetch transcript: {str(e)}"
-        if not scraperapi_key and "blocked" in str(e).lower():
-            error_msg += " - Consider setting SCRAPERAPI_KEY to bypass IP blocking"
-        raise Exception(error_msg)
+        except Exception as e:
+            print(f"❌ Attempt {attempt+1} failed: {str(e)}")
+            last_error = e
+            # If proxy failed, mark it
+            if proxies:
+                proxy_manager.mark_failed(proxies)
+            # If direct connection failed (and it was a block), force proxy next time
+            elif "Subtitles are disabled" in str(e) or "cookie" in str(e).lower():
+                print("⚠️ Direct connection blocked, switching to proxies...")
+                proxy_manager._refresh_proxies()
+    
+    raise Exception(f"Failed after {max_retries} attempts. Last error: {last_error}")
             
     # Cleanup is handled by tempfile context managers, but we need to clean up cookies
     if cookies_file and os.path.exists(cookies_file):
@@ -162,7 +205,7 @@ def _get_youtube_transcript_with_cookies(video_id):
 @app.route('/api/extract-transcript', methods=['POST'])
 def extract_transcript():
     """Extract transcript from YouTube video"""
-    DEPLOYMENT_ID = "v2025.11.21.10"
+    DEPLOYMENT_ID = "v2025.11.21.11"
     try:
         data = request.json
         youtube_url = data.get('url', '')
@@ -200,13 +243,13 @@ def diagnostics():
     scraperapi_key = os.getenv('SCRAPERAPI_KEY', '')
     
     diagnostics_info = {
-        'deployment_id': 'v2025.11.21.09',
+        'deployment_id': 'v2025.11.21.11',
         'cookies_configured': bool(cookies_content),
         'cookies_line_count': len(cookies_content.splitlines()) if cookies_content else 0,
         'cookies_has_header': cookies_content.startswith('# Netscape') if cookies_content else False,
         'gemini_api_configured': bool(os.getenv('GEMINI_API_KEY')),
-        'proxy_configured': bool(scraperapi_key),
-        'proxy_key_length': len(scraperapi_key) if scraperapi_key else 0,
+        'proxy_mode': 'free_rotation',
+        'cached_proxies': len(proxy_manager.proxies)
     }
     
     return jsonify(diagnostics_info)
