@@ -97,7 +97,8 @@ def _get_youtube_transcript_with_cookies(video_id):
         
         # Check for ffmpeg
         import shutil
-        print(f"📽️ ffmpeg available: {shutil.which('ffmpeg')}")
+        ffmpeg_path = shutil.which('ffmpeg')
+        print(f"📽️ ffmpeg available: {ffmpeg_path}")
 
         url = f"https://www.youtube.com/watch?v={video_id}"
 
@@ -120,10 +121,12 @@ def _get_youtube_transcript_with_cookies(video_id):
             }
 
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                ydl_error = None
                 # Download metadata and subtitles
                 try:
                     ydl.download([url])
                 except Exception as e:
+                    ydl_error = str(e)
                     print(f"⚠️ yt-dlp download error: {e}")
                 
                 # List all files in temp dir
@@ -134,11 +137,14 @@ def _get_youtube_transcript_with_cookies(video_id):
                 vtt_files = [f for f in files if f.endswith('.vtt')]
                 
                 if not vtt_files:
-                    # Check if there are other subtitle formats
-                    other_subs = [f for f in files if any(f.endswith(ext) for ext in ['.srv1', '.srv2', '.ttml', '.json3'])]
-                    if other_subs:
-                         raise Exception(f"Found subtitle files in wrong format: {other_subs}. ffmpeg might be missing.")
-                    raise Exception(f"No subtitle file downloaded by yt-dlp. Files found: {files}")
+                    # Construct detailed error message
+                    error_details = f"Files found: {files}. "
+                    if not ffmpeg_path:
+                        error_details += "[WARNING: ffmpeg not found! This is likely the cause.] "
+                    if ydl_error:
+                        error_details += f"[yt-dlp error: {ydl_error}] "
+                    
+                    raise Exception(f"No subtitle file downloaded by yt-dlp. {error_details}")
                 
                 # Read the first VTT file found
                 vtt_path = os.path.join(temp_dir, vtt_files[0])
