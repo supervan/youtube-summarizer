@@ -101,6 +101,8 @@ def _get_youtube_transcript_with_cookies(video_id):
         print(f"📽️ ffmpeg available: {ffmpeg_path}")
         print(f"📦 yt-dlp version: {yt_dlp.version.__version__}")
 
+        url = f"https://www.youtube.com/watch?v={video_id}"
+
         # Pre-check: Fetch page content to see if we are blocked
         try:
             print(f"🔍 Pre-checking video page: {url}")
