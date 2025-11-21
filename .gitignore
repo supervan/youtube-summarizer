@@ -1,7 +1,14 @@
+# Environment variables
 .env
+
+# Python cache
 __pycache__/
 *.pyc
 *.pyo
+
+# Virtual environment
+venv/
+env/
 *.pyd
 .Python
 *.so
