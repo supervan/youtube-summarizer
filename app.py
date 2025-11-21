@@ -151,6 +151,7 @@ def _get_youtube_transcript_with_cookies(video_id):
         pre_check_info = f"Pre-check failed: {str(e)}"
 
     # 4. Attempt with youtube-transcript-api (Primary Method)
+    yta_error = None
     try:
         print("🚀 Attempting to fetch transcript with youtube-transcript-api...")
         # Use the cookies file we created
@@ -177,9 +178,11 @@ def _get_youtube_transcript_with_cookies(video_id):
             return full_text, loaded_cookie_count
         else:
             print("⚠️ youtube-transcript-api: No English transcript found")
+            yta_error = "No English transcript found"
             
     except Exception as e:
         print(f"⚠️ youtube-transcript-api failed: {e}")
+        yta_error = str(e)
         # Continue to yt-dlp as backup
 
     # 5. Download Subtitles with yt-dlp (Backup Method)
@@ -238,7 +241,7 @@ def _get_youtube_transcript_with_cookies(video_id):
     except Exception as e:
         print(f"⚠️ yt-dlp block failed: {e}")
 
-    # 5. Manual Fallback (since pre-check worked)
+    # 6. Manual Fallback (since pre-check worked)
     print("⚠️ yt-dlp failed, attempting manual extraction from page content...")
     manual_error = None
     try:
@@ -282,12 +285,15 @@ def _get_youtube_transcript_with_cookies(video_id):
                             cap_response = session.get(caption_url)
                             cap_response.raise_for_status()
                             
-                            full_text = _parse_vtt(cap_response.text)
+                            raw_content = cap_response.text
+                            print(f"📄 Manual raw content first 200 chars: {raw_content[:200]}")
+                            
+                            full_text = _parse_vtt(raw_content)
                             if full_text:
                                 print("✅ Manual fallback successful!")
                                 return full_text, loaded_cookie_count
                             else:
-                                manual_error = "Fetched caption file was empty"
+                                manual_error = f"Fetched caption file was empty (Raw len: {len(raw_content)})"
                         else:
                             manual_error = "No caption URL found in tracks"
                     else:
@@ -306,6 +312,8 @@ def _get_youtube_transcript_with_cookies(video_id):
 
     # If we get here, everything failed
     error_details = f"[Pre-check: {pre_check_info}] "
+    if yta_error:
+        error_details += f"[youtube-transcript-api error: {yta_error}] "
     if ydl_error:
         error_details += f"[yt-dlp error: {ydl_error}] "
     if manual_error:
