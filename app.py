@@ -237,6 +237,7 @@ def _get_youtube_transcript_with_cookies(video_id):
 @app.route('/api/extract-transcript', methods=['POST'])
 def extract_transcript():
     """Extract transcript from YouTube video"""
+    DEPLOYMENT_ID = "v2025.11.21.06"
     try:
         data = request.json
         youtube_url = data.get('url', '')
@@ -257,14 +258,15 @@ def extract_transcript():
                 'success': True,
                 'video_id': video_id,
                 'transcript': full_transcript,
-                'length': len(full_transcript)
+                'length': len(full_transcript),
+                'deployment_id': DEPLOYMENT_ID
             })
             
         except Exception as e:
-            return jsonify({'error': f'Error fetching transcript: {str(e)}'}), 500
+            return jsonify({'error': f'Error fetching transcript: {str(e)} [Deployment ID: {DEPLOYMENT_ID}]'}), 500
             
     except Exception as e:
-        return jsonify({'error': f'Server error: {str(e)}'}), 500
+        return jsonify({'error': f'Server error: {str(e)} [Deployment ID: {DEPLOYMENT_ID}]'}), 500
 
 @app.route('/api/summarize', methods=['POST'])
 def summarize():
