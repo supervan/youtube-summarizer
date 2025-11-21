@@ -99,6 +99,8 @@ def _get_youtube_transcript_with_cookies(video_id):
         import shutil
         print(f"📽️ ffmpeg available: {shutil.which('ffmpeg')}")
 
+        url = f"https://www.youtube.com/watch?v={video_id}"
+
         # Use a temporary directory for the download
         with tempfile.TemporaryDirectory() as temp_dir:
             ydl_opts = {
