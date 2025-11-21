@@ -133,6 +133,12 @@ def _get_youtube_transcript_with_cookies(video_id):
     ffmpeg_path = shutil.which('ffmpeg')
     print(f"📽️ ffmpeg available: {ffmpeg_path}")
     print(f"📦 yt-dlp version: {yt_dlp.version.__version__}")
+    
+    try:
+        import youtube_transcript_api
+        print(f"📦 youtube-transcript-api version: {getattr(youtube_transcript_api, '__version__', 'unknown')}")
+    except Exception as e:
+        print(f"⚠️ Could not check youtube-transcript-api version: {e}")
 
     url = f"https://www.youtube.com/watch?v={video_id}"
     pre_check_info = "Pre-check not run"
@@ -219,7 +225,7 @@ def _get_youtube_transcript_with_cookies(video_id):
                 'quiet': False, # Enable logs
                 'verbose': True,
                 'force_ipv4': True, # Force IPv4 to avoid potential IPv6 blocks
-                'format': 'best', # Ensure we select a valid format even if skipping download
+                'format': 'bestaudio/best', # Safer format selection for audio/subs
                 'extractor_args': {'youtube': {'player_client': ['web']}}, # Switch to WEB client (matches requests)
                 'cookiefile': cookies_file if cookies_file else None,
                 'outtmpl': f"{temp_dir}/%(id)s.%(ext)s",
@@ -299,33 +305,36 @@ def _get_youtube_transcript_with_cookies(video_id):
 
                         if caption_url:
                             print(f"⬇️ Manual fallback: Fetching captions from {caption_url}")
-                            # Try VTT first
+                            
+                            # 1. Try VTT
                             vtt_url = caption_url + '&fmt=vtt' if '&fmt=' not in caption_url else caption_url
+                            print(f"🔗 Trying VTT: {vtt_url}")
                             
-                            print(f"🔗 Caption URL (VTT): {vtt_url}")
+                            try:
+                                cap_response = session.get(vtt_url)
+                                cap_response.raise_for_status()
+                                raw_vtt = cap_response.text
                                 
-                            cap_response = session.get(vtt_url)
-                            cap_response.raise_for_status()
-                            
-                            raw_content = cap_response.text
-                            print(f"📄 Manual raw content first 200 chars: {raw_content[:200]}")
-                            
-                            if len(raw_content) > 0:
-                                full_text = _parse_vtt(raw_content)
-                                if full_text:
-                                    print("✅ Manual fallback (VTT) successful!")
-                                    return full_text, loaded_cookie_count
-                            
-                            # If VTT failed or empty, try XML (original URL)
-                            print("⚠️ VTT fetch empty or failed, trying XML...")
+                                if len(raw_vtt) > 50: # Arbitrary small size check
+                                    full_text = _parse_vtt(raw_vtt)
+                                    if full_text:
+                                        print("✅ Manual fallback (VTT) successful!")
+                                        return full_text, loaded_cookie_count
+                                else:
+                                    print(f"⚠️ VTT content too short: {len(raw_vtt)}")
+                            except Exception as ve:
+                                print(f"⚠️ VTT fetch failed: {ve}")
+
+                            # 2. Try XML (original URL)
+                            print("⚠️ VTT failed, trying XML...")
                             xml_url = caption_url # Original URL is usually XML
-                            print(f"🔗 Caption URL (XML): {xml_url}")
+                            print(f"🔗 Trying XML: {xml_url}")
                             
                             xml_response = session.get(xml_url)
                             xml_response.raise_for_status()
                             xml_content = xml_response.text
                             
-                            if len(xml_content) > 0:
+                            if len(xml_content) > 50:
                                 full_text = _parse_xml(xml_content)
                                 if full_text:
                                     print("✅ Manual fallback (XML) successful!")
@@ -333,7 +342,7 @@ def _get_youtube_transcript_with_cookies(video_id):
                                 else:
                                     manual_error = "Parsed XML content was empty"
                             else:
-                                manual_error = f"Fetched caption file was empty (Raw len: {len(raw_content)})"
+                                manual_error = f"Fetched XML file was empty (Raw len: {len(xml_content)})"
                         else:
                             manual_error = "No caption URL found in tracks"
                     else:
