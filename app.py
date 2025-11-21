@@ -78,31 +78,27 @@ def _parse_vtt(vtt_content):
 
 def _parse_xml(xml_content):
     """Parse XML transcript content to extract plain text"""
-    # Simple regex to extract text from <text> tags
-    # Example: <text start="0" dur="1.5">Hello world</text>
     import html
-    text_parts = re.findall(r'<text.+?>(.+?)</text>', xml_content)
-    # Decode HTML entities (e.g. &amp; -> &)
-    decoded_parts = [html.unescape(t) for t in text_parts]
+    # Extract text from <text> tags
+    text_parts = re.findall(r'<text[^>]*>(.+?)</text>', xml_content, re.DOTALL)
+    # Decode HTML entities and clean whitespace
+    decoded_parts = [html.unescape(t).strip() for t in text_parts if t.strip()]
     return " ".join(decoded_parts)
 
 def _get_youtube_transcript_with_cookies(video_id):
-    """Extract transcript from YouTube video using yt-dlp, with optional cookies."""
+    """Extract transcript from YouTube video using manual HTML parsing."""
     cookies_content = os.getenv('YOUTUBE_COOKIES')
-    # ... (rest of function setup) ...
     cookies_file = None
     loaded_cookie_count = 0
     
     # 1. Setup Cookies
     try:
         if cookies_content:
-            # Ensure it has the Netscape header
             if not cookies_content.startswith('# Netscape HTTP Cookie File'):
                 cookies_content = '# Netscape HTTP Cookie File\n# http://curl.haxx.se/rfc/cookie.html\n\n' + cookies_content
             
             loaded_cookie_count = len(cookies_content.splitlines())
 
-            # Create a temporary file for cookies
             with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
                 f.write(cookies_content)
                 cookies_file = f.name
@@ -110,7 +106,7 @@ def _get_youtube_transcript_with_cookies(video_id):
     except Exception as e:
         print(f"⚠️ Cookie setup failed: {e}")
 
-    # 2. Setup Session (needed for pre-check and manual fetches)
+    # 2. Setup Session
     import requests
     import http.cookiejar
     
@@ -128,256 +124,111 @@ def _get_youtube_transcript_with_cookies(video_id):
         except Exception as e:
             print(f"⚠️ Failed to load cookies into session: {e}")
 
-    # 3. Diagnostics & Pre-checks
-    import shutil
-    ffmpeg_path = shutil.which('ffmpeg')
-    print(f"📽️ ffmpeg available: {ffmpeg_path}")
-    print(f"📦 yt-dlp version: {yt_dlp.version.__version__}")
-    
-    try:
-        import youtube_transcript_api
-        print(f"📦 youtube-transcript-api file: {youtube_transcript_api.__file__}")
-        print(f"📦 youtube-transcript-api dir: {dir(youtube_transcript_api)}")
-        print(f"📦 YouTubeTranscriptApi class dir: {dir(YouTubeTranscriptApi)}")
-    except Exception as e:
-        print(f"⚠️ Could not inspect youtube-transcript-api: {e}")
-
+    # 3. Fetch and parse video page
     url = f"https://www.youtube.com/watch?v={video_id}"
-    pre_check_info = "Pre-check not run"
     
     try:
-        print(f"🔍 Pre-checking video page: {url}")
+        print(f"🔍 Fetching video page: {url}")
         page_response = session.get(url)
+        page_response.raise_for_status()
         page_content = page_response.text
         
-        # Extract title
+        # Extract title for diagnostics
         page_title_match = re.search(r'<title>(.*?)</title>', page_content)
         page_title = page_title_match.group(1) if page_title_match else "Unknown Title"
         print(f"📄 Page Title: {page_title}")
         
-        pre_check_info = f"Page Title: '{page_title}'"
-        
-        # Check for common block messages
-        if "Sign in to confirm you’re not a bot" in page_content:
-            pre_check_info += " [DETECTED: Bot Verification Block]"
+        # Check for blocks
+        if "Sign in to confirm you're not a bot" in page_content:
+            raise Exception("YouTube is requesting bot verification")
         elif "Google Account" in page_title and "Sign in" in page_content:
-                pre_check_info += " [DETECTED: Sign-in Redirect]"
-        else:
-                pre_check_info += " [No obvious block detected]"
+            raise Exception("YouTube is requesting sign-in")
                 
     except Exception as e:
-        print(f"⚠️ Pre-check warning: {e}")
-        pre_check_info = f"Pre-check failed: {str(e)}"
+        raise Exception(f"Failed to fetch video page: {e}")
 
-    # 4. Attempt with youtube-transcript-api (Primary Method)
-    yta_error = None
+    # 4. Extract ytInitialPlayerResponse
     try:
-        print("🚀 Attempting to fetch transcript with youtube-transcript-api...")
-        # Use the cookies file we created
-        try:
-            transcript_list = YouTubeTranscriptApi.list_transcripts(video_id, cookies=cookies_file)
+        import json
+        
+        json_match = re.search(r'var ytInitialPlayerResponse\s*=\s*({.+?});', page_content)
+        
+        if not json_match:
+            raise Exception("ytInitialPlayerResponse not found in HTML")
             
-            # Try to find English transcript (manual or generated)
-            transcript = None
-            try:
-                transcript = transcript_list.find_manually_created_transcript(['en'])
-            except:
-                try:
-                    transcript = transcript_list.find_generated_transcript(['en'])
-                except:
-                    pass
+        player_response = json.loads(json_match.group(1))
+        
+        # Navigate to captions
+        captions = player_response.get('captions', {})
+        pctr = captions.get('playerCaptionsTracklistRenderer', {})
+        tracks = pctr.get('captionTracks', [])
+        
+        if not tracks:
+            raise Exception("No caption tracks found in player response")
+        
+        # Find English track
+        caption_url = None
+        for track in tracks:
+            if track.get('languageCode') == 'en':
+                caption_url = track.get('baseUrl')
+                break
+        
+        # Fallback to first track
+        if not caption_url and tracks:
+            caption_url = tracks[0].get('baseUrl')
+            print("⚠️ No English track found, using first available track")
+
+        if not caption_url:
+            raise Exception("No caption URL found in tracks")
             
-            if transcript:
-                fetched_transcript = transcript.fetch()
-                # Join text parts
-                full_text = " ".join([t['text'] for t in fetched_transcript])
-                # Basic cleaning of whitespace
-                full_text = " ".join(full_text.split())
-                
-                print("✅ youtube-transcript-api success!")
+    except json.JSONDecodeError as je:
+        raise Exception(f"Failed to parse ytInitialPlayerResponse JSON: {je}")
+    except Exception as e:
+        raise Exception(f"Failed to extract caption URL: {e}")
+
+    # 5. Fetch captions (try XML first, then VTT)
+    try:
+        # Try XML format (default)
+        print(f"⬇️ Fetching XML captions from: {caption_url}")
+        xml_response = session.get(caption_url)
+        print(f"📡 XML Status: {xml_response.status_code}")
+        xml_response.raise_for_status()
+        xml_content = xml_response.text
+        
+        print(f"📄 XML content length: {len(xml_content)}")
+        print(f"📄 XML content preview: {xml_content[:200]}")
+        
+        if len(xml_content) > 50:
+            full_text = _parse_xml(xml_content)
+            if full_text and len(full_text) > 10:
+                print(f"✅ Successfully extracted {len(full_text)} characters from XML")
                 return full_text, loaded_cookie_count
             else:
-                print("⚠️ youtube-transcript-api: No English transcript found")
-                yta_error = "No English transcript found"
+                print(f"⚠️ Parsed XML was too short: {len(full_text) if full_text else 0} chars")
+        
+        # Try VTT format as fallback
+        print("⚠️ XML failed, trying VTT format...")
+        vtt_url = caption_url + '&fmt=vtt' if '&fmt=' not in caption_url else caption_url
+        vtt_response = session.get(vtt_url)
+        vtt_response.raise_for_status()
+        vtt_content = vtt_response.text
+        
+        print(f"📄 VTT content length: {len(vtt_content)}")
+        
+        if len(vtt_content) > 50:
+            full_text = _parse_vtt(vtt_content)
+            if full_text and len(full_text) > 10:
+                print(f"✅ Successfully extracted {len(full_text)} characters from VTT")
+                return full_text, loaded_cookie_count
                 
-        except AttributeError as ae:
-            print(f"⚠️ AttributeError details: {ae}")
-            # Fallback for older versions that don't have list_transcripts
-            print("⚠️ list_transcripts not found, trying get_transcript...")
-            fetched_transcript = YouTubeTranscriptApi.get_transcript(video_id, cookies=cookies_file)
-            full_text = " ".join([t['text'] for t in fetched_transcript])
-            full_text = " ".join(full_text.split())
-            print("✅ youtube-transcript-api (get_transcript) success!")
-            return full_text, loaded_cookie_count
-
+        raise Exception(f"Both XML and VTT formats returned insufficient content")
+        
     except Exception as e:
-        print(f"⚠️ youtube-transcript-api failed: {e}")
-        yta_error = str(e)
-        # Continue to yt-dlp as backup
-
-    # 5. Download Subtitles with yt-dlp (Backup Method)
-    ydl_error = None
-    try:
-        # Use a temporary directory for the download
-        with tempfile.TemporaryDirectory() as temp_dir:
-            ydl_opts = {
-                'skip_download': True, # Don't download video
-                'writesubtitles': True,
-                'writeautomaticsub': True,
-                'subtitleslangs': ['en'],
-                'quiet': False, # Enable logs
-                'verbose': True,
-                'force_ipv4': True, # Force IPv4 to avoid potential IPv6 blocks
-                # 'format': 'bestaudio/best', # Relax format constraint to avoid "Requested format not available"
-                'extractor_args': {'youtube': {'player_client': ['web']}}, # Switch to WEB client (matches requests)
-                'cookiefile': cookies_file if cookies_file else None,
-                'outtmpl': f"{temp_dir}/%(id)s.%(ext)s",
-                'http_headers': {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                    'Accept-Language': 'en-US,en;q=0.9',
-                    'Referer': 'https://www.youtube.com/',
-                }
-            }
-
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                # Download metadata and subtitles
-                try:
-                    ydl.download([url])
-                except Exception as e:
-                    ydl_error = str(e)
-                    print(f"⚠️ yt-dlp download error: {e}")
-                
-                # List all files in temp dir
-                files = os.listdir(temp_dir)
-                print(f"📂 Files in temp dir: {files}")
-                
-                # Find the downloaded VTT file
-                vtt_files = [f for f in files if f.endswith('.vtt')]
-                
-                if vtt_files:
-                    # Read the first VTT file found
-                    vtt_path = os.path.join(temp_dir, vtt_files[0])
-                    file_size = os.path.getsize(vtt_path)
-                    print(f"📄 Reading subtitles from: {vtt_path} (Size: {file_size} bytes)")
-                    
-                    with open(vtt_path, 'r', encoding='utf-8') as f:
-                        vtt_content = f.read()
-                        
-                    print(f"📄 Raw VTT length: {len(vtt_content)}")
-                    full_text = _parse_vtt(vtt_content)
-                    
-                    if full_text:
-                        return full_text, loaded_cookie_count
-    except Exception as e:
-        print(f"⚠️ yt-dlp block failed: {e}")
-
-    # 6. Manual Fallback (since pre-check worked)
-    print("⚠️ yt-dlp failed, attempting manual extraction from page content...")
-    manual_error = None
-    try:
-        # We already have page_content from the pre-check
-        if 'page_content' in locals() and page_content:
-            import json
-            
-            # Try to extract ytInitialPlayerResponse
-            # It usually looks like: var ytInitialPlayerResponse = {...};
-            json_match = re.search(r'var ytInitialPlayerResponse\s*=\s*({.+?});', page_content)
-            
-            if json_match:
-                try:
-                    player_response = json.loads(json_match.group(1))
-                    
-                    # Navigate to captions
-                    # captions -> playerCaptionsTracklistRenderer -> captionTracks
-                    captions = player_response.get('captions', {})
-                    pctr = captions.get('playerCaptionsTracklistRenderer', {})
-                    tracks = pctr.get('captionTracks', [])
-                    
-                    if tracks:
-                        caption_url = None
-                        # Find English track
-                        for track in tracks:
-                            if track.get('languageCode') == 'en':
-                                caption_url = track.get('baseUrl')
-                                break
-                        
-                        # Fallback to first track if no English
-                        if not caption_url and tracks:
-                             caption_url = tracks[0].get('baseUrl')
-                             print("⚠️ No English track found, using first available track.")
-
-                        if caption_url:
-                            print(f"⬇️ Manual fallback: Fetching captions from {caption_url}")
-                            
-                            # 1. Try VTT
-                            vtt_url = caption_url + '&fmt=vtt' if '&fmt=' not in caption_url else caption_url
-                            print(f"🔗 Trying VTT: {vtt_url}")
-                            
-                            try:
-                                cap_response = session.get(vtt_url)
-                                print(f"📡 VTT Status: {cap_response.status_code}, Headers: {cap_response.headers}")
-                                cap_response.raise_for_status()
-                                raw_vtt = cap_response.text
-                                
-                                if len(raw_vtt) > 50: # Arbitrary small size check
-                                    full_text = _parse_vtt(raw_vtt)
-                                    if full_text:
-                                        print("✅ Manual fallback (VTT) successful!")
-                                        return full_text, loaded_cookie_count
-                                else:
-                                    print(f"⚠️ VTT content too short: {len(raw_vtt)}")
-                            except Exception as ve:
-                                print(f"⚠️ VTT fetch failed: {ve}")
-
-                            # 2. Try XML (original URL)
-                            print("⚠️ VTT failed, trying XML...")
-                            xml_url = caption_url # Original URL is usually XML
-                            print(f"🔗 Trying XML: {xml_url}")
-                            
-                            xml_response = session.get(xml_url)
-                            print(f"📡 XML Status: {xml_response.status_code}, Headers: {xml_response.headers}")
-                            xml_response.raise_for_status()
-                            xml_content = xml_response.text
-                            
-                            if len(xml_content) > 50:
-                                full_text = _parse_xml(xml_content)
-                                if full_text:
-                                    print("✅ Manual fallback (XML) successful!")
-                                    return full_text, loaded_cookie_count
-                                else:
-                                    manual_error = "Parsed XML content was empty"
-                            else:
-                                manual_error = f"Fetched XML file was empty (Raw len: {len(xml_content)})"
-                        else:
-                            manual_error = "No caption URL found in tracks"
-                    else:
-                        manual_error = "No captionTracks found in player_response"
-                        
-                except json.JSONDecodeError as je:
-                    manual_error = f"Failed to parse ytInitialPlayerResponse JSON: {je}"
-            else:
-                manual_error = "ytInitialPlayerResponse not found in HTML"
-        else:
-            manual_error = "Page content not available for fallback"
-            
-    except Exception as e:
-        print(f"⚠️ Manual fallback error: {e}")
-        manual_error = str(e)
-
-    # If we get here, everything failed
-    error_details = f"[Pre-check: {pre_check_info}] "
-    if yta_error:
-        error_details += f"[youtube-transcript-api error: {yta_error}] "
-    if ydl_error:
-        error_details += f"[yt-dlp error: {ydl_error}] "
-    if manual_error:
-        error_details += f"[Manual fallback error: {manual_error}] "
-    
-    # Add Deployment ID to verify code version
-    DEPLOYMENT_ID = "v2025.11.21.05"
-    error_details += f"[Deployment ID: {DEPLOYMENT_ID}]"
-    
-    raise Exception(f"Failed to extract transcript. {error_details}")
+        raise Exception(f"Failed to fetch/parse captions: {e}")
+    finally:
+        # Cleanup cookie file
+        if cookies_file and os.path.exists(cookies_file):
+            os.unlink(cookies_file)
             
     # Cleanup is handled by tempfile context managers, but we need to clean up cookies
     if cookies_file and os.path.exists(cookies_file):
