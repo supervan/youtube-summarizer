@@ -95,6 +95,10 @@ def _get_youtube_transcript_with_cookies(video_id):
                 cookies_file = f.name
                 print(f"🍪 Using cookies for authentication (file: {cookies_file})")
         
+        # Check for ffmpeg
+        import shutil
+        print(f"📽️ ffmpeg available: {shutil.which('ffmpeg')}")
+
         # Use a temporary directory for the download
         with tempfile.TemporaryDirectory() as temp_dir:
             ydl_opts = {
@@ -102,7 +106,8 @@ def _get_youtube_transcript_with_cookies(video_id):
                 'writesubtitles': True,
                 'writeautomaticsub': True,
                 'subtitleslangs': ['en'],
-                'quiet': True,
+                'quiet': False, # Enable logs
+                'verbose': True,
                 'cookiefile': cookies_file if cookies_file else None,
                 'outtmpl': f"{temp_dir}/%(id)s.%(ext)s",
                 'http_headers': {
@@ -114,18 +119,29 @@ def _get_youtube_transcript_with_cookies(video_id):
 
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 # Download metadata and subtitles
-                ydl.download([url])
+                try:
+                    ydl.download([url])
+                except Exception as e:
+                    print(f"⚠️ yt-dlp download error: {e}")
+                
+                # List all files in temp dir
+                files = os.listdir(temp_dir)
+                print(f"📂 Files in temp dir: {files}")
                 
                 # Find the downloaded VTT file
-                # yt-dlp names it like video_id.en.vtt
-                vtt_files = [f for f in os.listdir(temp_dir) if f.endswith('.vtt')]
+                vtt_files = [f for f in files if f.endswith('.vtt')]
                 
                 if not vtt_files:
-                    raise Exception("No subtitle file downloaded by yt-dlp.")
+                    # Check if there are other subtitle formats
+                    other_subs = [f for f in files if any(f.endswith(ext) for ext in ['.srv1', '.srv2', '.ttml', '.json3'])]
+                    if other_subs:
+                         raise Exception(f"Found subtitle files in wrong format: {other_subs}. ffmpeg might be missing.")
+                    raise Exception(f"No subtitle file downloaded by yt-dlp. Files found: {files}")
                 
                 # Read the first VTT file found
                 vtt_path = os.path.join(temp_dir, vtt_files[0])
-                print(f"📄 Reading subtitles from: {vtt_path}")
+                file_size = os.path.getsize(vtt_path)
+                print(f"📄 Reading subtitles from: {vtt_path} (Size: {file_size} bytes)")
                 
                 with open(vtt_path, 'r', encoding='utf-8') as f:
                     vtt_content = f.read()
@@ -134,6 +150,8 @@ def _get_youtube_transcript_with_cookies(video_id):
                 full_text = _parse_vtt(vtt_content)
                 
                 if not full_text:
+                    # If empty, maybe it's just headers?
+                    print(f"⚠️ Parsed text is empty. Raw content first 500 chars:\n{vtt_content[:500]}")
                     raise Exception(f"Parsed transcript is empty. Raw VTT length: {len(vtt_content)}")
                     
                 return full_text, loaded_cookie_count
