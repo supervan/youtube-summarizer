@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Video Summarizer - AI-Powered Summaries</title>
+    <meta name="description"
+        content="Get instant AI-powered summaries of YouTube videos using advanced transcript extraction and Google's Gemini AI">
+
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="YT Summary">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div class="background-gradient"></div>
+
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="40" height="40" rx="12" fill="url(#gradient)" />
+                    <path d="M16 12L28 20L16 28V12Z" fill="white" />
+                    <defs>
+                        <linearGradient id="gradient" x1="0" y1="0" x2="40" y2="40">
+                            <stop offset="0%" stop-color="#FF0080" />
+                            <stop offset="100%" stop-color="#7928CA" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <h1>YouTube Summarizer</h1>
+            </div>
+            <p class="tagline">AI-Powered Video Summaries in Seconds</p>
+        </header>
+
+        <!-- Main Input Section -->
+        <div class="card main-card">
+            <h2>📺 Enter YouTube URL</h2>
+            <form id="summarizerForm">
+                <div class="input-group">
+                    <input type="text" id="youtubeUrl" placeholder="https://www.youtube.com/watch?v=..."
+                        class="input-field" required>
+                </div>
+
+                <!-- Summary Options -->
+                <div class="options-grid">
+                    <div class="option-group">
+                        <label for="summaryLength">📏 Summary Length</label>
+                        <select id="summaryLength" class="select-field">
+                            <option value="short">Short (Quick overview)</option>
+                            <option value="medium" selected>Medium (Balanced)</option>
+                            <option value="long">Long (Comprehensive)</option>
+                        </select>
+                    </div>
+
+                    <div class="option-group">
+                        <label for="summaryTone">🎯 Tone</label>
+                        <select id="summaryTone" class="select-field">
+                            <option value="conversational">Conversational (Easy to read)</option>
+                            <option value="professional">Professional (Formal)</option>
+                            <option value="technical">Technical (Direct & Dense)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="submitBtn">
+                    <span id="btnText">Summarize</span>
+                    <span id="btnLoader" class="loader hidden"></span>
+                </button>
+            </form>
+        </div>
+
+        <!-- Video Info Section -->
+        <div class="card video-info-card hidden" id="videoInfoCard">
+            <div class="video-preview">
+                <img id="videoThumbnail" src="" alt="Video thumbnail" class="thumbnail">
+                <div class="video-details">
+                    <h3 id="videoTitle">Video Information</h3>
+                    <p class="video-meta">
+                        <span class="meta-item">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                <path
+                                    d="M8 0C3.58 0 0 3.58 0 8s3.58 8 8 8 8-3.58 8-8-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z" />
+                                <path d="M7 4h2v5H7z" />
+                                <path d="M7 10h2v2H7z" />
+                            </svg>
+                            <span id="transcriptLength">0</span> characters
+                        </span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Section -->
+        <div class="card summary-card hidden" id="summaryCard">
+            <div class="card-header">
+                <h2>✨ AI Summary</h2>
+                <button class="btn btn-small" id="copyBtn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M4 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"
+                            stroke="currentColor" fill="none" />
+                        <path d="M6 0h6a2 2 0 0 1 2 2v6" stroke="currentColor" fill="none" />
+                    </svg>
+                    Copy
+                </button>
+            </div>
+            <div class="summary-content" id="summaryContent">
+                <!-- Summary will be inserted here -->
+            </div>
+        </div>
+
+        <!-- Error Section -->
+        <div class="card error-card hidden" id="errorCard">
+            <div class="error-content">
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                    <circle cx="24" cy="24" r="22" stroke="#ff4444" stroke-width="2" />
+                    <path d="M24 14v14M24 32v2" stroke="#ff4444" stroke-width="2" stroke-linecap="round" />
+                </svg>
+                <h3>Oops! Something went wrong</h3>
+                <p id="errorMessage"></p>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <p>Powered by <strong>Google Gemini AI</strong> & <strong>YouTube Transcript API</strong></p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
