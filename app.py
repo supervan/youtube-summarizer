@@ -219,13 +219,21 @@ proxy_manager = FreeProxyManager()
 def _get_youtube_transcript_with_cookies(video_id):
     """Extract transcript from YouTube video using yt-dlp with free proxy rotation."""
     
-    # Try up to 20 times with different proxies
-    max_retries = 20
+    # Try up to 10 times with different proxies (reduced from 20 to avoid timeout)
+    max_retries = 10
     last_error = None
+    
+    # Global timeout safety - stop trying if we've spent more than 25 seconds
+    start_time = time.time()
     
     video_url = f"https://www.youtube.com/watch?v={video_id}"
     
     for attempt in range(max_retries):
+        # Check global timeout
+        if time.time() - start_time > 25:
+            print("⚠️ Global timeout reached (25s), stopping retries")
+            break
+            
         # Get a proxy (first attempt can be direct if no working proxy known)
         proxies = proxy_manager.get_proxy() if attempt > 0 else None
         
@@ -246,6 +254,10 @@ def _get_youtube_transcript_with_cookies(video_id):
                     'outtmpl': os.path.join(temp_dir, '%(id)s'),
                     'quiet': True,
                     'no_warnings': True,
+                    # Optimization settings to fail fast on bad proxies
+                    'socket_timeout': 5, # 5 seconds timeout
+                    'retries': 1,        # Retry only once internally
+                    'fragment_retries': 1,
                 }
                 
                 # Add proxy if available
@@ -296,6 +308,35 @@ def _get_youtube_transcript_with_cookies(video_id):
                     print("⚠️ Direct connection failed, switching to proxies...")
                     proxy_manager._refresh_proxies()
     
+    # Final fallback attempt: Direct connection if we haven't tried it recently and have time
+    if time.time() - start_time < 28:
+        print("⚠️ All proxy attempts failed. Trying one last direct connection...")
+        try:
+             with tempfile.TemporaryDirectory() as temp_dir:
+                ydl_opts = {
+                    'skip_download': True,
+                    'writesubtitles': True,
+                    'writeautomaticsub': True,
+                    'subtitleslangs': ['en'],
+                    'subtitlesformat': 'vtt',
+                    'outtmpl': os.path.join(temp_dir, '%(id)s'),
+                    'quiet': True,
+                    'no_warnings': True,
+                    'socket_timeout': 5,
+                }
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                    ydl.extract_info(video_url, download=True)
+                    vtt_file = None
+                    for filename in os.listdir(temp_dir):
+                        if filename.endswith('.vtt'):
+                            vtt_file = os.path.join(temp_dir, filename)
+                            break
+                    if vtt_file:
+                        with open(vtt_file, 'r', encoding='utf-8') as f:
+                            return _parse_vtt(f.read()), 0
+        except Exception as e:
+            print(f"❌ Final fallback failed: {e}")
+
     raise Exception(f"Failed after {max_retries} attempts. Last error: {last_error}")
             
     # Cleanup is handled by tempfile context managers, but we need to clean up cookies
@@ -305,7 +346,7 @@ def _get_youtube_transcript_with_cookies(video_id):
 @app.route('/api/extract-transcript', methods=['POST'])
 def extract_transcript():
     """Extract transcript from YouTube video"""
-    DEPLOYMENT_ID = "v2025.11.21.14"
+    DEPLOYMENT_ID = "v2025.11.21.15"
     try:
         data = request.json
         youtube_url = data.get('url', '')
@@ -343,7 +384,7 @@ def diagnostics():
     scraperapi_key = os.getenv('SCRAPERAPI_KEY', '')
     
     diagnostics_info = {
-        'deployment_id': 'v2025.11.21.14',
+        'deployment_id': 'v2025.11.21.15',
         'cookies_configured': bool(cookies_content),
         'cookies_line_count': len(cookies_content.splitlines()) if cookies_content else 0,
         'cookies_has_header': cookies_content.startswith('# Netscape') if cookies_content else False,
