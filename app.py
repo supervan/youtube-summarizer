@@ -76,190 +76,75 @@ def _parse_vtt(vtt_content):
             
     return " ".join(text_lines)
 
-def _parse_xml(xml_content):
-    """Parse XML transcript content to extract plain text"""
-    import html
-    # Extract text from <text> tags
-    text_parts = re.findall(r'<text[^>]*>(.+?)</text>', xml_content, re.DOTALL)
-    # Decode HTML entities and clean whitespace
-    decoded_parts = [html.unescape(t).strip() for t in text_parts if t.strip()]
-    return " ".join(decoded_parts)
-
 def _get_youtube_transcript_with_cookies(video_id):
-    """Extract transcript from YouTube video using manual HTML parsing."""
-    cookies_content = os.getenv('YOUTUBE_COOKIES')
-    cookies_file = None
-    loaded_cookie_count = 0
+    """Extract transcript from YouTube video using youtube-transcript-api with optional proxy."""
     
-    # 1. Setup Cookies
-    try:
-        if cookies_content:
-            if not cookies_content.startswith('# Netscape HTTP Cookie File'):
-                cookies_content = '# Netscape HTTP Cookie File\n# http://curl.haxx.se/rfc/cookie.html\n\n' + cookies_content
-            
-            loaded_cookie_count = len(cookies_content.splitlines())
-
-            with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
-                f.write(cookies_content)
-                cookies_file = f.name
-                print(f"🍪 Using cookies for authentication (file: {cookies_file})")
-    except Exception as e:
-        print(f"⚠️ Cookie setup failed: {e}")
-
-    # 2. Setup Session
-    import requests
-    import http.cookiejar
+    # Check if we should use a proxy
+    scraperapi_key = os.getenv('SCRAPERAPI_KEY')
     
-    session = requests.Session()
-    session.headers.update({
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept-Language': 'en-US,en;q=0.9',
-        'Referer': 'https://www.youtube.com/',
-    })
-    
-    if cookies_file:
-        session.cookies = http.cookiejar.MozillaCookieJar(cookies_file)
-        try:
-            session.cookies.load(ignore_discard=True, ignore_expires=True)
-        except Exception as e:
-            print(f"⚠️ Failed to load cookies into session: {e}")
-
-    # 3. Fetch and parse video page
-    url = f"https://www.youtube.com/watch?v={video_id}"
-    
-    try:
-        print(f"🔍 Fetching video page: {url}")
-        page_response = session.get(url)
-        page_response.raise_for_status()
-        page_content = page_response.text
-        
-        # Extract title for diagnostics
-        page_title_match = re.search(r'<title>(.*?)</title>', page_content)
-        page_title = page_title_match.group(1) if page_title_match else "Unknown Title"
-        print(f"📄 Page Title: {page_title}")
-        
-        # Check for blocks
-        if "Sign in to confirm you're not a bot" in page_content:
-            raise Exception("YouTube is requesting bot verification")
-        elif "Google Account" in page_title and "Sign in" in page_content:
-            raise Exception("YouTube is requesting sign-in")
-                
-    except Exception as e:
-        raise Exception(f"Failed to fetch video page: {e}")
-
-    # 4. Extract ytInitialPlayerResponse
-    try:
-        import json
-        
-        json_match = re.search(r'var ytInitialPlayerResponse\s*=\s*({.+?});', page_content)
-        
-        if not json_match:
-            raise Exception("ytInitialPlayerResponse not found in HTML")
-            
-        player_response = json.loads(json_match.group(1))
-        
-        # Navigate to captions
-        captions = player_response.get('captions', {})
-        pctr = captions.get('playerCaptionsTracklistRenderer', {})
-        tracks = pctr.get('captionTracks', [])
-        
-        if not tracks:
-            raise Exception("No caption tracks found in player response")
-        
-        # Find English track
-        caption_url = None
-        for track in tracks:
-            if track.get('languageCode') == 'en':
-                caption_url = track.get('baseUrl')
-                break
-        
-        # Fallback to first track
-        if not caption_url and tracks:
-            caption_url = tracks[0].get('baseUrl')
-            print("⚠️ No English track found, using first available track")
-
-        if not caption_url:
-            raise Exception("No caption URL found in tracks")
-            
-    except json.JSONDecodeError as je:
-        raise Exception(f"Failed to parse ytInitialPlayerResponse JSON: {je}")
-    except Exception as e:
-        raise Exception(f"Failed to extract caption URL: {e}")
-
-    # 5. Fetch captions (try XML first, then VTT)
-    try:
-        # Debug: Show cookies being used
-        print(f"🍪 Session cookies: {len(session.cookies)} cookies")
-        for cookie in session.cookies:
-            print(f"  - {cookie.name}: {cookie.value[:20]}...")
-        
-        # Check if we should use a proxy
-        scraperapi_key = os.getenv('SCRAPERAPI_KEY')
-        use_proxy = bool(scraperapi_key)
-        
-        if use_proxy:
-            print(f"🔄 Using ScraperAPI proxy to bypass IP blocking")
-            # ScraperAPI format: http://scraperapi:API_KEY@proxy-server.scraperapi.com:8001
-            proxy_url = f"http://scraperapi:{scraperapi_key}@proxy-server.scraperapi.com:8001"
-            session.proxies = {
-                'http': proxy_url,
-                'https': proxy_url
-            }
-        else:
-            print(f"⚠️ No proxy configured - using direct connection (may be blocked)")
-        
-        # Try XML format (default)
-        print(f"⬇️ Fetching XML captions from: {caption_url[:100]}...")
-        
-        # Add headers that might be required for caption API
-        caption_headers = {
-            'Referer': url,  # Important: Tell YouTube where we came from
-            'Accept': '*/*',
+    # Setup proxy if available
+    proxies = None
+    if scraperapi_key:
+        print(f"🔄 Using ScraperAPI proxy to bypass IP blocking")
+        proxy_url = f"http://scraperapi:{scraperapi_key}@proxy-server.scraperapi.com:8001"
+        proxies = {
+            'http': proxy_url,
+            'https': proxy_url
         }
+    else:
+        print(f"⚠️ No proxy configured - attempting direct connection")
+    
+    try:
+        # Use youtube-transcript-api (simple and reliable)
+        print(f"🚀 Fetching transcript with youtube-transcript-api for video: {video_id}")
         
-        xml_response = session.get(caption_url, headers=caption_headers, timeout=30)
-        print(f"📡 XML Status: {xml_response.status_code}")
-        print(f"📡 XML Response headers: {dict(xml_response.headers)}")
-        xml_response.raise_for_status()
-        xml_content = xml_response.text
-        
-        print(f"📄 XML content length: {len(xml_content)}")
-        print(f"📄 XML content preview: {xml_content[:200]}")
-        
-        if len(xml_content) > 50:
-            full_text = _parse_xml(xml_content)
-            if full_text and len(full_text) > 10:
-                print(f"✅ Successfully extracted {len(full_text)} characters from XML")
-                return full_text, loaded_cookie_count
+        # Try to get transcript list first (supports language selection)
+        try:
+            transcript_list = YouTubeTranscriptApi.list_transcripts(video_id, proxies=proxies)
+            
+            # Try to find English transcript (manual or auto-generated)
+            transcript = None
+            try:
+                # Prefer manually created transcripts
+                transcript = transcript_list.find_manually_created_transcript(['en'])
+                print("✅ Found manually created English transcript")
+            except:
+                try:
+                    # Fall back to auto-generated
+                    transcript = transcript_list.find_generated_transcript(['en'])
+                    print("✅ Found auto-generated English transcript")
+                except:
+                    # Try any available transcript
+                    for t in transcript_list:
+                        transcript = t
+                        print(f"✅ Using available transcript: {t.language}")
+                        break
+            
+            if transcript:
+                fetched_transcript = transcript.fetch()
+                full_text = " ".join([entry['text'] for entry in fetched_transcript])
+                full_text = " ".join(full_text.split())  # Clean whitespace
+                
+                print(f"✅ Successfully extracted {len(full_text)} characters")
+                return full_text, 0
             else:
-                print(f"⚠️ Parsed XML was too short: {len(full_text) if full_text else 0} chars")
-        
-        # Try VTT format as fallback
-        print("⚠️ XML failed, trying VTT format...")
-        vtt_url = caption_url + '&fmt=vtt' if '&fmt=' not in caption_url else caption_url
-        vtt_response = session.get(vtt_url, headers=caption_headers, timeout=30)
-        vtt_response.raise_for_status()
-        vtt_content = vtt_response.text
-        
-        print(f"📄 VTT content length: {len(vtt_content)}")
-        
-        if len(vtt_content) > 50:
-            full_text = _parse_vtt(vtt_content)
-            if full_text and len(full_text) > 10:
-                print(f"✅ Successfully extracted {len(full_text)} characters from VTT")
-                return full_text, loaded_cookie_count
-        
-        error_msg = f"Both XML and VTT formats returned insufficient content (XML: {len(xml_content)} bytes, VTT: {len(vtt_content)} bytes)"
-        if not use_proxy:
-            error_msg += " - Consider setting SCRAPERAPI_KEY to use proxy and bypass IP blocking"
-        raise Exception(error_msg)
-        
+                raise Exception("No transcripts available for this video")
+                
+        except Exception as list_error:
+            # Fallback to simple get_transcript (older API)
+            print(f"⚠️ list_transcripts failed ({list_error}), trying get_transcript...")
+            fetched_transcript = YouTubeTranscriptApi.get_transcript(video_id, proxies=proxies)
+            full_text = " ".join([entry['text'] for entry in fetched_transcript])
+            full_text = " ".join(full_text.split())
+            
+            print(f"✅ Successfully extracted {len(full_text)} characters (via get_transcript)")
+            return full_text, 0
+            
     except Exception as e:
-        raise Exception(f"Failed to fetch/parse captions: {e}")
-    finally:
-        # Cleanup cookie file
-        if cookies_file and os.path.exists(cookies_file):
-            os.unlink(cookies_file)
+        error_msg = f"Failed to fetch transcript: {str(e)}"
+        if not scraperapi_key and "blocked" in str(e).lower():
+            error_msg += " - Consider setting SCRAPERAPI_KEY to bypass IP blocking"
+        raise Exception(error_msg)
             
     # Cleanup is handled by tempfile context managers, but we need to clean up cookies
     if cookies_file and os.path.exists(cookies_file):
@@ -268,7 +153,7 @@ def _get_youtube_transcript_with_cookies(video_id):
 @app.route('/api/extract-transcript', methods=['POST'])
 def extract_transcript():
     """Extract transcript from YouTube video"""
-    DEPLOYMENT_ID = "v2025.11.21.08"
+    DEPLOYMENT_ID = "v2025.11.21.09"
     try:
         data = request.json
         youtube_url = data.get('url', '')
@@ -306,7 +191,7 @@ def diagnostics():
     scraperapi_key = os.getenv('SCRAPERAPI_KEY', '')
     
     diagnostics_info = {
-        'deployment_id': 'v2025.11.21.08',
+        'deployment_id': 'v2025.11.21.09',
         'cookies_configured': bool(cookies_content),
         'cookies_line_count': len(cookies_content.splitlines()) if cookies_content else 0,
         'cookies_has_header': cookies_content.startswith('# Netscape') if cookies_content else False,
