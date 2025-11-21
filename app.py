@@ -207,48 +207,76 @@ def _get_youtube_transcript_with_cookies(video_id):
 
     # 5. Manual Fallback (since pre-check worked)
     print("⚠️ yt-dlp failed, attempting manual extraction from page content...")
+    manual_error = None
     try:
         # We already have page_content from the pre-check
         if 'page_content' in locals() and page_content:
             import json
-            # Look for captionTracks in the HTML
-            match = re.search(r'"captionTracks":\s*(\[.*?\])', page_content)
-            if match:
-                tracks = json.loads(match.group(1))
-                caption_url = None
-                
-                # Find English track
-                for track in tracks:
-                    if track.get('languageCode') == 'en':
-                        caption_url = track.get('baseUrl')
-                        break
-                
-                if caption_url:
-                    print(f"⬇️ Manual fallback: Fetching captions from {caption_url}")
-                    # Append &fmt=vtt to get VTT format instead of XML
-                    if '&fmt=' not in caption_url:
-                        caption_url += '&fmt=vtt'
-                        
-                    cap_response = session.get(caption_url)
-                    cap_response.raise_for_status()
+            
+            # Try to extract ytInitialPlayerResponse
+            # It usually looks like: var ytInitialPlayerResponse = {...};
+            json_match = re.search(r'var ytInitialPlayerResponse\s*=\s*({.+?});', page_content)
+            
+            if json_match:
+                try:
+                    player_response = json.loads(json_match.group(1))
                     
-                    full_text = _parse_vtt(cap_response.text)
-                    if full_text:
-                        print("✅ Manual fallback successful!")
-                        return full_text, loaded_cookie_count
+                    # Navigate to captions
+                    # captions -> playerCaptionsTracklistRenderer -> captionTracks
+                    captions = player_response.get('captions', {})
+                    pctr = captions.get('playerCaptionsTracklistRenderer', {})
+                    tracks = pctr.get('captionTracks', [])
+                    
+                    if tracks:
+                        caption_url = None
+                        # Find English track
+                        for track in tracks:
+                            if track.get('languageCode') == 'en':
+                                caption_url = track.get('baseUrl')
+                                break
+                        
+                        # Fallback to first track if no English
+                        if not caption_url and tracks:
+                             caption_url = tracks[0].get('baseUrl')
+                             print("⚠️ No English track found, using first available track.")
+
+                        if caption_url:
+                            print(f"⬇️ Manual fallback: Fetching captions from {caption_url}")
+                            # Append &fmt=vtt to get VTT format instead of XML
+                            if '&fmt=' not in caption_url:
+                                caption_url += '&fmt=vtt'
+                                
+                            cap_response = session.get(caption_url)
+                            cap_response.raise_for_status()
+                            
+                            full_text = _parse_vtt(cap_response.text)
+                            if full_text:
+                                print("✅ Manual fallback successful!")
+                                return full_text, loaded_cookie_count
+                            else:
+                                manual_error = "Fetched caption file was empty"
+                        else:
+                            manual_error = "No caption URL found in tracks"
                     else:
-                        print("⚠️ Manual fallback fetched empty text")
-                else:
-                    print("⚠️ No English caption track found in HTML")
+                        manual_error = "No captionTracks found in player_response"
+                        
+                except json.JSONDecodeError as je:
+                    manual_error = f"Failed to parse ytInitialPlayerResponse JSON: {je}"
             else:
-                print("⚠️ No captionTracks found in HTML")
+                manual_error = "ytInitialPlayerResponse not found in HTML"
+        else:
+            manual_error = "Page content not available for fallback"
+            
     except Exception as e:
         print(f"⚠️ Manual fallback error: {e}")
+        manual_error = str(e)
 
     # If we get here, everything failed
     error_details = f"[Pre-check: {pre_check_info}] "
     if ydl_error:
         error_details += f"[yt-dlp error: {ydl_error}] "
+    if manual_error:
+        error_details += f"[Manual fallback error: {manual_error}] "
     
     raise Exception(f"Failed to extract transcript. {error_details}")
             
