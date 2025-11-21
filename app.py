@@ -281,6 +281,21 @@ def extract_transcript():
     except Exception as e:
         return jsonify({'error': f'Server error: {str(e)} [Deployment ID: {DEPLOYMENT_ID}]'}), 500
 
+@app.route('/api/diagnostics', methods=['GET'])
+def diagnostics():
+    """Diagnostic endpoint to check configuration"""
+    cookies_content = os.getenv('YOUTUBE_COOKIES', '')
+    
+    diagnostics_info = {
+        'deployment_id': 'v2025.11.21.07',
+        'cookies_configured': bool(cookies_content),
+        'cookies_line_count': len(cookies_content.splitlines()) if cookies_content else 0,
+        'cookies_has_header': cookies_content.startswith('# Netscape') if cookies_content else False,
+        'gemini_api_configured': bool(os.getenv('GEMINI_API_KEY')),
+    }
+    
+    return jsonify(diagnostics_info)
+
 @app.route('/api/summarize', methods=['POST'])
 def summarize():
     """Summarize text using Gemini API with customizable length and tone"""
