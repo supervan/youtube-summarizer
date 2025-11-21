@@ -95,63 +95,48 @@ def _get_youtube_transcript_with_cookies(video_id):
                 cookies_file = f.name
                 print(f"🍪 Using cookies for authentication (file: {cookies_file})")
         
-        # Create session for fetching the actual subtitle file
-        # We need to use the same headers/cookies as yt-dlp to avoid blocks/empty responses
-        import requests
-        import http.cookiejar
-        
-        session = requests.Session()
-        session.headers.update({
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept-Language': 'en-US,en;q=0.9',
-            'Referer': 'https://www.youtube.com/',
-        })
-        
-        if cookies_file:
-            session.cookies = http.cookiejar.MozillaCookieJar(cookies_file)
-            try:
-                session.cookies.load(ignore_discard=True, ignore_expires=True)
-            except Exception as e:
-                print(f"⚠️ Failed to load cookies into session: {e}")
+        # Use a temporary directory for the download
+        with tempfile.TemporaryDirectory() as temp_dir:
+            ydl_opts = {
+                'skip_download': True, # Don't download video
+                'writesubtitles': True,
+                'writeautomaticsub': True,
+                'subtitleslangs': ['en'],
+                'quiet': True,
+                'cookiefile': cookies_file if cookies_file else None,
+                'outtmpl': f"{temp_dir}/%(id)s.%(ext)s",
+                'http_headers': {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Accept-Language': 'en-US,en;q=0.9',
+                    'Referer': 'https://www.youtube.com/',
+                }
+            }
 
-        url = f"https://www.youtube.com/watch?v={video_id}"
-        
-        ydl_opts = {
-            'skip_download': True,
-            'writesubtitles': True,
-            'writeautomaticsub': True,
-            'subtitleslangs': ['en'],
-            'quiet': True,
-            'cookiefile': cookies_file if cookies_file else None,
-            'http_headers': session.headers # Use same headers
-        }
-
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=False)
-            
-            # Check for requested subtitles
-            if 'requested_subtitles' in info and 'en' in info['requested_subtitles']:
-                sub_info = info['requested_subtitles']['en']
-                sub_url = sub_info.get('url')
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                # Download metadata and subtitles
+                ydl.download([url])
                 
-                if sub_url:
-                    print(f"⬇️ Fetching subtitles from: {sub_url}")
-                    # Use the session to fetch the URL
-                    response = session.get(sub_url)
-                    response.raise_for_status()
+                # Find the downloaded VTT file
+                # yt-dlp names it like video_id.en.vtt
+                vtt_files = [f for f in os.listdir(temp_dir) if f.endswith('.vtt')]
+                
+                if not vtt_files:
+                    raise Exception("No subtitle file downloaded by yt-dlp.")
+                
+                # Read the first VTT file found
+                vtt_path = os.path.join(temp_dir, vtt_files[0])
+                print(f"📄 Reading subtitles from: {vtt_path}")
+                
+                with open(vtt_path, 'r', encoding='utf-8') as f:
+                    vtt_content = f.read()
                     
-                    print(f"📄 Raw VTT length: {len(response.text)}")
-                    full_text = _parse_vtt(response.text)
+                print(f"📄 Raw VTT length: {len(vtt_content)}")
+                full_text = _parse_vtt(vtt_content)
+                
+                if not full_text:
+                    raise Exception(f"Parsed transcript is empty. Raw VTT length: {len(vtt_content)}")
                     
-                    if not full_text:
-                        raise Exception(f"Parsed transcript is empty. Raw VTT length: {len(response.text)}")
-                        
-                    return full_text, loaded_cookie_count
-            
-            # Fallback: check automatic captions if manual not found/requested
-            # (yt-dlp puts auto caps in requested_subtitles if writeautomaticsub is True and no manual subs exist)
-            
-            raise Exception("No English subtitles found for this video.")
+                return full_text, loaded_cookie_count
 
     except Exception as e:
         raise Exception(f"{str(e)} [Cookies Configured: {'Yes' if cookies_file else 'No'}]")
