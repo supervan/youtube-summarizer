@@ -81,6 +81,7 @@ def _get_youtube_transcript_with_cookies(video_id):
     cookies_file = None
     loaded_cookie_count = 0
     
+    # 1. Setup Cookies
     try:
         if cookies_content:
             # Ensure it has the Netscape header
@@ -94,41 +95,62 @@ def _get_youtube_transcript_with_cookies(video_id):
                 f.write(cookies_content)
                 cookies_file = f.name
                 print(f"🍪 Using cookies for authentication (file: {cookies_file})")
-        
-        # Check for ffmpeg
-        import shutil
-        ffmpeg_path = shutil.which('ffmpeg')
-        print(f"📽️ ffmpeg available: {ffmpeg_path}")
-        print(f"📦 yt-dlp version: {yt_dlp.version.__version__}")
+    except Exception as e:
+        print(f"⚠️ Cookie setup failed: {e}")
 
-        url = f"https://www.youtube.com/watch?v={video_id}"
-
-        # Pre-check: Fetch page content to see if we are blocked
-        pre_check_info = "Pre-check not run"
+    # 2. Setup Session (needed for pre-check and manual fetches)
+    import requests
+    import http.cookiejar
+    
+    session = requests.Session()
+    session.headers.update({
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Referer': 'https://www.youtube.com/',
+    })
+    
+    if cookies_file:
+        session.cookies = http.cookiejar.MozillaCookieJar(cookies_file)
         try:
-            print(f"🔍 Pre-checking video page: {url}")
-            page_response = session.get(url)
-            page_content = page_response.text
-            
-            # Extract title
-            page_title_match = re.search(r'<title>(.*?)</title>', page_content)
-            page_title = page_title_match.group(1) if page_title_match else "Unknown Title"
-            print(f"📄 Page Title: {page_title}")
-            
-            pre_check_info = f"Page Title: '{page_title}'"
-            
-            # Check for common block messages
-            if "Sign in to confirm you’re not a bot" in page_content:
-                pre_check_info += " [DETECTED: Bot Verification Block]"
-            elif "Google Account" in page_title and "Sign in" in page_content:
-                 pre_check_info += " [DETECTED: Sign-in Redirect]"
-            else:
-                 pre_check_info += " [No obvious block detected]"
-                 
+            session.cookies.load(ignore_discard=True, ignore_expires=True)
         except Exception as e:
-            print(f"⚠️ Pre-check warning: {e}")
-            pre_check_info = f"Pre-check failed: {str(e)}"
+            print(f"⚠️ Failed to load cookies into session: {e}")
 
+    # 3. Diagnostics & Pre-checks
+    import shutil
+    ffmpeg_path = shutil.which('ffmpeg')
+    print(f"📽️ ffmpeg available: {ffmpeg_path}")
+    print(f"📦 yt-dlp version: {yt_dlp.version.__version__}")
+
+    url = f"https://www.youtube.com/watch?v={video_id}"
+    pre_check_info = "Pre-check not run"
+    
+    try:
+        print(f"🔍 Pre-checking video page: {url}")
+        page_response = session.get(url)
+        page_content = page_response.text
+        
+        # Extract title
+        page_title_match = re.search(r'<title>(.*?)</title>', page_content)
+        page_title = page_title_match.group(1) if page_title_match else "Unknown Title"
+        print(f"📄 Page Title: {page_title}")
+        
+        pre_check_info = f"Page Title: '{page_title}'"
+        
+        # Check for common block messages
+        if "Sign in to confirm you’re not a bot" in page_content:
+            pre_check_info += " [DETECTED: Bot Verification Block]"
+        elif "Google Account" in page_title and "Sign in" in page_content:
+                pre_check_info += " [DETECTED: Sign-in Redirect]"
+        else:
+                pre_check_info += " [No obvious block detected]"
+                
+    except Exception as e:
+        print(f"⚠️ Pre-check warning: {e}")
+        pre_check_info = f"Pre-check failed: {str(e)}"
+
+    # 4. Download Subtitles with yt-dlp
+    try:
         # Use a temporary directory for the download
         with tempfile.TemporaryDirectory() as temp_dir:
             ydl_opts = {
