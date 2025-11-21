@@ -137,8 +137,18 @@ def extract_transcript():
             cookies_content = os.getenv('YOUTUBE_COOKIES')
             cookie_status = "✅ Present" if cookies_content else "❌ Missing (Env var not set)"
             
+            # Count loaded cookies if session exists (we can't easily access the local session variable here, 
+            # so we'll infer from the content for now, or we could move the session creation out)
+            # Actually, let's just check the content format
+            cookie_lines = len(cookies_content.splitlines()) if cookies_content else 0
+            
+            debug_info = f"[Debug Info]\nCookies Configured: {cookie_status}\nCookie Content Lines: {cookie_lines}"
+            
+            if cookies_content and cookie_lines < 2:
+                 debug_info += "\n⚠️ WARNING: Cookie content has very few lines. Newlines might be missing in the Environment Variable!"
+            
             return jsonify({
-                'error': f"{error_msg}\n\n[Debug Info] Cookies Configured: {cookie_status}"
+                'error': f"{error_msg}\n\n{debug_info}"
             }), 500
             
     except Exception as e:
