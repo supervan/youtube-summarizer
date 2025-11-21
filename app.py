@@ -99,6 +99,7 @@ def _get_youtube_transcript_with_cookies(video_id):
         import shutil
         ffmpeg_path = shutil.which('ffmpeg')
         print(f"📽️ ffmpeg available: {ffmpeg_path}")
+        print(f"📦 yt-dlp version: {yt_dlp.version.__version__}")
 
         url = f"https://www.youtube.com/watch?v={video_id}"
 
@@ -111,12 +112,13 @@ def _get_youtube_transcript_with_cookies(video_id):
                 'subtitleslangs': ['en'],
                 'quiet': False, # Enable logs
                 'verbose': True,
-                'force_ipv4': True, # Force IPv4 to avoid potential IPv6 blocks
-                'format': 'best', # Explicitly select best format to avoid "format not available" errors
+                # 'force_ipv4': True, # Removed to test if IPv6 works better
+                # 'format': 'best', # Removed
+                'extractor_args': {'youtube': {'player_client': ['android', 'web']}}, # Try Android client
                 'cookiefile': cookies_file if cookies_file else None,
                 'outtmpl': f"{temp_dir}/%(id)s.%(ext)s",
                 'http_headers': {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
                     'Accept-Language': 'en-US,en;q=0.9',
                     'Referer': 'https://www.youtube.com/',
                 }
