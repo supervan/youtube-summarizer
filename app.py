@@ -5,6 +5,7 @@ from youtube_transcript_api._errors import TranscriptsDisabled, NoTranscriptFoun
 import google.generativeai as genai
 import re
 import os
+import tempfile
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
