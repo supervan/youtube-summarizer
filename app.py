@@ -36,6 +36,41 @@ def serve_static(path):
     """Serve static files"""
     return send_from_directory('.', path)
 
+def _get_youtube_transcript_with_cookies(video_id):
+    """Extract transcript from YouTube video using youtube_transcript_api, with optional cookies."""
+    cookies_content = os.getenv('YOUTUBE_COOKIES')
+    cookies_file = None
+    
+    try:
+        if cookies_content:
+            # Create a temporary file for cookies
+            with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+                f.write(cookies_content)
+                cookies_file = f.name
+                print(f"🍪 Using cookies for authentication (file: {cookies_file})")
+        
+        # Create transcript API instance
+        transcript_api = YouTubeTranscriptApi()
+        
+        # Fetch transcript with cookies if available
+        # Note: The original API uses .fetch() and returns FetchedTranscriptSnippet objects.
+        # The user's provided change uses .get_transcript() which returns dicts.
+        # We will adapt to the .get_transcript() style as per the user's change.
+        transcript_list = transcript_api.get_transcript(
+            video_id, 
+            languages=['en'], # Specify language to ensure consistent output
+            cookies=cookies_file
+        )
+        
+        # Combine transcript text
+        full_text = " ".join([item['text'] for item in transcript_list])
+        return full_text
+            
+    finally:
+        # Clean up temporary cookie file
+        if cookies_file and os.path.exists(cookies_file):
+            os.unlink(cookies_file)
+
 @app.route('/api/extract-transcript', methods=['POST'])
 def extract_transcript():
     """Extract transcript from YouTube video"""
@@ -53,13 +88,7 @@ def extract_transcript():
         
         # Get transcript
         try:
-            # Use the new API (v1.2.3+) which requires instantiation
-            api = YouTubeTranscriptApi()
-            transcript_list = api.fetch(video_id)
-            
-            # Combine all transcript segments
-            # In v1.2.3+, transcript items are FetchedTranscriptSnippet objects with .text attribute
-            full_transcript = ' '.join([segment.text for segment in transcript_list])
+            full_transcript = _get_youtube_transcript_with_cookies(video_id)
             
             return jsonify({
                 'success': True,
