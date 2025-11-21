@@ -60,16 +60,19 @@ def _get_youtube_transcript_with_cookies(video_id):
         
         session = requests.Session()
         
-        # Set a real browser User-Agent (CRITICAL for bypassing blocks)
+        # Set a real browser User-Agent and other headers
         session.headers.update({
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept-Language": "en-US,en;q=0.9"
         })
 
+        loaded_cookie_count = 0
         if cookies_file:
             session.cookies = http.cookiejar.MozillaCookieJar(cookies_file)
             try:
                 session.cookies.load(ignore_discard=True, ignore_expires=True)
-                print(f"🍪 Cookies loaded successfully from {cookies_file}")
+                loaded_cookie_count = len(session.cookies)
+                print(f"🍪 Cookies loaded successfully from {cookies_file}. Count: {loaded_cookie_count}")
             except Exception as e:
                 print(f"⚠️ Failed to load cookies: {e}")
                 # If loading fails, we still try with the session (it has the User-Agent at least)
@@ -88,7 +91,7 @@ def _get_youtube_transcript_with_cookies(video_id):
         # Combine transcript text
         # fetch() returns FetchedTranscriptSnippet objects with .text attribute
         full_text = " ".join([item.text for item in transcript_list])
-        return full_text
+        return full_text, loaded_cookie_count
             
     finally:
         # Clean up temporary cookie file
@@ -112,7 +115,7 @@ def extract_transcript():
         
         # Get transcript
         try:
-            full_transcript = _get_youtube_transcript_with_cookies(video_id)
+            full_transcript, cookie_count = _get_youtube_transcript_with_cookies(video_id)
             
             return jsonify({
                 'success': True,
@@ -141,6 +144,11 @@ def extract_transcript():
             # so we'll infer from the content for now, or we could move the session creation out)
             # Actually, let's just check the content format
             cookie_lines = len(cookies_content.splitlines()) if cookies_content else 0
+            
+            # We can't access loaded_cookie_count here easily because it's inside the try block of _get_youtube_transcript_with_cookies
+            # But we can try to re-parse or just rely on lines for now. 
+            # Wait, I changed the return signature of _get_youtube_transcript_with_cookies to return a tuple!
+            # So the exception handling needs to be aware of that? No, exception happens inside.
             
             debug_info = f"[Debug Info]\nCookies Configured: {cookie_status}\nCookie Content Lines: {cookie_lines}"
             
