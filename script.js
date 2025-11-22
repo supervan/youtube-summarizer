@@ -450,7 +450,7 @@ function toggleInputSection(forceState = null) {
         // Collapse
         console.log('   → Collapsing...');
         inputSection.classList.add('collapsed');
-        inputSection.setAttribute('style', 'max-height: 0 !important; opacity: 0 !important; margin-bottom: 0 !important; overflow: hidden !important; transition: all 0.3s ease !important;');
+        inputSection.style.cssText = 'display: none !important;';
 
         if (iconMinus) {
             iconMinus.setAttribute('style', 'display: none !important;');
@@ -462,7 +462,7 @@ function toggleInputSection(forceState = null) {
         // Expand
         console.log('   → Expanding...');
         inputSection.classList.remove('collapsed');
-        inputSection.setAttribute('style', 'max-height: 500px !important; opacity: 1 !important; margin-bottom: 1.5rem !important; overflow: hidden !important; transition: all 0.3s ease !important;');
+        inputSection.style.cssText = 'display: block !important;';
 
         if (iconMinus) {
             iconMinus.setAttribute('style', 'display: block !important;');
