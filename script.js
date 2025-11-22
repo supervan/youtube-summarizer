@@ -29,8 +29,7 @@ const transcriptLength = document.getElementById('transcriptLength');
 const summaryCard = document.getElementById('summaryCard');
 const summaryContent = document.getElementById('summaryContent');
 const copyBtn = document.getElementById('copyBtn');
-const readAloudBtn = document.getElementById('readAloudBtn');
-const voiceSelect = document.getElementById('voiceSelect');
+// readAloudBtn and voiceSelect removed
 let voices = [];
 
 const errorCard = document.getElementById('errorCard');
@@ -96,14 +95,10 @@ function setupEventListeners() {
     summarizerForm.addEventListener('submit', handleSubmit);
     summarizerForm.addEventListener('submit', handleSubmit);
     copyBtn.addEventListener('click', copySummary);
-    readAloudBtn.addEventListener('click', toggleReadAloud);
+    // readAloudBtn listener removed
     toggleInputBtn.addEventListener('click', () => toggleInputSection());
 
-    // Voice selection
-    if (speechSynthesis.onvoiceschanged !== undefined) {
-        speechSynthesis.onvoiceschanged = populateVoiceList;
-    }
-    populateVoiceList();
+    // Voice selection removed
     resetBtn.addEventListener('click', resetApp);
 
     // Feature Tabs
@@ -487,8 +482,6 @@ function showSkeletonLoading() {
     summaryCard.classList.remove('hidden');
     summaryCard.classList.remove('hidden');
     copyBtn.classList.add('hidden'); // Ensure copy button is hidden
-    readAloudBtn.classList.add('hidden'); // Ensure read button is hidden
-    voiceSelect.classList.add('hidden'); // Ensure voice select is hidden
 }
 
 // Extract video ID from URL
@@ -625,142 +618,12 @@ function showSummary(summary) {
     summaryContent.innerHTML = formattedSummary;
     summaryCard.classList.remove('hidden');
     copyBtn.classList.remove('hidden'); // Show copy button
-    summaryCard.classList.remove('hidden');
-    copyBtn.classList.remove('hidden'); // Show copy button
-    readAloudBtn.classList.remove('hidden'); // Show read aloud button
-    if (voices.length > 0) voiceSelect.classList.remove('hidden'); // Show voice select if voices available
     summaryCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-// Populate Voice List
-function populateVoiceList() {
-    const allVoices = window.speechSynthesis.getVoices();
-
-    // Filter for English voices only
-    voices = allVoices.filter(voice => voice.lang.startsWith('en'));
-
-    // Sort voices: Google/Microsoft first, then others
-    voices.sort((a, b) => {
-        const aName = a.name.toLowerCase();
-        const bName = b.name.toLowerCase();
-        const isAGood = aName.includes('google') || aName.includes('microsoft') || aName.includes('natural');
-        const isBGood = bName.includes('google') || bName.includes('microsoft') || bName.includes('natural');
-
-        if (isAGood && !isBGood) return -1;
-        if (!isAGood && isBGood) return 1;
-        return aName.localeCompare(bName);
-    });
-
-    voiceSelect.innerHTML = '';
-
-    if (voices.length === 0) {
-        // Fallback if no English voices found
-        voices = allVoices;
-    }
-
-    voices.forEach((voice) => {
-        const option = document.createElement('option');
-        let label = voice.name;
-
-        // Clean up label for better readability
-        label = label.replace('Microsoft ', '').replace('Google ', '').replace(' English', '');
-
-        option.textContent = `${label} (${voice.lang})`;
-
-        if (voice.default) {
-            option.textContent += ' -- Default';
-        }
-
-        option.setAttribute('data-lang', voice.lang);
-        option.setAttribute('data-name', voice.name);
-        voiceSelect.appendChild(option);
-    });
-
-    // Select default voice: Prioritize UK English Female, then UK English, then US English
-    let defaultVoice = voices.find(v => v.name.includes('UK English Female') || v.name.includes('Google UK English Female'));
-
-    if (!defaultVoice) {
-        defaultVoice = voices.find(v => v.lang === 'en-GB' && (v.name.includes('Female') || v.name.includes('Google')));
-    }
-
-    if (!defaultVoice) {
-        defaultVoice = voices.find(v => v.lang === 'en-GB');
-    }
-
-    if (!defaultVoice) {
-        defaultVoice = voices.find(v => v.default) || voices[0];
-    }
-
-    if (defaultVoice) {
-        voiceSelect.value = defaultVoice.name;
-        // Manually select the option by text content if value doesn't work directly for some browsers
-        for (let i = 0; i < voiceSelect.options.length; i++) {
-            if (voiceSelect.options[i].getAttribute('data-name') === defaultVoice.name) {
-                voiceSelect.selectedIndex = i;
-                break;
-            }
-        }
-    }
-
-    // Show/hide dropdown based on availability
-    if (voices.length > 0) {
-        voiceSelect.classList.remove('hidden');
-    } else {
-        voiceSelect.classList.add('hidden');
-    }
-}
-
-// Toggle Read Aloud
-function toggleReadAloud() {
-    if (window.speechSynthesis.speaking) {
-        window.speechSynthesis.cancel();
-        updateReadButton(false);
-    } else {
-        const text = summaryContent.innerText;
-        const utterance = new SpeechSynthesisUtterance(text);
-
-        // Set selected voice
-        const selectedOption = voiceSelect.selectedOptions[0];
-        if (selectedOption) {
-            const selectedVoiceName = selectedOption.getAttribute('data-name');
-            const voice = voices.find(v => v.name === selectedVoiceName);
-            if (voice) utterance.voice = voice;
-        }
-
-        utterance.onend = () => {
-            updateReadButton(false);
-        };
-
-        utterance.onerror = () => {
-            updateReadButton(false);
-        };
-
-        window.speechSynthesis.speak(utterance);
-        updateReadButton(true);
-    }
-}
-
-function updateReadButton(isSpeaking) {
-    if (isSpeaking) {
-        readAloudBtn.innerHTML = `
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="6" y="4" width="4" height="16"></rect>
-                <rect x="14" y="4" width="4" height="16"></rect>
-            </svg>
-            Stop
-        `;
-        readAloudBtn.classList.add('btn-active');
-    } else {
-        readAloudBtn.innerHTML = `
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-            </svg>
-            Read
-        `;
-        readAloudBtn.classList.remove('btn-active');
-    }
-}
+// Populate Voice List removed
+// Toggle Read Aloud removed
+// updateReadButton removed
 
 // Copy summary to clipboard
 async function copySummary() {
