@@ -785,52 +785,7 @@ def generate_quiz():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/visualize', methods=['POST'])
-def generate_mindmap():
-    """Generate a Mermaid.js mind map from the transcript"""
-    try:
-        data = request.json
-        transcript = data.get('transcript', '')
-        
-        if not transcript:
-            return jsonify({'error': 'Transcript is required'}), 400
 
-        api_key = os.getenv('GEMINI_API_KEY')
-        if not api_key:
-            return jsonify({'error': 'API key not configured'}), 500
-            
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-2.5-flash')
-        
-        prompt = f"""Create a Mermaid.js mind map to visualize the key concepts and relationships in this transcript.
-        
-        Rules:
-        1. Use 'graph TD' or 'graph LR' (Top-Down or Left-Right).
-        2. Keep node labels concise (max 3-4 words).
-        3. Use clear relationships.
-        4. Return ONLY the raw Mermaid syntax. Do not wrap in markdown code blocks.
-        5. Do not include any conversational text.
-        6. CRITICAL: Enclose ALL node labels in double quotes. Example: id["Label Text"]
-        7. DO NOT use double quotes (") INSIDE the node labels. Use single quotes (') instead if needed. Example: id["User's Choice"] NOT id["User"s Choice"]
-        
-        Transcript:
-        {transcript}"""
-
-        response = model.generate_content(prompt)
-        
-        # Clean up potential markdown code blocks
-        text = response.text.strip()
-        if text.startswith('```mermaid'):
-            text = text[10:]
-        if text.startswith('```'):
-            text = text[3:]
-        if text.endswith('```'):
-            text = text[:-3]
-            
-        return jsonify({'success': True, 'mermaid': text.strip()})
-        
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/podcast', methods=['POST'])
 def generate_podcast():

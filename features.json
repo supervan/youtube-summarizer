@@ -1,5 +1,6 @@
 {
     "chat": true,
     "steps": true,
-    "quiz": true
+    "quiz": true,
+    "podcast": true
 }
