@@ -46,14 +46,16 @@ self.addEventListener('fetch', event => {
                 const text = formData.get('text');
 
                 // Android often sends the URL inside the 'text' field
-                if (!url && text) {
-                    const urlMatch = text.match(/https?:\/\/[^\s]+/);
-                    if (urlMatch) {
-                        url = urlMatch[0];
-                    } else {
-                        // Fallback: use the whole text if it looks like it might be a URL or ID
-                        url = text;
-                    }
+                // Sometimes it's in 'title' too? Let's check everything.
+                const contentToCheck = [url, text, formData.get('title')].filter(Boolean).join(' ');
+
+                // Try to find a URL in the combined content
+                const urlMatch = contentToCheck.match(/https?:\/\/[^\s]+/);
+                if (urlMatch) {
+                    url = urlMatch[0];
+                } else {
+                    // Fallback: use the text if no URL found (maybe it's just an ID?)
+                    url = text || url;
                 }
 
                 // Redirect to home with URL as query parameter

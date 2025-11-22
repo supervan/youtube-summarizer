@@ -49,8 +49,10 @@ const API_BASE = window.location.origin;
 // Initialize app
 // Global state
 let currentTranscript = '';
+let currentTranscript = '';
 let enabledFeatures = {};
 let player; // YouTube Player instance
+let deferredPrompt; // For PWA install prompt
 
 // Load YouTube IFrame API
 const tag = document.createElement('script');
@@ -73,9 +75,25 @@ window.onYouTubeIframeAPIReady = function () {
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
-    checkInstallPrompt();
+    setupEventListeners();
+    // checkInstallPrompt called via event listener now
     handleSharedContent();
     fetchFeatures(); // Fetch feature flags
+});
+
+// Capture PWA install prompt
+window.addEventListener('beforeinstallprompt', (e) => {
+    // Prevent Chrome 67 and earlier from automatically showing the prompt
+    e.preventDefault();
+    // Stash the event so it can be triggered later.
+    deferredPrompt = e;
+    // Update UI to notify the user they can add to home screen
+    const installPrompt = document.getElementById('installPrompt');
+    installPrompt.classList.remove('hidden');
+
+    // Hide manual instructions if we have the native prompt
+    const androidInstructions = document.getElementById('androidInstructions');
+    if (androidInstructions) androidInstructions.classList.add('hidden');
 });
 
 // Fetch feature flags
@@ -126,9 +144,23 @@ function setupEventListeners() {
     document.getElementById('podcastBtn').addEventListener('click', handlePodcastRequest);
 
     // Install prompt listeners
-    installLink.addEventListener('click', (e) => {
+    installLink.addEventListener('click', async (e) => {
         e.preventDefault();
-        installModal.classList.remove('hidden');
+
+        if (deferredPrompt) {
+            // Show the install prompt
+            deferredPrompt.prompt();
+            // Wait for the user to respond to the prompt
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`User response to the install prompt: ${outcome}`);
+            // We've used the prompt, so it can't be used again, discard it
+            deferredPrompt = null;
+            // Hide the prompt button
+            installPrompt.classList.add('hidden');
+        } else {
+            // Fallback to manual instructions
+            installModal.classList.remove('hidden');
+        }
     });
 
     closeModal.addEventListener('click', () => {
@@ -808,15 +840,26 @@ function playPodcastScript(script, onEndCallback) {
 // Handle shared content from Web Share Target
 function handleSharedContent() {
     const urlParams = new URLSearchParams(window.location.search);
-    const sharedUrl = urlParams.get('url') || urlParams.get('text');
+    const sharedUrl = urlParams.get('url') || urlParams.get('text') || urlParams.get('title');
 
     if (sharedUrl) {
         // Check if it's a YouTube URL
-        const videoId = extractVideoId(sharedUrl);
-        if (videoId) {
-            // Populate the input field
-            youtubeUrlInput.value = sharedUrl;
+        let videoId = extractVideoId(sharedUrl);
 
+        // If direct extraction failed, try to find a URL inside the text
+        if (!videoId) {
+            const urlMatch = sharedUrl.match(/https?:\/\/[^\s]+/);
+            if (urlMatch) {
+                videoId = extractVideoId(urlMatch[0]);
+                if (videoId) {
+                    youtubeUrlInput.value = urlMatch[0];
+                }
+            }
+        } else {
+            youtubeUrlInput.value = sharedUrl;
+        }
+
+        if (videoId) {
             // Expand input section if collapsed
             if (inputSection.classList.contains('collapsed')) {
                 toggleInputSection(true);
@@ -824,9 +867,6 @@ function handleSharedContent() {
 
             // Scroll to input
             youtubeUrlInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-            // Optional: Auto-submit after a short delay
-            // setTimeout(() => summarizerForm.requestSubmit(), 500);
         }
 
         // Clean up URL (remove query params)
@@ -834,8 +874,11 @@ function handleSharedContent() {
     }
 }
 
-// Check if install prompt should be shown
+// Check if install prompt should be shown (Fallback for when beforeinstallprompt doesn't fire but we want to show manual instructions)
 function checkInstallPrompt() {
+    // Only run this if deferredPrompt hasn't already fired
+    if (deferredPrompt) return;
+
     // Check if already installed (running in standalone mode)
     const isInstalled = window.matchMedia('(display-mode: standalone)').matches ||
         window.navigator.standalone === true;
@@ -845,10 +888,12 @@ function checkInstallPrompt() {
 
     // Show prompt only on mobile AND when not installed
     if (isMobile && !isInstalled) {
-        installPrompt.classList.remove('hidden');
+        // We don't automatically show it here anymore to avoid conflict with native prompt logic.
+        // But we can show it if we want to offer manual instructions.
+        // For now, let's rely on beforeinstallprompt for Android, and this for iOS (which doesn't support beforeinstallprompt)
 
-        // Show appropriate instructions based on platform
         if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+            installPrompt.classList.remove('hidden');
             androidInstructions.classList.add('hidden');
             iosInstructions.classList.remove('hidden');
         }
