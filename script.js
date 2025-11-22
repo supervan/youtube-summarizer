@@ -438,6 +438,8 @@ function resetApp() {
 // Toggle Input Section
 function toggleInputSection(forceState = null) {
     console.log('🔄 Toggle called! forceState:', forceState);
+    console.log('   inputSection element:', inputSection);
+    console.log('   inputSection classes:', inputSection.className);
     const isCollapsed = inputSection.classList.contains('collapsed');
     console.log('   Current collapsed state:', isCollapsed);
     const shouldCollapse = forceState !== null ? !forceState : !isCollapsed;
@@ -472,6 +474,7 @@ function toggleInputSection(forceState = null) {
         }
     }
     console.log('   ✅ Toggle complete. Applied styles:', inputSection.getAttribute('style'));
+    console.log('   Final classes:', inputSection.className);
 }
 
 // Hide all result cards
