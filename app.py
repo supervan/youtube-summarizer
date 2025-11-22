@@ -366,7 +366,9 @@ def _get_youtube_transcript_with_cookies(video_id):
                     ydl_opts['cookiefile'] = cookies_file
                         
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                    ydl.extract_info(video_url, download=True)
+                    info = ydl.extract_info(video_url, download=True)
+                    video_title = info.get('title', 'Unknown Title')
+                    
                     vtt_file = None
                     files_in_dir = os.listdir(temp_dir)
                     for filename in files_in_dir:
@@ -375,7 +377,7 @@ def _get_youtube_transcript_with_cookies(video_id):
                             break
                     if vtt_file:
                         with open(vtt_file, 'r', encoding='utf-8') as f:
-                            return _parse_vtt(f.read()), 0
+                            return _parse_vtt(f.read()), video_title, 0
                     else:
                             print(f"⚠️ Fallback: No VTT file. Dir contents: {files_in_dir}")
         except Exception as e:
