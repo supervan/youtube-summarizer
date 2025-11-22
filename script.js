@@ -439,19 +439,16 @@ function resetApp() {
 function toggleInputSection(forceState = null) {
     const isCollapsed = inputSection.classList.contains('collapsed');
     const shouldCollapse = forceState !== null ? !forceState : !isCollapsed;
+    const btn = document.getElementById('toggleInputBtn');
 
     if (shouldCollapse) {
-        // Collapse
         inputSection.classList.add('collapsed');
         inputSection.style.display = 'none';
-        document.getElementById('iconMinus').style.display = 'none';
-        document.getElementById('iconPlus').style.display = 'block';
+        btn.style.transform = 'rotate(180deg)';
     } else {
-        // Expand
         inputSection.classList.remove('collapsed');
         inputSection.style.display = 'block';
-        document.getElementById('iconMinus').style.display = 'block';
-        document.getElementById('iconPlus').style.display = 'none';
+        btn.style.transform = 'rotate(0deg)';
     }
 }
 
