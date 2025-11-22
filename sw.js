@@ -1,4 +1,4 @@
-const CACHE_NAME = 'yt-summarizer-v1';
+const CACHE_NAME = 'yt-summarizer-v2';
 const urlsToCache = [
     '/',
     '/index.html',
@@ -37,6 +37,21 @@ self.addEventListener('activate', event => {
 
 // Fetch event - serve from cache, fallback to network
 self.addEventListener('fetch', event => {
+    // Handle share target POST requests
+    if (event.request.url.endsWith('/share') && event.request.method === 'POST') {
+        event.respondWith(
+            (async () => {
+                const formData = await event.request.formData();
+                const url = formData.get('url') || formData.get('text') || '';
+
+                // Redirect to home with URL as query parameter
+                return Response.redirect(`/?url=${encodeURIComponent(url)}`, 303);
+            })()
+        );
+        return;
+    }
+
+    // Normal fetch handling
     event.respondWith(
         caches.match(event.request)
             .then(response => {
