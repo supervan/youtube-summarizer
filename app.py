@@ -123,7 +123,11 @@ class FreeProxyManager:
             "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/http.txt",
             "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/socks5.txt",
             "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/socks4.txt",
-            "https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list-raw.txt"
+            "https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list-raw.txt",
+            "https://raw.githubusercontent.com/ShiftyTR/Proxy-List/master/http.txt",
+            "https://raw.githubusercontent.com/ShiftyTR/Proxy-List/master/https.txt",
+            "https://raw.githubusercontent.com/sunny9577/proxy-scraper/master/proxies.txt",
+            "https://raw.githubusercontent.com/roosterkid/openproxylist/main/HTTPS_RAW.txt"
         ]
         
         for url in github_sources:
@@ -382,8 +386,10 @@ def _get_youtube_transcript_with_cookies(video_id):
                             print(f"⚠️ Fallback: No VTT file. Dir contents: {files_in_dir}")
         except Exception as e:
             print(f"❌ Final fallback failed: {e}")
+            # Capture the specific fallback error to return to the user
+            last_error = f"Proxy attempts failed. Direct fallback failed: {str(e)}"
 
-        raise Exception(f"Failed after {max_retries} attempts. Last error: {last_error}")
+        raise Exception(f"Failed after {max_retries} attempts. {last_error}")
         
     finally:
         # Clean up cookies file
