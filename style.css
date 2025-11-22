@@ -907,6 +907,26 @@ body {
     max-height: 90vh;
     overflow-y: auto;
     animation: fadeInUp 0.3s ease-out;
+    display: flex;
+    flex-direction: column;
+}
+
+.full-screen-modal {
+    max-width: 95vw !important;
+    width: 95vw !important;
+    height: 95vh !important;
+    max-height: 95vh !important;
+}
+
+.full-screen-modal .modal-body {
+    flex: 1;
+    overflow: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: white; /* Ensure white background for Mermaid */
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
 }
 
 .modal-header {

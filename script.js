@@ -118,7 +118,6 @@ async function fetchFeatures() {
 // Setup event listeners
 function setupEventListeners() {
     summarizerForm.addEventListener('submit', handleSubmit);
-    summarizerForm.addEventListener('submit', handleSubmit);
     copyBtn.addEventListener('click', copySummary);
     // readAloudBtn listener removed
     toggleInputBtn.addEventListener('click', () => toggleInputSection());
@@ -193,6 +192,10 @@ function setupEventListeners() {
             mindMapModal.classList.add('hidden');
         }
     });
+
+    // Mind Map Download Buttons
+    document.getElementById('downloadSvgBtn').addEventListener('click', downloadSVG);
+    document.getElementById('downloadPngBtn').addEventListener('click', downloadPNG);
 }
 
 // Switch Feature Tabs
@@ -798,6 +801,62 @@ async function handleMindMapRequest() {
 
 function openMindMapModal() {
     mindMapModal.classList.remove('hidden');
+}
+
+// Download Mind Map as SVG
+function downloadSVG() {
+    const svgElement = document.querySelector('#fullScreenMindMap svg');
+    if (!svgElement) return;
+
+    const svgData = new XMLSerializer().serializeToString(svgElement);
+    const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'mindmap.svg';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// Download Mind Map as PNG
+function downloadPNG() {
+    const svgElement = document.querySelector('#fullScreenMindMap svg');
+    if (!svgElement) return;
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const svgData = new XMLSerializer().serializeToString(svgElement);
+
+    const img = new Image();
+    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(svgBlob);
+
+    img.onload = function () {
+        // Set canvas dimensions to match SVG
+        const bbox = svgElement.getBoundingClientRect();
+        canvas.width = bbox.width * 2; // 2x scale for better quality
+        canvas.height = bbox.height * 2;
+
+        // Fill white background
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Draw image
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        const pngUrl = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.href = pngUrl;
+        link.download = 'mindmap.png';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
+
+    img.src = url;
 }
 
 // --- Podcast Feature ---
