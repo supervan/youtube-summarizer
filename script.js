@@ -49,7 +49,6 @@ const API_BASE = window.location.origin;
 // Initialize app
 // Global state
 let currentTranscript = '';
-let currentTranscript = '';
 let enabledFeatures = {};
 let player; // YouTube Player instance
 let deferredPrompt; // For PWA install prompt
