@@ -7,6 +7,9 @@ const submitBtn = document.getElementById('submitBtn');
 const btnText = document.getElementById('btnText');
 const btnLoader = document.getElementById('btnLoader');
 
+const inputSection = document.getElementById('inputSection');
+const toggleInputBtn = document.getElementById('toggleInputBtn');
+
 const videoInfoCard = document.getElementById('videoInfoCard');
 const videoThumbnail = document.getElementById('videoThumbnail');
 const videoTitle = document.getElementById('videoTitle');
@@ -33,6 +36,29 @@ document.addEventListener('DOMContentLoaded', () => {
 function setupEventListeners() {
     summarizerForm.addEventListener('submit', handleSubmit);
     copyBtn.addEventListener('click', copySummary);
+    toggleInputBtn.addEventListener('click', () => toggleInputSection());
+}
+
+// Toggle Input Section
+function toggleInputSection(forceState = null) {
+    const isCollapsed = inputSection.classList.contains('collapsed');
+    const shouldCollapse = forceState !== null ? !forceState : !isCollapsed;
+
+    if (shouldCollapse) {
+        inputSection.classList.add('collapsed');
+        toggleInputBtn.innerHTML = `
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 5v14M5 12h14" />
+            </svg>
+        `; // Plus icon
+    } else {
+        inputSection.classList.remove('collapsed');
+        toggleInputBtn.innerHTML = `
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M5 12h14" />
+            </svg>
+        `; // Minus icon
+    }
 }
 
 // Hide all result cards
@@ -48,6 +74,7 @@ function showError(message) {
     errorMessage.textContent = message;
     errorCard.classList.remove('hidden');
     errorCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    toggleInputSection(true); // Expand input on error
 }
 
 // Set loading state
@@ -55,6 +82,40 @@ function setLoading(isLoading) {
     submitBtn.disabled = isLoading;
     btnText.classList.toggle('hidden', isLoading);
     btnLoader.classList.toggle('hidden', !isLoading);
+}
+
+// Show Skeleton Loading
+function showSkeletonLoading() {
+    // Video Info Skeleton
+    videoThumbnail.src = ''; // Clear previous
+    videoThumbnail.classList.add('hidden');
+
+    // Create skeleton if not exists
+    let skeletonThumb = videoInfoCard.querySelector('.skeleton-thumbnail');
+    if (!skeletonThumb) {
+        skeletonThumb = document.createElement('div');
+        skeletonThumb.className = 'skeleton skeleton-thumbnail';
+        videoInfoCard.querySelector('.video-preview').prepend(skeletonThumb);
+    } else {
+        skeletonThumb.classList.remove('hidden');
+    }
+
+    videoTitle.innerHTML = '<div class="skeleton skeleton-text title"></div>';
+    transcriptLength.innerHTML = '<div class="skeleton skeleton-text short"></div>';
+
+    videoInfoCard.classList.remove('hidden');
+
+    // Summary Skeleton
+    summaryContent.innerHTML = `
+        <div class="skeleton skeleton-text"></div>
+        <div class="skeleton skeleton-text"></div>
+        <div class="skeleton skeleton-text short"></div>
+        <br>
+        <div class="skeleton skeleton-text"></div>
+        <div class="skeleton skeleton-text"></div>
+        <div class="skeleton skeleton-text"></div>
+    `;
+    summaryCard.classList.remove('hidden');
 }
 
 // Extract video ID from URL
@@ -91,6 +152,8 @@ async function handleSubmit(e) {
 
     hideAllCards();
     setLoading(true);
+    toggleInputSection(false); // Collapse input
+    showSkeletonLoading(); // Show skeletons
 
     try {
         // Step 1: Extract transcript
@@ -108,7 +171,7 @@ async function handleSubmit(e) {
             throw new Error(transcriptData.error || 'Failed to extract transcript');
         }
 
-        // Show video info
+        // Show video info (removes skeleton)
         showVideoInfo(videoId, transcriptData);
 
         // Step 2: Generate summary (API key is now in backend .env file)
@@ -142,6 +205,12 @@ async function handleSubmit(e) {
 
 // Show video information
 function showVideoInfo(videoId, data) {
+    // Remove skeleton
+    const skeletonThumb = videoInfoCard.querySelector('.skeleton-thumbnail');
+    if (skeletonThumb) skeletonThumb.classList.add('hidden');
+
+    videoThumbnail.classList.remove('hidden');
+
     const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
 
     // Try high quality thumbnail first, with fallback to medium quality

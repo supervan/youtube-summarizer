@@ -46,39 +46,49 @@
 
         <!-- Main Input Section -->
         <div class="card main-card">
-            <h2>📺 Enter YouTube URL</h2>
-            <form id="summarizerForm">
-                <div class="input-group">
-                    <input type="text" id="youtubeUrl" placeholder="https://www.youtube.com/watch?v=..."
-                        class="input-field" required>
-                </div>
-
-                <!-- Summary Options -->
-                <div class="options-grid">
-                    <div class="option-group">
-                        <label for="summaryLength">📏 Summary Length</label>
-                        <select id="summaryLength" class="select-field">
-                            <option value="short">Short (Quick overview)</option>
-                            <option value="medium" selected>Medium (Balanced)</option>
-                            <option value="long">Long (Comprehensive)</option>
-                        </select>
-                    </div>
-
-                    <div class="option-group">
-                        <label for="summaryTone">🎯 Tone</label>
-                        <select id="summaryTone" class="select-field">
-                            <option value="conversational">Conversational (Easy to read)</option>
-                            <option value="professional">Professional (Formal)</option>
-                            <option value="technical">Technical (Direct & Dense)</option>
-                        </select>
-                    </div>
-                </div>
-
-                <button type="submit" class="btn btn-primary" id="submitBtn">
-                    <span id="btnText">Summarize</span>
-                    <span id="btnLoader" class="loader hidden"></span>
+            <div class="card-header">
+                <h2>📺 Enter YouTube URL</h2>
+                <button id="toggleInputBtn" class="icon-btn" aria-label="Toggle input section">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14" />
+                    </svg>
                 </button>
-            </form>
+            </div>
+            
+            <div id="inputSection" class="collapsible-content expanded">
+                <form id="summarizerForm">
+                    <div class="input-group">
+                        <input type="text" id="youtubeUrl" placeholder="https://www.youtube.com/watch?v=..."
+                            class="input-field" required>
+                    </div>
+
+                    <!-- Summary Options -->
+                    <div class="options-grid">
+                        <div class="option-group">
+                            <label for="summaryLength">📏 Summary Length</label>
+                            <select id="summaryLength" class="select-field">
+                                <option value="short">Short (Quick overview)</option>
+                                <option value="medium" selected>Medium (Balanced)</option>
+                                <option value="long">Long (Comprehensive)</option>
+                            </select>
+                        </div>
+
+                        <div class="option-group">
+                            <label for="summaryTone">🎯 Tone</label>
+                            <select id="summaryTone" class="select-field">
+                                <option value="conversational">Conversational (Easy to read)</option>
+                                <option value="professional">Professional (Formal)</option>
+                                <option value="technical">Technical (Direct & Dense)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                        <span id="btnText">Summarize</span>
+                        <span id="btnLoader" class="loader hidden"></span>
+                    </button>
+                </form>
+            </div>
         </div>
 
         <!-- Video Info Section -->
