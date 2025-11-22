@@ -446,12 +446,24 @@ function toggleInputSection(forceState = null) {
 
     if (shouldCollapse) {
         inputSection.classList.add('collapsed');
-        if (iconMinus) iconMinus.style.display = 'none';
-        if (iconPlus) iconPlus.style.display = 'block';
+        if (iconMinus) {
+            iconMinus.style.display = 'none';
+            iconMinus.classList.add('hidden');
+        }
+        if (iconPlus) {
+            iconPlus.style.display = 'block';
+            iconPlus.classList.remove('hidden');
+        }
     } else {
         inputSection.classList.remove('collapsed');
-        if (iconMinus) iconMinus.style.display = 'block';
-        if (iconPlus) iconPlus.style.display = 'none';
+        if (iconMinus) {
+            iconMinus.style.display = 'block';
+            iconMinus.classList.remove('hidden');
+        }
+        if (iconPlus) {
+            iconPlus.style.display = 'none';
+            iconPlus.classList.add('hidden');
+        }
     }
 }
 
