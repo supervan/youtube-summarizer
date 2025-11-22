@@ -438,29 +438,20 @@ function resetApp() {
 // Toggle Input Section
 // Toggle Input Section
 function toggleInputSection(forceState = null) {
-    console.log('Toggle input clicked. Force state:', forceState);
     const isCollapsed = inputSection.classList.contains('collapsed');
-    console.log('Current state: collapsed =', isCollapsed);
-
     const shouldCollapse = forceState !== null ? !forceState : !isCollapsed;
-    console.log('New state: should collapse =', shouldCollapse);
 
     const iconMinus = document.getElementById('iconMinus');
     const iconPlus = document.getElementById('iconPlus');
 
-    if (!iconMinus || !iconPlus) {
-        console.error('Icons not found!', { iconMinus, iconPlus });
-        return;
-    }
-
     if (shouldCollapse) {
         inputSection.classList.add('collapsed');
-        iconMinus.classList.add('hidden');
-        iconPlus.classList.remove('hidden');
+        if (iconMinus) iconMinus.classList.add('hidden');
+        if (iconPlus) iconPlus.classList.remove('hidden');
     } else {
         inputSection.classList.remove('collapsed');
-        iconMinus.classList.remove('hidden');
-        iconPlus.classList.add('hidden');
+        if (iconMinus) iconMinus.classList.remove('hidden');
+        if (iconPlus) iconPlus.classList.add('hidden');
     }
 }
 
