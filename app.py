@@ -151,25 +151,22 @@ class FreeProxyManager:
         self.proxies = []
         self.verified_proxies = []
         
-        # Source 1: GitHub Proxy Lists (Raw Text) - HTTP + SOCKS
+        # Source 1: GitHub Proxy Lists (Prioritize SOCKS)
         github_sources = [
-            "https://raw.githubusercontent.com/TheSpeedX/SOCKS-List/master/http.txt",
             "https://raw.githubusercontent.com/TheSpeedX/SOCKS-List/master/socks5.txt",
             "https://raw.githubusercontent.com/TheSpeedX/SOCKS-List/master/socks4.txt",
-            "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/http.txt",
             "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/socks5.txt",
             "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/socks4.txt",
-            "https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list-raw.txt",
-            "https://raw.githubusercontent.com/ShiftyTR/Proxy-List/master/http.txt",
-            "https://raw.githubusercontent.com/ShiftyTR/Proxy-List/master/https.txt",
-            "https://raw.githubusercontent.com/sunny9577/proxy-scraper/master/proxies.txt",
-            "https://raw.githubusercontent.com/roosterkid/openproxylist/main/HTTPS_RAW.txt"
+            "https://raw.githubusercontent.com/roosterkid/openproxylist/main/SOCKS5_RAW.txt",
+            "https://raw.githubusercontent.com/roosterkid/openproxylist/main/SOCKS4_RAW.txt",
+            # HTTP proxies are often unreliable for HTTPS, put them last
+            "https://raw.githubusercontent.com/TheSpeedX/SOCKS-List/master/http.txt", 
+            "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/http.txt",
         ]
         
         for url in github_sources:
-            # Stop if we have enough proxies to avoid timeout
-            if len(self.proxies) > 1000:
-                print("✅ Collected enough proxies (>1000), stopping fetch.")
+            # Stop if we have enough proxies
+            if len(self.proxies) > 2000:
                 break
 
             try:
@@ -192,22 +189,14 @@ class FreeProxyManager:
                         self.proxies.append(f"{protocol}://{proxy}")
             except Exception as e:
                 print(f"⚠️ Failed to fetch from {url}: {e}")
-                # Continue to next source instead of crashing
                 continue
 
-        # Source 2: sslproxies.org (Backup)
-        try:
-            print("📥 Fetching from sslproxies.org...")
-            resp = requests.get('https://www.sslproxies.org/', timeout=5)
-            matches = re.findall(r'(\d+\.\d+\.\d+\.\d+):(\d+)', resp.text)
-            for ip, port in matches[:50]:
-                self.proxies.append(f"http://{ip}:{port}")
-            print(f"   Found {len(matches)} proxies")
-        except Exception as e:
-            print(f"⚠️ Failed to fetch from sslproxies.org: {e}")
-            
         # Deduplicate
         self.proxies = list(set(self.proxies))
+        
+        # Sort to put SOCKS proxies first
+        self.proxies.sort(key=lambda x: 0 if x.startswith('socks') else 1)
+        
         print(f"✅ Total unique proxies found: {len(self.proxies)}")
         
         # Validate a subset to find working ones immediately
@@ -218,15 +207,15 @@ class FreeProxyManager:
     def _validate_initial_batch(self):
         """
         Validate a batch of proxies to find some working ones quickly.
-        
-        This prevents the app from trying dead proxies one by one when a user requests a transcript.
         """
         print("🕵️ Validating random subset of proxies...")
         
-        # Shuffle and take top 100 to test (we need to find at least a few good ones)
-        test_batch = self.proxies[:]
+        # Take top 50 (mostly SOCKS due to sort) and some random ones
+        top_proxies = self.proxies[:50]
+        random_proxies = random.sample(self.proxies[50:], min(50, len(self.proxies[50:]))) if len(self.proxies) > 50 else []
+        
+        test_batch = top_proxies + random_proxies
         random.shuffle(test_batch)
-        test_batch = test_batch[:100]
         
         for i, proxy_url in enumerate(test_batch):
             if self._check_proxy(proxy_url):
@@ -243,17 +232,11 @@ class FreeProxyManager:
     def _check_proxy(self, proxy_url):
         """
         Check if a proxy actually works with YouTube.
-        
-        Args:
-            proxy_url (str): The proxy URL to test.
-            
-        Returns:
-            bool: True if the proxy works, False otherwise.
         """
         try:
             proxies = {'http': proxy_url, 'https': proxy_url}
-            # Try to fetch a real YouTube search page to verify access
-            resp = requests.get('https://www.youtube.com/results?search_query=test', proxies=proxies, timeout=3)
+            # Use a timeout of 5 seconds, slightly longer for SOCKS handshakes
+            resp = requests.get('https://www.youtube.com/results?search_query=test', proxies=proxies, timeout=5)
             return resp.status_code == 200
         except:
             return False
