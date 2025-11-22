@@ -131,9 +131,14 @@ class FreeProxyManager:
         ]
         
         for url in github_sources:
+            # Stop if we have enough proxies to avoid timeout
+            if len(self.proxies) > 1000:
+                print("✅ Collected enough proxies (>1000), stopping fetch.")
+                break
+
             try:
                 print(f"📥 Fetching from {url}...")
-                resp = requests.get(url, timeout=5)
+                resp = requests.get(url, timeout=2)
                 if resp.status_code == 200:
                     # Extract IP:Port patterns
                     matches = re.findall(r'(\d+\.\d+\.\d+\.\d+:\d+)', resp.text)
