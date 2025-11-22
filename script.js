@@ -72,7 +72,10 @@ function setupEventListeners() {
     });
 
     // Chat
-    document.getElementById('chatForm').addEventListener('submit', handleChatSubmit);
+    document.getElementById('chatSubmitBtn').addEventListener('click', handleChatSubmit);
+    document.getElementById('chatInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleChatSubmit(e);
+    });
 
     // Steps
     document.getElementById('generateStepsBtn').addEventListener('click', handleStepsRequest);
@@ -139,7 +142,7 @@ function showFeatures() {
 
 // --- Chat Feature ---
 async function handleChatSubmit(e) {
-    e.preventDefault();
+    if (e) e.preventDefault();
     const input = document.getElementById('chatInput');
     const question = input.value.trim();
     if (!question) return;
