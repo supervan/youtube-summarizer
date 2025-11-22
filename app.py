@@ -278,6 +278,20 @@ class FreeProxyManager:
         if self.working_proxy == proxy_dict:
             self.working_proxy = None
 
+    def report_success(self, proxy_url):
+        """
+        Report a proxy as working so it's preferred next time.
+        """
+        if not proxy_url:
+            return
+            
+        # Add to verified list if not already there
+        if proxy_url not in self.verified_proxies:
+            self.verified_proxies.append(proxy_url)
+            
+        # Set as current working proxy
+        self.working_proxy = {'http': proxy_url, 'https': proxy_url}
+
 # Global proxy manager instance
 proxy_manager = FreeProxyManager()
 
@@ -324,11 +338,34 @@ def _get_youtube_transcript_with_cookies(video_id):
             cookies_file = None
             
     # METHOD 1: Try YouTubeTranscriptApi (Fastest & often bypasses blocks)
+    # We'll try direct first, then with proxies if needed
     try:
         print(f"🚀 Attempting Method 1: YouTubeTranscriptApi for {video_id}...")
-        # Get transcript
-        transcript_list = YouTubeTranscriptApi.get_transcript(video_id, cookies=cookies_file)
         
+        # Try direct connection first
+        try:
+            transcript_list = YouTubeTranscriptApi.get_transcript(video_id, cookies=cookies_file)
+        except Exception as e:
+            print(f"⚠️ Direct YouTubeTranscriptApi failed: {e}")
+            # Try with proxies
+            transcript_list = None
+            for attempt in range(5): # Try 5 proxies
+                proxy = proxy_manager.get_proxy()
+                if not proxy:
+                    break
+                print(f"   Retrying YouTubeTranscriptApi with proxy {proxy['http']}...")
+                try:
+                    transcript_list = YouTubeTranscriptApi.get_transcript(video_id, cookies=cookies_file, proxies=proxy)
+                    proxy_manager.report_success(proxy['http']) # Mark as working
+                    print("   ✅ Proxy success!")
+                    break
+                except Exception as pe:
+                    print(f"   ❌ Proxy failed: {pe}")
+                    proxy_manager.mark_failed(proxy)
+            
+            if not transcript_list:
+                raise Exception("All YouTubeTranscriptApi attempts failed")
+
         # Parse transcript with timestamps
         formatted_lines = []
         for item in transcript_list:
