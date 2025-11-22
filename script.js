@@ -794,7 +794,7 @@ async function handleMindMapRequest() {
         placeholder.classList.remove('hidden');
     }
 }
-}
+
 
 function openMindMapModal() {
     mindMapModal.classList.remove('hidden');
