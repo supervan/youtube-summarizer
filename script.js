@@ -38,7 +38,37 @@ const API_BASE = window.location.origin;
 document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
     checkInstallPrompt();
+    handleSharedContent();
 });
+
+// Handle shared content from Web Share Target
+function handleSharedContent() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const sharedUrl = urlParams.get('url') || urlParams.get('text');
+
+    if (sharedUrl) {
+        // Check if it's a YouTube URL
+        const videoId = extractVideoId(sharedUrl);
+        if (videoId) {
+            // Populate the input field
+            youtubeUrlInput.value = sharedUrl;
+
+            // Expand input section if collapsed
+            if (inputSection.classList.contains('collapsed')) {
+                toggleInputSection(true);
+            }
+
+            // Scroll to input
+            youtubeUrlInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            // Optional: Auto-submit after a short delay
+            // setTimeout(() => summarizerForm.requestSubmit(), 500);
+        }
+
+        // Clean up URL (remove query params)
+        window.history.replaceState({}, document.title, '/');
+    }
+}
 
 // Check if install prompt should be shown
 function checkInstallPrompt() {
