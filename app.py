@@ -81,7 +81,15 @@ def _parse_vtt(vtt_content):
     return " ".join(text_lines)
 
 class FreeProxyManager:
-    """Manages a pool of free proxies from multiple sources with validation"""
+    """
+    Manages a pool of free proxies from multiple sources with validation.
+    
+    This class is responsible for:
+    1. Fetching free proxies from various GitHub repositories and websites.
+    2. Validating these proxies to ensure they work with YouTube.
+    3. maintaining a list of verified working proxies.
+    4. Rotating through proxies to avoid IP bans.
+    """
     def __init__(self):
         self.proxies = []
         self.last_update = 0
@@ -89,7 +97,13 @@ class FreeProxyManager:
         self.verified_proxies = []
         
     def get_proxy(self):
-        """Get a working proxy, refreshing pool if needed"""
+        """
+        Get a working proxy, refreshing pool if needed.
+        
+        Returns:
+            dict: A dictionary containing 'http' and 'https' keys with the proxy URL.
+            None: If no proxy is available.
+        """
         # If we have a known working proxy, try it first
         if self.working_proxy:
             return self.working_proxy
@@ -110,7 +124,11 @@ class FreeProxyManager:
         return None
         
     def _refresh_proxies(self):
-        """Fetch fresh proxies from multiple free sources"""
+        """
+        Fetch fresh proxies from multiple free sources.
+        
+        Sources include various GitHub repositories that maintain lists of free HTTP, SOCKS4, and SOCKS5 proxies.
+        """
         print("🔄 Refreshing free proxy list from multiple sources...")
         self.proxies = []
         self.verified_proxies = []
@@ -180,7 +198,11 @@ class FreeProxyManager:
         self.last_update = time.time()
 
     def _validate_initial_batch(self):
-        """Validate a batch of proxies to find some working ones quickly"""
+        """
+        Validate a batch of proxies to find some working ones quickly.
+        
+        This prevents the app from trying dead proxies one by one when a user requests a transcript.
+        """
         print("🕵️ Validating random subset of proxies...")
         
         # Shuffle and take top 100 to test (we need to find at least a few good ones)
@@ -201,7 +223,15 @@ class FreeProxyManager:
         print(f"🎉 Found {len(self.verified_proxies)} verified working proxies")
 
     def _check_proxy(self, proxy_url):
-        """Check if a proxy actually works with YouTube"""
+        """
+        Check if a proxy actually works with YouTube.
+        
+        Args:
+            proxy_url (str): The proxy URL to test.
+            
+        Returns:
+            bool: True if the proxy works, False otherwise.
+        """
         try:
             proxies = {'http': proxy_url, 'https': proxy_url}
             # Try to fetch a real YouTube search page to verify access
@@ -211,7 +241,12 @@ class FreeProxyManager:
             return False
 
     def mark_failed(self, proxy_dict):
-        """Mark a proxy as failed"""
+        """
+        Mark a proxy as failed so it isn't used again immediately.
+        
+        Args:
+            proxy_dict (dict): The proxy dictionary that failed.
+        """
         if not proxy_dict:
             return
         proxy_url = proxy_dict.get('http')
@@ -229,6 +264,21 @@ class FreeProxyManager:
 proxy_manager = FreeProxyManager()
 
 def _get_youtube_transcript_with_cookies(video_id):
+    """
+    Extract transcript from YouTube video using a multi-method approach.
+    
+    Strategy:
+    1. Try `YouTubeTranscriptApi` first (fastest, often works without proxies).
+    2. Fallback to `yt-dlp` with proxy rotation if Method 1 fails.
+    3. Use a pool of free proxies to bypass IP blocks.
+    4. Support cookies for age-restricted content (if provided in env).
+    
+    Args:
+        video_id (str): The YouTube video ID.
+        
+    Returns:
+        tuple: (transcript_text, video_title, cookie_count)
+    """
     """Extract transcript from YouTube video using yt-dlp with free proxy rotation."""
     
     # Try up to 10 times with different proxies (reduced from 20 to avoid timeout)

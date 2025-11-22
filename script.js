@@ -1,3 +1,13 @@
+/**
+ * YouTube Summarizer Frontend Script
+ * 
+ * This script handles:
+ * 1. User interactions (clicking buttons, submitting forms).
+ * 2. API calls to the backend (extracting transcripts, generating summaries).
+ * 3. UI updates (showing loading states, displaying results).
+ * 4. Managing the chat interface for querying the video content.
+ */
+
 // DOM Elements
 const summarizerForm = document.getElementById('summarizerForm');
 const youtubeUrlInput = document.getElementById('youtubeUrl');
@@ -467,6 +477,13 @@ function extractVideoId(url) {
 }
 
 // Handle form submission
+/**
+ * Handles the summarization process.
+ * 1. Validates the YouTube URL.
+ * 2. Calls the backend to extract the transcript.
+ * 3. Calls the backend to generate a summary.
+ * 4. Updates the UI with the results.
+ */
 async function handleSubmit(e) {
     e.preventDefault();
 
