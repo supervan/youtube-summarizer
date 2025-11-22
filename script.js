@@ -23,15 +23,43 @@ const copyBtn = document.getElementById('copyBtn');
 const errorCard = document.getElementById('errorCard');
 const errorMessage = document.getElementById('errorMessage');
 
-// API Base URL - automatically detects local vs production
-const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? 'http://localhost:5000'
-    : window.location.origin;
+// Install prompt elements
+const installPrompt = document.getElementById('installPrompt');
+const installLink = document.getElementById('installLink');
+const installModal = document.getElementById('installModal');
+const closeModal = document.getElementById('closeModal');
+const androidInstructions = document.getElementById('androidInstructions');
+const iosInstructions = document.getElementById('iosInstructions');
 
-// Initialize
+// API Configuration
+const API_BASE = window.location.origin;
+
+// Initialize app
 document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
+    checkInstallPrompt();
 });
+
+// Check if install prompt should be shown
+function checkInstallPrompt() {
+    // Check if already installed (running in standalone mode)
+    const isInstalled = window.matchMedia('(display-mode: standalone)').matches ||
+        window.navigator.standalone === true;
+
+    // Check if mobile device
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+    // Show prompt only on mobile AND when not installed
+    if (isMobile && !isInstalled) {
+        installPrompt.classList.remove('hidden');
+
+        // Show appropriate instructions based on platform
+        if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+            androidInstructions.classList.add('hidden');
+            iosInstructions.classList.remove('hidden');
+        }
+    }
+}
 
 // Setup event listeners
 function setupEventListeners() {
@@ -39,6 +67,23 @@ function setupEventListeners() {
     copyBtn.addEventListener('click', copySummary);
     toggleInputBtn.addEventListener('click', () => toggleInputSection());
     resetBtn.addEventListener('click', resetApp);
+
+    // Install prompt listeners
+    installLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        installModal.classList.remove('hidden');
+    });
+
+    closeModal.addEventListener('click', () => {
+        installModal.classList.add('hidden');
+    });
+
+    // Close modal when clicking outside
+    installModal.addEventListener('click', (e) => {
+        if (e.target === installModal) {
+            installModal.classList.add('hidden');
+        }
+    });
 }
 
 // Reset Application
