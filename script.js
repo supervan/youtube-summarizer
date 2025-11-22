@@ -809,7 +809,9 @@ function playPodcastScript(script) {
     currentLineIndex = 0;
 
     // Update UI
+    // Update UI
     updatePodcastUI('playing');
+    updatePodcastProgress();
 
     const voices = window.speechSynthesis.getVoices();
     // Select two distinct voices
@@ -836,6 +838,7 @@ function speakNextLine() {
     utterance.onend = () => {
         if (isPodcastPlaying && !isPodcastPaused) {
             currentLineIndex++;
+            updatePodcastProgress();
             speakNextLine();
         }
     };
@@ -844,6 +847,7 @@ function speakNextLine() {
         console.error('Speech error:', e);
         if (isPodcastPlaying && !isPodcastPaused) {
             currentLineIndex++;
+            updatePodcastProgress();
             speakNextLine();
         }
     };
@@ -903,6 +907,14 @@ function updatePodcastUI(state) {
         `;
         statusText.textContent = 'Paused';
     }
+}
+
+function updatePodcastProgress() {
+    if (!podcastScript.length) return;
+
+    const progress = Math.min(100, Math.round((currentLineIndex / podcastScript.length) * 100));
+    document.getElementById('podcastProgressBar').style.width = `${progress}%`;
+    document.getElementById('podcastProgressText').textContent = `${progress}%`;
 }
 
 // Handle shared content from Web Share Target
