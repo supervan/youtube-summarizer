@@ -43,10 +43,12 @@ def serve_static(path):
     return send_from_directory('.', path)
 
 def _parse_vtt(vtt_content):
-    """Parse VTT subtitle content to extract plain text"""
+    """Parse VTT subtitle content to extract text with timestamps"""
     lines = vtt_content.splitlines()
     text_lines = []
-    seen_lines = set() # Deduplicate lines
+    seen_lines = set()
+    
+    current_timestamp = None
     
     for line in lines:
         line = line.strip()
@@ -57,25 +59,41 @@ def _parse_vtt(vtt_content):
         if line.startswith('WEBVTT') or line.startswith('Kind:') or line.startswith('Language:'):
             continue
             
-        # Skip timestamps (lines containing -->)
+        # Extract timestamp (lines containing -->)
         if '-->' in line:
+            # Format: 00:00:00.000 --> 00:00:05.000
+            try:
+                start_time = line.split('-->')[0].strip()
+                # Convert 00:00:00.000 to 00:00 format
+                parts = start_time.split(':')
+                if len(parts) >= 2:
+                    # Take minutes and seconds, ignore milliseconds
+                    minutes = parts[-2]
+                    seconds = parts[-1].split('.')[0]
+                    current_timestamp = f"[{minutes}:{seconds}]"
+            except:
+                pass
             continue
             
-        # Skip sequence numbers (lines that are just digits)
+        # Skip sequence numbers
         if line.isdigit():
             continue
             
-        # Remove HTML-like tags (e.g. <c.colorE5E5E5>, <b>, etc.)
+        # Remove HTML-like tags
         clean_line = re.sub(r'<[^>]+>', '', line)
         clean_line = clean_line.strip()
         
-        # Skip empty lines after cleaning
         if not clean_line:
             continue
             
-        # Add to text if not duplicate (VTT often repeats lines for karaoke effect)
+        # Add to text if not duplicate
         if clean_line not in seen_lines:
-            text_lines.append(clean_line)
+            if current_timestamp:
+                text_lines.append(f"{current_timestamp} {clean_line}")
+                # Only use timestamp for the first line of a block to avoid clutter
+                current_timestamp = None 
+            else:
+                text_lines.append(clean_line)
             seen_lines.add(clean_line)
             
     return " ".join(text_lines)
@@ -311,8 +329,17 @@ def _get_youtube_transcript_with_cookies(video_id):
         # Get transcript
         transcript_list = YouTubeTranscriptApi.get_transcript(video_id, cookies=cookies_file)
         
-        # Parse transcript
-        full_text = " ".join([item['text'] for item in transcript_list])
+        # Parse transcript with timestamps
+        formatted_lines = []
+        for item in transcript_list:
+            start = item['start']
+            # Format seconds to MM:SS
+            minutes = int(start // 60)
+            seconds = int(start % 60)
+            timestamp = f"[{minutes:02d}:{seconds:02d}]"
+            formatted_lines.append(f"{timestamp} {item['text']}")
+            
+        full_text = " ".join(formatted_lines)
         print(f"✅ Method 1 Success! Extracted {len(full_text)} chars")
         
         # We need the title too. Since this API doesn't give it, we'll do a quick fetch
@@ -602,6 +629,8 @@ def build_summary_prompt(transcript, length, tone):
 
 {length_instructions[length]}
 
+IMPORTANT: Include timestamps [MM:SS] for key points where possible, referencing the transcript.
+
 Transcript:
 {transcript}"""
     else:
@@ -616,6 +645,8 @@ Transcript:
 - Short: Single paragraph with key takeaways
 - Medium: Overview + Key Points (bullet list) + Conclusion
 - Long: Detailed sections with Overview, Main Topics, Key Points, Important Details, Examples, and Conclusion
+
+**IMPORTANT**: You MUST include timestamps [MM:SS] from the transcript for every key point or major topic change. This allows the user to jump to that part of the video.
 
 Transcript:
 {transcript}"""
@@ -750,6 +781,101 @@ def generate_quiz():
             text = text[:-3]
             
         return jsonify({'success': True, 'quiz': json.loads(text)})
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/visualize', methods=['POST'])
+def generate_mindmap():
+    """Generate a Mermaid.js mind map from the transcript"""
+    try:
+        data = request.json
+        transcript = data.get('transcript', '')
+        
+        if not transcript:
+            return jsonify({'error': 'Transcript is required'}), 400
+
+        api_key = os.getenv('GEMINI_API_KEY')
+        if not api_key:
+            return jsonify({'error': 'API key not configured'}), 500
+            
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-2.5-flash')
+        
+        prompt = f"""Create a Mermaid.js mind map to visualize the key concepts and relationships in this transcript.
+        
+        Rules:
+        1. Use 'graph TD' or 'graph LR' (Top-Down or Left-Right).
+        2. Keep node labels concise (max 3-4 words).
+        3. Use clear relationships.
+        4. Return ONLY the raw Mermaid syntax. Do not wrap in markdown code blocks.
+        5. Do not include any conversational text.
+        
+        Transcript:
+        {transcript}"""
+
+        response = model.generate_content(prompt)
+        
+        # Clean up potential markdown code blocks
+        text = response.text.strip()
+        if text.startswith('```mermaid'):
+            text = text[10:]
+        if text.startswith('```'):
+            text = text[3:]
+        if text.endswith('```'):
+            text = text[:-3]
+            
+        return jsonify({'success': True, 'mermaid': text.strip()})
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/podcast', methods=['POST'])
+def generate_podcast():
+    """Generate a podcast dialogue script from the transcript"""
+    try:
+        data = request.json
+        transcript = data.get('transcript', '')
+        
+        if not transcript:
+            return jsonify({'error': 'Transcript is required'}), 400
+
+        api_key = os.getenv('GEMINI_API_KEY')
+        if not api_key:
+            return jsonify({'error': 'API key not configured'}), 500
+            
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-2.5-flash')
+        
+        prompt = f"""Convert this transcript into an engaging podcast dialogue between two hosts, 'Alex' (Host A) and 'Jamie' (Host B).
+        
+        Rules:
+        1. Make it sound natural, conversational, and enthusiastic.
+        2. Alex introduces the topic. Jamie asks insightful questions or adds details.
+        3. Keep it concise (about 2-3 minutes of reading time).
+        4. Return the result as a JSON array of objects.
+        
+        Format:
+        [
+            {{"speaker": "Alex", "text": "Welcome back! Today we're discussing..."}},
+            {{"speaker": "Jamie", "text": "I'm excited about this one..."}}
+        ]
+        
+        Transcript:
+        {transcript}"""
+
+        response = model.generate_content(prompt)
+        
+        # Clean up potential markdown code blocks
+        text = response.text.strip()
+        if text.startswith('```json'):
+            text = text[7:]
+        if text.startswith('```'):
+            text = text[3:]
+        if text.endswith('```'):
+            text = text[:-3]
+            
+        return jsonify({'success': True, 'script': json.loads(text)})
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500

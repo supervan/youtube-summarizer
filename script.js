@@ -51,6 +51,25 @@ const API_BASE = window.location.origin;
 // Global state
 let currentTranscript = '';
 let enabledFeatures = {};
+let player; // YouTube Player instance
+
+// Load YouTube IFrame API
+const tag = document.createElement('script');
+tag.src = "https://www.youtube.com/iframe_api";
+const firstScriptTag = document.getElementsByTagName('script')[0];
+firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+// YouTube API Callback
+window.onYouTubeIframeAPIReady = function () {
+    player = new YT.Player('youtubePlayer', {
+        height: '360',
+        width: '100%',
+        videoId: '', // Will be set later
+        playerVars: {
+            'playsinline': 1
+        }
+    });
+};
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
@@ -105,6 +124,12 @@ function setupEventListeners() {
     document.getElementById('startQuizBtn').addEventListener('click', handleQuizRequest);
     document.getElementById('retryQuizBtn').addEventListener('click', resetQuiz);
 
+    // Mind Map
+    document.getElementById('generateMindMapBtn').addEventListener('click', handleMindMapRequest);
+
+    // Podcast
+    document.getElementById('podcastBtn').addEventListener('click', handlePodcastRequest);
+
     // Install prompt listeners
     installLink.addEventListener('click', (e) => {
         e.preventDefault();
@@ -152,6 +177,9 @@ function showFeatures() {
         document.getElementById('tabQuiz').classList.remove('hidden');
         hasFeatures = true;
     }
+    // Always show Mind Map tab if we have a transcript (it's a core feature now)
+    document.getElementById('tabMindMap').classList.remove('hidden');
+    hasFeatures = true;
 
     if (hasFeatures) {
         container.classList.remove('hidden');
@@ -561,30 +589,21 @@ async function handleSubmit(e) {
 }
 
 // Show video information
+// Show video information
 function showVideoInfo(videoId, data) {
     // Remove skeleton
     const skeletonThumb = videoInfoCard.querySelector('.skeleton-thumbnail');
     if (skeletonThumb) skeletonThumb.classList.add('hidden');
 
-    videoThumbnail.classList.remove('hidden');
-
-    const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
-
-    // Try high quality thumbnail first, with fallback to medium quality
-    const thumbnailUrl = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
-
-    // Make thumbnail clickable
-    videoThumbnail.src = thumbnailUrl;
-    videoThumbnail.alt = 'Video Thumbnail - Click to watch';
-    videoThumbnail.style.cursor = 'pointer';
-    videoThumbnail.onclick = () => window.open(videoUrl, '_blank');
-    videoThumbnail.title = 'Click to watch video on YouTube';
-
-    // Fallback to default thumbnail if high quality fails
-    videoThumbnail.onerror = () => {
-        videoThumbnail.src = `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`;
-        videoThumbnail.onerror = null; // Prevent infinite loop
-    };
+    // Load video into player
+    if (player && player.loadVideoById) {
+        player.loadVideoById(videoId);
+    } else {
+        // Fallback if player not ready yet (rare)
+        setTimeout(() => {
+            if (player && player.loadVideoById) player.loadVideoById(videoId);
+        }, 1000);
+    }
 
     videoTitle.textContent = data.title || `Video ID: ${videoId}`;
     transcriptLength.textContent = `Transcript: ${data.length} characters`;
@@ -773,8 +792,149 @@ function formatMarkdown(text) {
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
         .replace(/\* (.*?)(\n|$)/g, '<li>$1</li>')
         .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
+        .replace(/\[(\d{1,2}):(\d{2})\]/g, '<a href="#" class="timestamp-link" onclick="seekTo($1 * 60 + $2 * 1); return false;">[$1:$2]</a>') // Timestamp linking
         .replace(/\n\n/g, '</p><p>')
         .replace(/\n/g, '<br>');
+}
+
+// Seek video to timestamp
+window.seekTo = function (seconds) {
+    if (player && player.seekTo) {
+        player.seekTo(seconds, true);
+        player.playVideo();
+    }
+};
+
+// --- Mind Map Feature ---
+async function handleMindMapRequest() {
+    const btn = document.getElementById('generateMindMapBtn');
+    const loading = document.getElementById('mindMapLoading');
+    const content = document.getElementById('mindMapContent');
+    const placeholder = document.getElementById('mindMapPlaceholder');
+
+    placeholder.classList.add('hidden');
+    loading.classList.remove('hidden');
+
+    try {
+        const response = await fetch(`${API_BASE}/api/visualize`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ transcript: currentTranscript })
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            loading.classList.add('hidden');
+            content.classList.remove('hidden');
+
+            // Initialize Mermaid
+            mermaid.initialize({ startOnLoad: true });
+
+            // Render diagram
+            const graphDefinition = data.mermaid;
+            const { svg } = await mermaid.render('graphDiv', graphDefinition);
+            content.innerHTML = svg;
+
+        } else {
+            alert('Failed to generate mind map');
+            loading.classList.add('hidden');
+            placeholder.classList.remove('hidden');
+        }
+    } catch (error) {
+        console.error(error);
+        alert('Network error');
+        loading.classList.add('hidden');
+        placeholder.classList.remove('hidden');
+    }
+}
+
+// --- Podcast Feature ---
+async function handlePodcastRequest() {
+    const btn = document.getElementById('podcastBtn');
+    const originalText = btn.innerHTML;
+
+    if (window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+        btn.innerHTML = originalText.replace('Stop', 'Podcast');
+        btn.classList.remove('btn-active');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = 'Generating...';
+
+    try {
+        const response = await fetch(`${API_BASE}/api/podcast`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ transcript: currentTranscript })
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            btn.disabled = false;
+            btn.classList.add('btn-active');
+            btn.innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="6" y="4" width="4" height="16"></rect>
+                    <rect x="14" y="4" width="4" height="16"></rect>
+                </svg>
+                Stop Podcast
+            `;
+
+            playPodcastScript(data.script, () => {
+                // On end
+                btn.classList.remove('btn-active');
+                btn.innerHTML = originalText;
+            });
+        } else {
+            alert('Failed to generate podcast');
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    } catch (error) {
+        console.error(error);
+        alert('Network error');
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
+}
+
+function playPodcastScript(script, onEndCallback) {
+    let currentIndex = 0;
+    const voices = window.speechSynthesis.getVoices();
+
+    // Select two distinct voices
+    const voiceA = voices.find(v => v.name.includes('Male') || v.name.includes('Google US English')) || voices[0];
+    const voiceB = voices.find(v => v.name.includes('Female') || v.name.includes('Google UK English Female')) || voices[1] || voices[0];
+
+    function speakNext() {
+        if (currentIndex >= script.length) {
+            if (onEndCallback) onEndCallback();
+            return;
+        }
+
+        const line = script[currentIndex];
+        const utterance = new SpeechSynthesisUtterance(line.text);
+
+        // Assign voice based on speaker
+        utterance.voice = (line.speaker === 'Alex') ? voiceA : voiceB;
+
+        utterance.onend = () => {
+            currentIndex++;
+            speakNext();
+        };
+
+        utterance.onerror = (e) => {
+            console.error('Speech error:', e);
+            currentIndex++;
+            speakNext();
+        };
+
+        window.speechSynthesis.speak(utterance);
+    }
+
+    speakNext();
 }
 
 // Handle shared content from Web Share Target

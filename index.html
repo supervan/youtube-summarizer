@@ -22,6 +22,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 </head>
 
 <body>
@@ -97,7 +98,9 @@
         <!-- Video Info Section -->
         <div class="card video-info-card hidden" id="videoInfoCard">
             <div class="video-preview">
-                <img id="videoThumbnail" src="" alt="Video thumbnail" class="thumbnail">
+                <div id="playerContainer" class="video-player-container">
+                    <div id="youtubePlayer"></div>
+                </div>
                 <div class="video-details">
                     <h3 id="videoTitle">Video Information</h3>
                     <p class="video-meta">
@@ -121,13 +124,14 @@
                 <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
                     <h2>✨ AI Summary</h2>
                     <div style="display: flex; gap: 0.5rem;">
-                        <button class="btn btn-small hidden" id="readAloudBtn">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                        <button class="btn btn-small hidden" id="podcastBtn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                                <line x1="12" y1="19" x2="12" y2="23"></line>
+                                <line x1="8" y1="23" x2="16" y2="23"></line>
                             </svg>
-                            Read
+                            Podcast
                         </button>
                         <button class="btn btn-small hidden" id="copyBtn">
                             <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
@@ -159,6 +163,9 @@
                 </button>
                 <button class="feature-tab hidden" id="tabQuiz" data-target="quizSection">
                     <span class="tab-icon">🧠</span> Quiz
+                </button>
+                <button class="feature-tab hidden" id="tabMindMap" data-target="mindMapSection">
+                    <span class="tab-icon">🗺️</span> Mind Map
                 </button>
             </div>
 
@@ -193,6 +200,20 @@
                     <button id="generateStepsBtn" class="btn btn-secondary">
                         Generate Steps
                     </button>
+                </div>
+            </div>
+
+            <!-- Mind Map Section -->
+            <div id="mindMapSection" class="feature-content hidden">
+                <div class="mindmap-container">
+                    <div id="mindMapPlaceholder" style="text-align: center; padding: 2rem;">
+                        <button id="generateMindMapBtn" class="btn btn-secondary">Generate Mind Map</button>
+                    </div>
+                    <div id="mindMapLoading" class="hidden" style="text-align: center; padding: 2rem;">
+                        <div class="loader" style="margin: 0 auto 1rem;"></div> 
+                        <p>Generating Visual Graph...</p>
+                    </div>
+                    <div id="mindMapContent" class="mermaid hidden" style="background: white; padding: 1rem; border-radius: 8px; overflow-x: auto;"></div>
                 </div>
             </div>
 
