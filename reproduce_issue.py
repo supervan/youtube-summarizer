@@ -21,6 +21,10 @@ def reproduce():
             'socket_timeout': 5,
             'retries': 1,
             'fragment_retries': 1,
+            'format': 'worst',
+            'extractor_args': {'youtube': {'player_client': ['web', 'android']}},
+            'ignore_no_formats_error': True,
+            'allow_unplayable_formats': True,
         }
         
         try:

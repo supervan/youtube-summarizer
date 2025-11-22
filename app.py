@@ -268,8 +268,8 @@ def _get_youtube_transcript_with_cookies(video_id):
                         'subtitleslangs': ['en'],
                         'subtitlesformat': 'vtt',
                         'outtmpl': os.path.join(temp_dir, '%(id)s'),
-                        'quiet': True,
-                        'no_warnings': True,
+                        'quiet': False,      # ENABLE LOGS to see what's happening
+                        'no_warnings': False,
                         # Optimization settings to fail fast on bad proxies
                         'socket_timeout': 5, # 5 seconds timeout
                         'retries': 1,        # Retry only once internally
@@ -295,7 +295,8 @@ def _get_youtube_transcript_with_cookies(video_id):
                         
                         # Look for the downloaded VTT file
                         vtt_file = None
-                        for filename in os.listdir(temp_dir):
+                        files_in_dir = os.listdir(temp_dir) # Debug: See what was downloaded
+                        for filename in files_in_dir:
                             if filename.endswith('.vtt'):
                                 vtt_file = os.path.join(temp_dir, filename)
                                 break
@@ -320,7 +321,8 @@ def _get_youtube_transcript_with_cookies(video_id):
                                 
                             return full_text, 0
                         else:
-                            raise Exception("No subtitle file downloaded")
+                            print(f"⚠️ No VTT file found. Files in temp dir: {files_in_dir}")
+                            raise Exception(f"No subtitle file downloaded. Dir contents: {files_in_dir}")
                     
                 except Exception as e:
                     print(f"❌ Attempt {attempt+1} failed: {str(e)}")
@@ -350,8 +352,8 @@ def _get_youtube_transcript_with_cookies(video_id):
                         'subtitleslangs': ['en'],
                         'subtitlesformat': 'vtt',
                         'outtmpl': os.path.join(temp_dir, '%(id)s'),
-                        'quiet': True,
-                        'no_warnings': True,
+                        'quiet': False, # Enable logs
+                        'no_warnings': False,
                         'socket_timeout': 5,
                         'format': 'worst',
                         'ignore_no_formats_error': True,
@@ -363,13 +365,16 @@ def _get_youtube_transcript_with_cookies(video_id):
                     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                         ydl.extract_info(video_url, download=True)
                         vtt_file = None
-                        for filename in os.listdir(temp_dir):
+                        files_in_dir = os.listdir(temp_dir)
+                        for filename in files_in_dir:
                             if filename.endswith('.vtt'):
                                 vtt_file = os.path.join(temp_dir, filename)
                                 break
                         if vtt_file:
                             with open(vtt_file, 'r', encoding='utf-8') as f:
                                 return _parse_vtt(f.read()), 0
+                        else:
+                             print(f"⚠️ Fallback: No VTT file. Dir contents: {files_in_dir}")
             except Exception as e:
                 print(f"❌ Final fallback failed: {e}")
 
@@ -386,7 +391,7 @@ def _get_youtube_transcript_with_cookies(video_id):
 @app.route('/api/extract-transcript', methods=['POST'])
 def extract_transcript():
     """Extract transcript from YouTube video"""
-    DEPLOYMENT_ID = "v2025.11.21.19"
+    DEPLOYMENT_ID = "v2025.11.21.20"
     try:
         data = request.json
         youtube_url = data.get('url', '')
@@ -424,7 +429,7 @@ def diagnostics():
     scraperapi_key = os.getenv('SCRAPERAPI_KEY', '')
     
     diagnostics_info = {
-        'deployment_id': 'v2025.11.21.19',
+        'deployment_id': 'v2025.11.21.20',
         'cookies_configured': bool(cookies_content),
         'cookies_line_count': len(cookies_content.splitlines()) if cookies_content else 0,
         'cookies_has_header': cookies_content.startswith('# Netscape') if cookies_content else False,
