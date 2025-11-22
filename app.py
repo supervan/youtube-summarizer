@@ -810,7 +810,8 @@ def generate_mindmap():
         3. Use clear relationships.
         4. Return ONLY the raw Mermaid syntax. Do not wrap in markdown code blocks.
         5. Do not include any conversational text.
-        6. CRITICAL: Enclose ALL node labels in double quotes to prevent syntax errors with special characters. Example: id["Label Text"]
+        6. CRITICAL: Enclose ALL node labels in double quotes. Example: id["Label Text"]
+        7. DO NOT use double quotes (") INSIDE the node labels. Use single quotes (') instead if needed. Example: id["User's Choice"] NOT id["User"s Choice"]
         
         Transcript:
         {transcript}"""
