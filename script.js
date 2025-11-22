@@ -147,6 +147,37 @@ function setupEventListeners() {
     document.getElementById('podcastBtn').addEventListener('click', handlePodcastRequest);
     document.getElementById('podcastPlayPauseBtn').addEventListener('click', togglePodcastPlayback);
     document.getElementById('podcastStopBtn').addEventListener('click', stopPodcast);
+
+    // Install prompt listeners
+    installLink.addEventListener('click', async (e) => {
+        e.preventDefault();
+
+        if (deferredPrompt) {
+            // Show the install prompt
+            deferredPrompt.prompt();
+            // Wait for the user to respond to the prompt
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`User response to the install prompt: ${outcome}`);
+            // We've used the prompt, so it can't be used again, discard it
+            deferredPrompt = null;
+            // Hide the prompt button
+            installPrompt.classList.add('hidden');
+        } else {
+            // Fallback to manual instructions
+            installModal.classList.remove('hidden');
+        }
+    });
+
+    // Close modal when clicking outside
+    installModal.addEventListener('click', (e) => {
+        if (e.target === installModal) {
+            installModal.classList.add('hidden');
+        }
+    });
+
+    closeModal.addEventListener('click', () => {
+        installModal.classList.add('hidden');
+    });
 }
 
 // Switch Feature Tabs
