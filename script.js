@@ -116,6 +116,7 @@ function showSkeletonLoading() {
         <div class="skeleton skeleton-text"></div>
     `;
     summaryCard.classList.remove('hidden');
+    copyBtn.classList.add('hidden'); // Ensure copy button is hidden
 }
 
 // Extract video ID from URL
@@ -249,6 +250,7 @@ function showSummary(summary) {
 
     summaryContent.innerHTML = formattedSummary;
     summaryCard.classList.remove('hidden');
+    copyBtn.classList.remove('hidden'); // Show copy button
     summaryCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
