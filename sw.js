@@ -1,4 +1,4 @@
-const CACHE_NAME = 'yt-summarizer-v23';
+const CACHE_NAME = 'yt-summarizer-v24';
 const urlsToCache = [
     '/',
     '/index.html',
@@ -66,6 +66,10 @@ self.addEventListener('fetch', event => {
     }
 
     // Normal fetch handling
+    if (event.request.method !== 'GET') {
+        return;
+    }
+
     event.respondWith(
         caches.match(event.request)
             .then(response => {

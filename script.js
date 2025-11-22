@@ -176,9 +176,7 @@ function showFeatures() {
         document.getElementById('tabQuiz').classList.remove('hidden');
         hasFeatures = true;
     }
-    // Always show Mind Map tab if we have a transcript (it's a core feature now)
-    document.getElementById('tabMindMap').classList.remove('hidden');
-    hasFeatures = true;
+
 
     if (hasFeatures) {
         container.classList.remove('hidden');
