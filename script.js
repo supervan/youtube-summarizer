@@ -82,7 +82,6 @@ window.onYouTubeIframeAPIReady = function () {
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
-    setupEventListeners();
     // checkInstallPrompt called via event listener now
     handleSharedContent();
     fetchFeatures(); // Fetch feature flags
@@ -437,18 +436,20 @@ function resetApp() {
 
 // Toggle Input Section
 function toggleInputSection(forceState = null) {
+    if (!inputSection) return;
+
     const isCollapsed = inputSection.classList.contains('collapsed');
     const shouldCollapse = forceState !== null ? !forceState : !isCollapsed;
-    const btn = document.getElementById('toggleInputBtn');
+    const toggleText = document.getElementById('toggleText');
 
     if (shouldCollapse) {
         inputSection.classList.add('collapsed');
-        inputSection.style.display = 'none';
-        btn.style.transform = 'rotate(180deg)';
+        inputSection.style.setProperty('display', 'none', 'important');
+        if (toggleText) toggleText.textContent = 'Show';
     } else {
         inputSection.classList.remove('collapsed');
-        inputSection.style.display = 'block';
-        btn.style.transform = 'rotate(0deg)';
+        inputSection.style.setProperty('display', 'block', 'important');
+        if (toggleText) toggleText.textContent = 'Hide';
     }
 }
 
@@ -966,11 +967,6 @@ function handleSharedContent() {
         }
 
         if (videoId) {
-            // Expand input section if collapsed
-            if (inputSection.classList.contains('collapsed')) {
-                toggleInputSection(true);
-            }
-
             // Scroll to input
             youtubeUrlInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
