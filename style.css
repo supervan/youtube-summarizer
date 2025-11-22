@@ -181,8 +181,10 @@ body {
 /* Input Styles */
 .input-group {
     display: flex;
-    gap: 1rem;
+    align-items: center;
+    gap: 0.5rem;
     margin-bottom: 1rem;
+    position: relative;
 }
 
 .input-field {
@@ -195,6 +197,31 @@ body {
     font-size: 1rem;
     font-family: inherit;
     transition: all 0.3s ease;
+    padding-right: 3rem;
+    /* Space for reset button */
+}
+
+.icon-btn-small {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.icon-btn-small:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
 }
 
 .input-field:focus {

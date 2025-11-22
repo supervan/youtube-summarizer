@@ -55,6 +55,13 @@
                     <div class="input-group">
                         <input type="text" id="youtubeUrl" placeholder="https://www.youtube.com/watch?v=..."
                             class="input-field" required>
+                        <button type="button" id="resetBtn" class="icon-btn-small" aria-label="Reset"
+                            title="Clear input and results">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M18 6L6 18M6 6l12 12" />
+                            </svg>
+                        </button>
                     </div>
 
                     <!-- Summary Options -->
@@ -62,8 +69,8 @@
                         <div class="option-group">
                             <label for="summaryLength">📏 Summary Length</label>
                             <select id="summaryLength" class="select-field">
-                                <option value="short">Short (Quick overview)</option>
-                                <option value="medium" selected>Medium (Balanced)</option>
+                                <option value="short" selected>Short (Quick overview)</option>
+                                <option value="medium">Medium (Balanced)</option>
                                 <option value="long">Long (Comprehensive)</option>
                             </select>
                         </div>

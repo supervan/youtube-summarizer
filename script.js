@@ -9,6 +9,7 @@ const btnLoader = document.getElementById('btnLoader');
 
 const inputSection = document.getElementById('inputSection');
 const toggleInputBtn = document.getElementById('toggleInputBtn');
+const resetBtn = document.getElementById('resetBtn');
 
 const videoInfoCard = document.getElementById('videoInfoCard');
 const videoThumbnail = document.getElementById('videoThumbnail');
@@ -37,6 +38,18 @@ function setupEventListeners() {
     summarizerForm.addEventListener('submit', handleSubmit);
     copyBtn.addEventListener('click', copySummary);
     toggleInputBtn.addEventListener('click', () => toggleInputSection());
+    resetBtn.addEventListener('click', resetApp);
+}
+
+// Reset Application
+function resetApp() {
+    youtubeUrlInput.value = '';
+    hideAllCards();
+    toggleInputSection(false); // Ensure input is expanded
+
+    // Reset defaults
+    summaryLengthSelect.value = 'short';
+    summaryToneSelect.value = 'conversational'; // Assuming conversational is default
 }
 
 // Toggle Input Section
