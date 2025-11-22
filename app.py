@@ -151,6 +151,8 @@ class FreeProxyManager:
                         self.proxies.append(f"{protocol}://{proxy}")
             except Exception as e:
                 print(f"⚠️ Failed to fetch from {url}: {e}")
+                # Continue to next source instead of crashing
+                continue
 
         # Source 2: sslproxies.org (Backup)
         try:

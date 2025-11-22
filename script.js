@@ -635,8 +635,21 @@ function populateVoiceList() {
         voiceSelect.appendChild(option);
     });
 
-    // Select default or first English voice
-    const defaultVoice = voices.find(v => v.default) || voices[0];
+    // Select default voice: Prioritize UK English Female, then UK English, then US English
+    let defaultVoice = voices.find(v => v.name.includes('UK English Female') || v.name.includes('Google UK English Female'));
+
+    if (!defaultVoice) {
+        defaultVoice = voices.find(v => v.lang === 'en-GB' && (v.name.includes('Female') || v.name.includes('Google')));
+    }
+
+    if (!defaultVoice) {
+        defaultVoice = voices.find(v => v.lang === 'en-GB');
+    }
+
+    if (!defaultVoice) {
+        defaultVoice = voices.find(v => v.default) || voices[0];
+    }
+
     if (defaultVoice) {
         voiceSelect.value = defaultVoice.name;
         // Manually select the option by text content if value doesn't work directly for some browsers
