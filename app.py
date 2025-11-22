@@ -292,8 +292,9 @@ def _get_youtube_transcript_with_cookies(video_id):
                         ydl_opts['cookiefile'] = cookies_file
                     
                     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                        # Download subtitles
-                        ydl.extract_info(video_url, download=True)
+                        # Download subtitles and metadata
+                        info = ydl.extract_info(video_url, download=True)
+                        video_title = info.get('title', 'Unknown Title')
                         
                         # Look for the downloaded VTT file
                         vtt_file = None
@@ -319,9 +320,9 @@ def _get_youtube_transcript_with_cookies(video_id):
                             
                             # Remember this working proxy for next time
                             if proxies:
-                                proxy_manager.working_proxy = proxies
+                                proxy_manager.report_success(proxy_url)
                                 
-                            return full_text, 0
+                            return full_text, video_title, len(cookies_content) if cookies_content else 0
                         else:
                             print(f"⚠️ No VTT file found. Files in temp dir: {files_in_dir}")
                             raise Exception(f"No subtitle file downloaded. Dir contents: {files_in_dir}")
@@ -406,13 +407,14 @@ def extract_transcript():
         if not video_id:
             return jsonify({'error': 'Invalid YouTube URL'}), 400
         
-        # Get transcript
+        # Get transcript and title
         try:
-            full_transcript, cookie_count = _get_youtube_transcript_with_cookies(video_id)
+            full_transcript, video_title, cookie_count = _get_youtube_transcript_with_cookies(video_id)
             
             return jsonify({
                 'success': True,
                 'video_id': video_id,
+                'title': video_title,
                 'transcript': full_transcript,
                 'length': len(full_transcript),
                 'deployment_id': DEPLOYMENT_ID

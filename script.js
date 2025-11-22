@@ -569,7 +569,7 @@ function showVideoInfo(videoId, data) {
         videoThumbnail.onerror = null; // Prevent infinite loop
     };
 
-    videoTitle.textContent = `Video ID: ${videoId}`;
+    videoTitle.textContent = data.title || `Video ID: ${videoId}`;
     transcriptLength.textContent = `Transcript: ${data.length} characters`;
 
     videoInfoCard.classList.remove('hidden');
