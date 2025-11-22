@@ -826,6 +826,9 @@ async function handleSubmit(e) {
             throw new Error(transcriptData.error || 'Failed to extract transcript');
         }
 
+        // Store transcript globally for other features
+        currentTranscript = transcriptData.transcript;
+
         // Show video info (removes skeleton)
         showVideoInfo(videoId, transcriptData);
 
@@ -850,6 +853,9 @@ async function handleSubmit(e) {
 
         // Show summary
         showSummary(summaryData.summary);
+
+        // Show enabled features
+        showFeatures();
 
     } catch (error) {
         showError(error.message);
