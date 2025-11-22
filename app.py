@@ -255,6 +255,33 @@ def _get_youtube_transcript_with_cookies(video_id):
             print(f"⚠️ Failed to create cookies file: {e}")
             cookies_file = None
             
+    # METHOD 1: Try YouTubeTranscriptApi (Fastest & often bypasses blocks)
+    try:
+        print(f"🚀 Attempting Method 1: YouTubeTranscriptApi for {video_id}...")
+        # Get transcript
+        transcript_list = YouTubeTranscriptApi.get_transcript(video_id, cookies=cookies_file)
+        
+        # Parse transcript
+        full_text = " ".join([item['text'] for item in transcript_list])
+        print(f"✅ Method 1 Success! Extracted {len(full_text)} chars")
+        
+        # We need the title too. Since this API doesn't give it, we'll do a quick fetch
+        # or just return a placeholder if we want to be super fast. 
+        # Let's try a quick lightweight fetch for title using yt-dlp but WITHOUT downloading subs
+        try:
+            with yt_dlp.YoutubeDL({'quiet': True, 'skip_download': True}) as ydl:
+                info = ydl.extract_info(video_url, download=False)
+                video_title = info.get('title', 'Unknown Title')
+        except:
+            video_title = "YouTube Video (Title Unavailable)"
+            
+        return full_text, video_title, len(cookies_content) if cookies_content else 0
+        
+    except Exception as e:
+        print(f"⚠️ Method 1 failed: {e}")
+        print("🔄 Switching to Method 2: yt-dlp with proxy rotation...")
+
+    # METHOD 2: yt-dlp with Proxy Rotation (Fallback)
     try:
         for attempt in range(max_retries):
             # Check global timeout
