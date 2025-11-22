@@ -446,12 +446,12 @@ function toggleInputSection(forceState = null) {
 
     if (shouldCollapse) {
         inputSection.classList.add('collapsed');
-        if (iconMinus) iconMinus.classList.add('hidden');
-        if (iconPlus) iconPlus.classList.remove('hidden');
+        if (iconMinus) iconMinus.style.display = 'none';
+        if (iconPlus) iconPlus.style.display = 'block';
     } else {
         inputSection.classList.remove('collapsed');
-        if (iconMinus) iconMinus.classList.remove('hidden');
-        if (iconPlus) iconPlus.classList.add('hidden');
+        if (iconMinus) iconMinus.style.display = 'block';
+        if (iconPlus) iconPlus.style.display = 'none';
     }
 }
 
