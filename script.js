@@ -440,16 +440,16 @@ function toggleInputSection(forceState = null) {
 
     const isCollapsed = inputSection.classList.contains('collapsed');
     const shouldCollapse = forceState !== null ? !forceState : !isCollapsed;
-    const toggleText = document.getElementById('toggleText');
+    const btn = document.getElementById('toggleInputBtn');
 
     if (shouldCollapse) {
         inputSection.classList.add('collapsed');
         inputSection.style.setProperty('display', 'none', 'important');
-        if (toggleText) toggleText.textContent = 'Show';
+        if (btn) btn.classList.add('collapsed');
     } else {
         inputSection.classList.remove('collapsed');
         inputSection.style.setProperty('display', 'block', 'important');
-        if (toggleText) toggleText.textContent = 'Hide';
+        if (btn) btn.classList.remove('collapsed');
     }
 }
 

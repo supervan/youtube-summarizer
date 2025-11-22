@@ -17,7 +17,7 @@
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icon-192.png">
 
-    <link rel="stylesheet" href="style.css?v=304">
+    <link rel="stylesheet" href="style.css?v=502">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
@@ -45,9 +45,11 @@
                     </svg>
                     <h1>YouTube Summarizer</h1>
                 </div>
-                <button id="toggleInputBtn" type="button"
-                    style="background: #667eea; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;">
-                    <span id="toggleText">Hide</span>
+                <button id="toggleInputBtn" type="button" class="icon-btn" aria-label="Toggle input section">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="18 15 12 9 6 15"></polyline>
+                    </svg>
                 </button>
             </div>
 
@@ -319,7 +321,7 @@
         </div>
     </div>
 
-    <script src="script.js?v=501"></script>
+    <script src="script.js?v=502"></script>
     <script>
         // Register Service Worker for PWA
         if ('serviceWorker' in navigator) {

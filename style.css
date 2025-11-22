@@ -793,18 +793,26 @@ body {
 }
 
 .icon-btn {
-    background: rgba(102, 126, 234, 0.2);
-    border: 2px solid var(--primary-color);
+    background: rgba(102, 126, 234, 0.15);
+    border: 2px solid rgba(102, 126, 234, 0.3);
     color: var(--primary-color);
-    width: 48px;
-    height: 48px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 0;
+}
+
+.icon-btn svg {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.icon-btn.collapsed svg {
+    transform: rotate(180deg);
 }
 
 .icon-btn .hidden {
@@ -812,9 +820,9 @@ body {
 }
 
 .icon-btn:hover {
-    background: rgba(102, 126, 234, 0.4);
-    color: var(--text-primary);
-    transform: scale(1.1);
+    background: rgba(102, 126, 234, 0.25);
+    border-color: rgba(102, 126, 234, 0.5);
+    transform: scale(1.05);
 }
 
 /* Skeleton Loading */
