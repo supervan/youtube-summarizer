@@ -204,8 +204,8 @@ class FreeProxyManager:
         """Check if a proxy actually works with YouTube"""
         try:
             proxies = {'http': proxy_url, 'https': proxy_url}
-            # Try to fetch a lightweight YouTube page with short timeout
-            resp = requests.get('https://www.youtube.com/favicon.ico', proxies=proxies, timeout=2)
+            # Try to fetch a real YouTube search page to verify access
+            resp = requests.get('https://www.youtube.com/results?search_query=test', proxies=proxies, timeout=3)
             return resp.status_code == 200
         except:
             return False
@@ -391,6 +391,7 @@ def _get_youtube_transcript_with_cookies(video_id):
                             return _parse_vtt(f.read()), video_title, 0
                     else:
                             print(f"⚠️ Fallback: No VTT file. Dir contents: {files_in_dir}")
+                            raise Exception(f"No subtitle file downloaded. Dir contents: {files_in_dir}")
         except Exception as e:
             print(f"❌ Final fallback failed: {e}")
             # Capture the specific fallback error to return to the user
