@@ -437,22 +437,19 @@ function resetApp() {
 
 // Toggle Input Section
 function toggleInputSection(forceState = null) {
-    console.log('🔄 Toggle called! forceState:', forceState);
-    console.log('   inputSection element:', inputSection);
-    console.log('   inputSection classes:', inputSection.className);
     const isCollapsed = inputSection.classList.contains('collapsed');
-    console.log('   Current collapsed state:', isCollapsed);
     const shouldCollapse = forceState !== null ? !forceState : !isCollapsed;
-    console.log('   Should collapse:', shouldCollapse);
 
     const iconMinus = document.getElementById('iconMinus');
     const iconPlus = document.getElementById('iconPlus');
 
     if (shouldCollapse) {
         // Collapse
-        console.log('   → Collapsing...');
         inputSection.classList.add('collapsed');
-        inputSection.style.cssText = 'display: none !important;';
+        // Force immediate style update
+        requestAnimationFrame(() => {
+            inputSection.style.cssText = 'display: none !important;';
+        });
 
         if (iconMinus) {
             iconMinus.setAttribute('style', 'display: none !important;');
@@ -462,9 +459,13 @@ function toggleInputSection(forceState = null) {
         }
     } else {
         // Expand
-        console.log('   → Expanding...');
         inputSection.classList.remove('collapsed');
-        inputSection.style.cssText = 'display: block !important;';
+        // Force immediate style update with double requestAnimationFrame to ensure it takes
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                inputSection.style.cssText = 'display: block !important;';
+            });
+        });
 
         if (iconMinus) {
             iconMinus.setAttribute('style', 'display: block !important;');
@@ -473,8 +474,6 @@ function toggleInputSection(forceState = null) {
             iconPlus.setAttribute('style', 'display: none !important;');
         }
     }
-    console.log('   ✅ Toggle complete. Applied styles:', inputSection.getAttribute('style'));
-    console.log('   Final classes:', inputSection.className);
 }
 
 // Hide all result cards
