@@ -45,7 +45,7 @@ function setupEventListeners() {
 function resetApp() {
     youtubeUrlInput.value = '';
     hideAllCards();
-    toggleInputSection(false); // Ensure input is expanded
+    toggleInputSection(true); // Ensure input is expanded
 
     // Reset defaults
     summaryLengthSelect.value = 'short';
@@ -270,9 +270,11 @@ function showSummary(summary) {
 // Copy summary to clipboard
 async function copySummary() {
     const text = summaryContent.innerText;
+    const url = youtubeUrlInput.value.trim();
+    const clipboardText = url ? `${url}\n\n${text}` : text;
 
     try {
-        await navigator.clipboard.writeText(text);
+        await navigator.clipboard.writeText(clipboardText);
 
         // Visual feedback
         const originalText = copyBtn.innerHTML;
