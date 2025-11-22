@@ -20,6 +20,8 @@ const summaryCard = document.getElementById('summaryCard');
 const summaryContent = document.getElementById('summaryContent');
 const copyBtn = document.getElementById('copyBtn');
 const readAloudBtn = document.getElementById('readAloudBtn');
+const voiceSelect = document.getElementById('voiceSelect');
+let voices = [];
 
 const errorCard = document.getElementById('errorCard');
 const errorMessage = document.getElementById('errorMessage');
@@ -67,6 +69,12 @@ function setupEventListeners() {
     copyBtn.addEventListener('click', copySummary);
     readAloudBtn.addEventListener('click', toggleReadAloud);
     toggleInputBtn.addEventListener('click', () => toggleInputSection());
+
+    // Voice selection
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = populateVoiceList;
+    }
+    populateVoiceList();
     resetBtn.addEventListener('click', resetApp);
 
     // Feature Tabs
@@ -441,6 +449,7 @@ function showSkeletonLoading() {
     summaryCard.classList.remove('hidden');
     copyBtn.classList.add('hidden'); // Ensure copy button is hidden
     readAloudBtn.classList.add('hidden'); // Ensure read button is hidden
+    voiceSelect.classList.add('hidden'); // Ensure voice select is hidden
 }
 
 // Extract video ID from URL
@@ -578,7 +587,40 @@ function showSummary(summary) {
     summaryCard.classList.remove('hidden');
     copyBtn.classList.remove('hidden'); // Show copy button
     readAloudBtn.classList.remove('hidden'); // Show read aloud button
+    if (voices.length > 0) voiceSelect.classList.remove('hidden'); // Show voice select if voices available
     summaryCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// Populate Voice List
+function populateVoiceList() {
+    voices = window.speechSynthesis.getVoices();
+    voiceSelect.innerHTML = '';
+
+    voices.forEach((voice) => {
+        const option = document.createElement('option');
+        option.textContent = `${voice.name} (${voice.lang})`;
+
+        if (voice.default) {
+            option.textContent += ' -- DEFAULT';
+        }
+
+        option.setAttribute('data-lang', voice.lang);
+        option.setAttribute('data-name', voice.name);
+        voiceSelect.appendChild(option);
+    });
+
+    // Select default or first English voice
+    const defaultVoice = voices.find(v => v.default) || voices.find(v => v.lang.startsWith('en'));
+    if (defaultVoice) {
+        voiceSelect.value = defaultVoice.name;
+        // Manually select the option by text content if value doesn't work directly for some browsers
+        for (let i = 0; i < voiceSelect.options.length; i++) {
+            if (voiceSelect.options[i].getAttribute('data-name') === defaultVoice.name) {
+                voiceSelect.selectedIndex = i;
+                break;
+            }
+        }
+    }
 }
 
 // Toggle Read Aloud
@@ -589,6 +631,14 @@ function toggleReadAloud() {
     } else {
         const text = summaryContent.innerText;
         const utterance = new SpeechSynthesisUtterance(text);
+
+        // Set selected voice
+        const selectedOption = voiceSelect.selectedOptions[0];
+        if (selectedOption) {
+            const selectedVoiceName = selectedOption.getAttribute('data-name');
+            const voice = voices.find(v => v.name === selectedVoiceName);
+            if (voice) utterance.voice = voice;
+        }
 
         utterance.onend = () => {
             updateReadButton(false);
