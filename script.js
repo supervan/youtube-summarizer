@@ -446,6 +446,10 @@ function toggleInputSection(forceState = null) {
 
     if (shouldCollapse) {
         inputSection.classList.add('collapsed');
+        inputSection.style.maxHeight = '0';
+        inputSection.style.opacity = '0';
+        inputSection.style.marginBottom = '0';
+
         if (iconMinus) {
             iconMinus.style.display = 'none';
             iconMinus.classList.add('hidden');
@@ -456,6 +460,10 @@ function toggleInputSection(forceState = null) {
         }
     } else {
         inputSection.classList.remove('collapsed');
+        inputSection.style.maxHeight = '500px';
+        inputSection.style.opacity = '1';
+        inputSection.style.marginBottom = '1.5rem'; // Restore margin if needed
+
         if (iconMinus) {
             iconMinus.style.display = 'block';
             iconMinus.classList.remove('hidden');
