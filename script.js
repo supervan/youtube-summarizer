@@ -22,7 +22,7 @@ const toggleInputBtn = document.getElementById('toggleInputBtn');
 const resetBtn = document.getElementById('resetBtn');
 
 const videoInfoCard = document.getElementById('videoInfoCard');
-const videoThumbnail = document.getElementById('videoThumbnail');
+// videoThumbnail removed, using youtubePlayer instead
 const videoTitle = document.getElementById('videoTitle');
 const transcriptLength = document.getElementById('transcriptLength');
 
@@ -455,8 +455,9 @@ function setLoading(isLoading) {
 // Show Skeleton Loading
 function showSkeletonLoading() {
     // Video Info Skeleton
-    videoThumbnail.src = ''; // Clear previous
-    videoThumbnail.classList.add('hidden');
+    // Hide player temporarily or show skeleton overlay
+    const playerContainer = document.getElementById('playerContainer');
+    if (playerContainer) playerContainer.classList.add('hidden');
 
     // Create skeleton if not exists
     let skeletonThumb = videoInfoCard.querySelector('.skeleton-thumbnail');
@@ -594,6 +595,10 @@ function showVideoInfo(videoId, data) {
     // Remove skeleton
     const skeletonThumb = videoInfoCard.querySelector('.skeleton-thumbnail');
     if (skeletonThumb) skeletonThumb.classList.add('hidden');
+
+    // Show player container
+    const playerContainer = document.getElementById('playerContainer');
+    if (playerContainer) playerContainer.classList.remove('hidden');
 
     // Load video into player
     if (player && player.loadVideoById) {

@@ -42,10 +42,22 @@ self.addEventListener('fetch', event => {
         event.respondWith(
             (async () => {
                 const formData = await event.request.formData();
-                const url = formData.get('url') || formData.get('text') || '';
+                let url = formData.get('url');
+                const text = formData.get('text');
+
+                // Android often sends the URL inside the 'text' field
+                if (!url && text) {
+                    const urlMatch = text.match(/https?:\/\/[^\s]+/);
+                    if (urlMatch) {
+                        url = urlMatch[0];
+                    } else {
+                        // Fallback: use the whole text if it looks like it might be a URL or ID
+                        url = text;
+                    }
+                }
 
                 // Redirect to home with URL as query parameter
-                return Response.redirect(`/?url=${encodeURIComponent(url)}`, 303);
+                return Response.redirect(`/?url=${encodeURIComponent(url || '')}`, 303);
             })()
         );
         return;
