@@ -154,6 +154,28 @@
                 </div>
                 <select id="voiceSelect" class="select-field hidden"
                     style="width: 100%; padding: 0.6rem; font-size: 0.9rem;"></select>
+
+                <!-- Podcast Controls -->
+                <div id="podcastControls" class="hidden"
+                    style="display: flex; gap: 0.5rem; align-items: center; margin-top: 0.5rem; width: 100%; padding: 0.5rem; background: #f8f9fa; border-radius: 8px;">
+                    <button id="podcastPlayPauseBtn" class="btn btn-small">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <rect x="6" y="4" width="4" height="16"></rect>
+                            <rect x="14" y="4" width="4" height="16"></rect>
+                        </svg>
+                        Pause
+                    </button>
+                    <button id="podcastStopBtn" class="btn btn-small btn-secondary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <rect x="4" y="4" width="16" height="16"></rect>
+                        </svg>
+                        Stop
+                    </button>
+                    <span id="podcastStatus"
+                        style="font-size: 0.9rem; color: #666; margin-left: auto;">Playing...</span>
+                </div>
             </div>
             <div class="summary-content" id="summaryContent">
                 <!-- Summary will be inserted here -->

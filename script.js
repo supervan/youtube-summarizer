@@ -145,6 +145,8 @@ function setupEventListeners() {
 
     // Podcast
     document.getElementById('podcastBtn').addEventListener('click', handlePodcastRequest);
+    document.getElementById('podcastPlayPauseBtn').addEventListener('click', togglePodcastPlayback);
+    document.getElementById('podcastStopBtn').addEventListener('click', stopPodcast);
 }
 
 // Switch Feature Tabs
@@ -750,41 +752,157 @@ async function handlePodcastRequest() {
     }
 }
 
-function playPodcastScript(script, onEndCallback) {
-    let currentIndex = 0;
-    const voices = window.speechSynthesis.getVoices();
+// --- Podcast Feature ---
+let isPodcastPlaying = false;
+let isPodcastPaused = false;
+let podcastScript = [];
+let currentLineIndex = 0;
+let podcastVoices = { a: null, b: null };
 
-    // Select two distinct voices
-    const voiceA = voices.find(v => v.name.includes('Male') || v.name.includes('Google US English')) || voices[0];
-    const voiceB = voices.find(v => v.name.includes('Female') || v.name.includes('Google UK English Female')) || voices[1] || voices[0];
+async function handlePodcastRequest() {
+    const btn = document.getElementById('podcastBtn');
+    const originalText = btn.innerHTML;
 
-    function speakNext() {
-        if (currentIndex >= script.length) {
-            if (onEndCallback) onEndCallback();
-            return;
-        }
-
-        const line = script[currentIndex];
-        const utterance = new SpeechSynthesisUtterance(line.text);
-
-        // Assign voice based on speaker
-        utterance.voice = (line.speaker === 'Alex') ? voiceA : voiceB;
-
-        utterance.onend = () => {
-            currentIndex++;
-            speakNext();
-        };
-
-        utterance.onerror = (e) => {
-            console.error('Speech error:', e);
-            currentIndex++;
-            speakNext();
-        };
-
-        window.speechSynthesis.speak(utterance);
+    // If already playing, just scroll to controls
+    if (isPodcastPlaying) {
+        document.getElementById('podcastControls').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        return;
     }
 
-    speakNext();
+    btn.disabled = true;
+    btn.innerHTML = '<div class="loader" style="width: 16px; height: 16px;"></div> Generating...';
+
+    try {
+        const response = await fetch(`${API_BASE}/api/podcast`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ transcript: currentTranscript })
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            // Show controls
+            const controls = document.getElementById('podcastControls');
+            controls.classList.remove('hidden');
+            controls.style.display = 'flex';
+
+            // Start playback
+            podcastScript = data.script;
+            playPodcastScript(podcastScript);
+        } else {
+            alert('Failed to generate podcast');
+        }
+    } catch (error) {
+        console.error(error);
+        alert('Network error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
+}
+
+function playPodcastScript(script) {
+    // Reset state
+    window.speechSynthesis.cancel();
+    isPodcastPlaying = true;
+    isPodcastPaused = false;
+    currentLineIndex = 0;
+
+    // Update UI
+    updatePodcastUI('playing');
+
+    const voices = window.speechSynthesis.getVoices();
+    // Select two distinct voices
+    podcastVoices.a = voices.find(v => v.name.includes('Male') || v.name.includes('Google US English')) || voices[0];
+    podcastVoices.b = voices.find(v => v.name.includes('Female') || v.name.includes('Google UK English Female')) || voices[1] || voices[0];
+
+    speakNextLine();
+}
+
+function speakNextLine() {
+    if (!isPodcastPlaying || isPodcastPaused) return;
+
+    if (currentLineIndex >= podcastScript.length) {
+        stopPodcast();
+        return;
+    }
+
+    const line = podcastScript[currentLineIndex];
+    const utterance = new SpeechSynthesisUtterance(line.text);
+
+    // Assign voice based on speaker
+    utterance.voice = (line.speaker === 'Alex') ? podcastVoices.a : podcastVoices.b;
+
+    utterance.onend = () => {
+        if (isPodcastPlaying && !isPodcastPaused) {
+            currentLineIndex++;
+            speakNextLine();
+        }
+    };
+
+    utterance.onerror = (e) => {
+        console.error('Speech error:', e);
+        if (isPodcastPlaying && !isPodcastPaused) {
+            currentLineIndex++;
+            speakNextLine();
+        }
+    };
+
+    window.speechSynthesis.speak(utterance);
+}
+
+function togglePodcastPlayback() {
+    if (!isPodcastPlaying) return;
+
+    if (isPodcastPaused) {
+        // Resume
+        isPodcastPaused = false;
+        window.speechSynthesis.resume();
+        // If nothing was speaking (e.g. paused between lines), start next line
+        if (!window.speechSynthesis.speaking) {
+            speakNextLine();
+        }
+        updatePodcastUI('playing');
+    } else {
+        // Pause
+        isPodcastPaused = true;
+        window.speechSynthesis.pause();
+        updatePodcastUI('paused');
+    }
+}
+
+function stopPodcast() {
+    isPodcastPlaying = false;
+    isPodcastPaused = false;
+    currentLineIndex = 0;
+    window.speechSynthesis.cancel();
+
+    // Hide controls
+    document.getElementById('podcastControls').classList.add('hidden');
+}
+
+function updatePodcastUI(state) {
+    const playPauseBtn = document.getElementById('podcastPlayPauseBtn');
+    const statusText = document.getElementById('podcastStatus');
+
+    if (state === 'playing') {
+        playPauseBtn.innerHTML = `
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="6" y="4" width="4" height="16"></rect>
+                <rect x="14" y="4" width="4" height="16"></rect>
+            </svg>
+            Pause
+        `;
+        statusText.textContent = 'Playing...';
+    } else {
+        playPauseBtn.innerHTML = `
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+            Resume
+        `;
+        statusText.textContent = 'Paused';
+    }
 }
 
 // Handle shared content from Web Share Target
