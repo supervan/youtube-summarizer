@@ -488,7 +488,7 @@ def build_summary_prompt(transcript, length, tone):
     
     # Length instructions
     length_instructions = {
-        'short': 'Provide a brief, concise summary in 3-5 sentences focusing only on the most critical points.',
+        'short': 'Provide a single short paragraph summary using simple language suitable for a 13-year-old.',
         'medium': 'Provide a balanced summary with an overview, key points (3-5 bullet points), and a brief conclusion.',
         'long': 'Provide a comprehensive, detailed summary covering all major topics, subtopics, important details, examples, and conclusions.'
     }

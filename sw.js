@@ -1,4 +1,4 @@
-const CACHE_NAME = 'yt-summarizer-v7';
+const CACHE_NAME = 'yt-summarizer-v8';
 const urlsToCache = [
     '/',
     '/index.html',

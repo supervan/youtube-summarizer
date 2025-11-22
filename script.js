@@ -19,6 +19,7 @@ const transcriptLength = document.getElementById('transcriptLength');
 const summaryCard = document.getElementById('summaryCard');
 const summaryContent = document.getElementById('summaryContent');
 const copyBtn = document.getElementById('copyBtn');
+const readAloudBtn = document.getElementById('readAloudBtn');
 
 const errorCard = document.getElementById('errorCard');
 const errorMessage = document.getElementById('errorMessage');
@@ -62,7 +63,9 @@ async function fetchFeatures() {
 // Setup event listeners
 function setupEventListeners() {
     summarizerForm.addEventListener('submit', handleSubmit);
+    summarizerForm.addEventListener('submit', handleSubmit);
     copyBtn.addEventListener('click', copySummary);
+    readAloudBtn.addEventListener('click', toggleReadAloud);
     toggleInputBtn.addEventListener('click', () => toggleInputSection());
     resetBtn.addEventListener('click', resetApp);
 
@@ -339,6 +342,7 @@ function resetQuiz() {
 function resetApp() {
     youtubeUrlInput.value = '';
     hideAllCards();
+    window.speechSynthesis.cancel(); // Stop speaking
     toggleInputSection(true); // Ensure input is expanded
 
     // Reset features
@@ -383,6 +387,7 @@ function hideAllCards() {
     summaryCard.classList.add('hidden');
     errorCard.classList.add('hidden');
     document.getElementById('featuresContainer').classList.add('hidden');
+    window.speechSynthesis.cancel(); // Stop speaking
 }
 
 // Show error
@@ -433,7 +438,9 @@ function showSkeletonLoading() {
         <div class="skeleton skeleton-text"></div>
     `;
     summaryCard.classList.remove('hidden');
+    summaryCard.classList.remove('hidden');
     copyBtn.classList.add('hidden'); // Ensure copy button is hidden
+    readAloudBtn.classList.add('hidden'); // Ensure read button is hidden
 }
 
 // Extract video ID from URL
@@ -568,7 +575,54 @@ function showSummary(summary) {
     summaryContent.innerHTML = formattedSummary;
     summaryCard.classList.remove('hidden');
     copyBtn.classList.remove('hidden'); // Show copy button
+    summaryCard.classList.remove('hidden');
+    copyBtn.classList.remove('hidden'); // Show copy button
+    readAloudBtn.classList.remove('hidden'); // Show read aloud button
     summaryCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// Toggle Read Aloud
+function toggleReadAloud() {
+    if (window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+        updateReadButton(false);
+    } else {
+        const text = summaryContent.innerText;
+        const utterance = new SpeechSynthesisUtterance(text);
+
+        utterance.onend = () => {
+            updateReadButton(false);
+        };
+
+        utterance.onerror = () => {
+            updateReadButton(false);
+        };
+
+        window.speechSynthesis.speak(utterance);
+        updateReadButton(true);
+    }
+}
+
+function updateReadButton(isSpeaking) {
+    if (isSpeaking) {
+        readAloudBtn.innerHTML = `
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="6" y="4" width="4" height="16"></rect>
+                <rect x="14" y="4" width="4" height="16"></rect>
+            </svg>
+            Stop
+        `;
+        readAloudBtn.classList.add('btn-active');
+    } else {
+        readAloudBtn.innerHTML = `
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+            </svg>
+            Read
+        `;
+        readAloudBtn.classList.remove('btn-active');
+    }
 }
 
 // Copy summary to clipboard
