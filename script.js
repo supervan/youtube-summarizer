@@ -593,15 +593,41 @@ function showSummary(summary) {
 
 // Populate Voice List
 function populateVoiceList() {
-    voices = window.speechSynthesis.getVoices();
+    const allVoices = window.speechSynthesis.getVoices();
+
+    // Filter for English voices only
+    voices = allVoices.filter(voice => voice.lang.startsWith('en'));
+
+    // Sort voices: Google/Microsoft first, then others
+    voices.sort((a, b) => {
+        const aName = a.name.toLowerCase();
+        const bName = b.name.toLowerCase();
+        const isAGood = aName.includes('google') || aName.includes('microsoft') || aName.includes('natural');
+        const isBGood = bName.includes('google') || bName.includes('microsoft') || bName.includes('natural');
+
+        if (isAGood && !isBGood) return -1;
+        if (!isAGood && isBGood) return 1;
+        return aName.localeCompare(bName);
+    });
+
     voiceSelect.innerHTML = '';
+
+    if (voices.length === 0) {
+        // Fallback if no English voices found
+        voices = allVoices;
+    }
 
     voices.forEach((voice) => {
         const option = document.createElement('option');
-        option.textContent = `${voice.name} (${voice.lang})`;
+        let label = voice.name;
+
+        // Clean up label for better readability
+        label = label.replace('Microsoft ', '').replace('Google ', '').replace(' English', '');
+
+        option.textContent = `${label} (${voice.lang})`;
 
         if (voice.default) {
-            option.textContent += ' -- DEFAULT';
+            option.textContent += ' -- Default';
         }
 
         option.setAttribute('data-lang', voice.lang);
@@ -610,7 +636,7 @@ function populateVoiceList() {
     });
 
     // Select default or first English voice
-    const defaultVoice = voices.find(v => v.default) || voices.find(v => v.lang.startsWith('en'));
+    const defaultVoice = voices.find(v => v.default) || voices[0];
     if (defaultVoice) {
         voiceSelect.value = defaultVoice.name;
         // Manually select the option by text content if value doesn't work directly for some browsers
@@ -620,6 +646,13 @@ function populateVoiceList() {
                 break;
             }
         }
+    }
+
+    // Show/hide dropdown based on availability
+    if (voices.length > 0) {
+        voiceSelect.classList.remove('hidden');
+    } else {
+        voiceSelect.classList.add('hidden');
     }
 }
 
