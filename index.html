@@ -30,7 +30,19 @@
         <!-- Main Input Section -->
         <div class="card main-card">
             <div class="card-header">
-                <h2>YouTube Summarizer</h2>
+                <div class="logo">
+                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="40" height="40" rx="12" fill="url(#gradient)" />
+                        <path d="M16 12L28 20L16 28V12Z" fill="white" />
+                        <defs>
+                            <linearGradient id="gradient" x1="0" y1="0" x2="40" y2="40">
+                                <stop offset="0%" stop-color="#FF0080" />
+                                <stop offset="100%" stop-color="#7928CA" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <h1>YouTube Summarizer</h1>
+                </div>
                 <button id="toggleInputBtn" class="icon-btn" aria-label="Toggle input section">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M5 12h14" />
@@ -38,25 +50,8 @@
                 </button>
             </div>
 
-            <div id="inputSection" class="collapsible-content expanded">
-                <header class="header">
-                    <div class="logo">
-                        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <rect width="40" height="40" rx="12" fill="url(#gradient)" />
-                            <path d="M16 12L28 20L16 28V12Z" fill="white" />
-                            <defs>
-                                <linearGradient id="gradient" x1="0" y1="0" x2="40" y2="40">
-                                    <stop offset="0%" stop-color="#FF0080" />
-                                    <stop offset="100%" stop-color="#7928CA" />
-                                </linearGradient>
-                            </defs>
-                        </svg>
-                        <h1>YouTube Summarizer</h1>
-                    </div>
-                    <p class="tagline">AI-Powered Video Summaries in Seconds</p>
-                </header>
-
-                <form id="summarizerForm">
+            <form id="summarizerForm">
+                <div id="inputSection" class="collapsible-content expanded">
                     <div class="input-group">
                         <input type="text" id="youtubeUrl" placeholder="https://www.youtube.com/watch?v=..."
                             class="input-field" required>
@@ -82,13 +77,13 @@
                             </select>
                         </div>
                     </div>
+                </div>
 
-                    <button type="submit" class="btn btn-primary" id="submitBtn">
-                        <span id="btnText">Summarize</span>
-                        <span id="btnLoader" class="loader hidden"></span>
-                    </button>
-                </form>
-            </div>
+                <button type="submit" class="btn btn-primary" id="submitBtn">
+                    <span id="btnText">Summarize</span>
+                    <span id="btnLoader" class="loader hidden"></span>
+                </button>
+            </form>
         </div>
 
         <!-- Video Info Section -->
