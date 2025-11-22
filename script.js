@@ -794,6 +794,11 @@ async function handleMindMapRequest() {
         placeholder.classList.remove('hidden');
     }
 }
+}
+
+function openMindMapModal() {
+    mindMapModal.classList.remove('hidden');
+}
 
 // --- Podcast Feature ---
 async function handlePodcastRequest() {
