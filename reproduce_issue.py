@@ -18,13 +18,14 @@ def reproduce():
             'outtmpl': os.path.join(temp_dir, '%(id)s'),
             'quiet': False, # Enable output to see details
             'no_warnings': False,
-            'socket_timeout': 5,
+            'socket_timeout': 10,
             'retries': 1,
             'fragment_retries': 1,
             'format': 'worst',
             'extractor_args': {'youtube': {'player_client': ['web', 'android']}},
             'ignore_no_formats_error': True,
             'allow_unplayable_formats': True,
+            'force_ipv4': True,
         }
         
         try:

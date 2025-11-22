@@ -246,8 +246,8 @@ def _get_youtube_transcript_with_cookies(video_id):
     try:
         for attempt in range(max_retries):
             # Check global timeout
-            if time.time() - start_time > 25:
-                print("⚠️ Global timeout reached (25s), stopping retries")
+            if time.time() - start_time > 50:
+                print("⚠️ Global timeout reached (50s), stopping retries")
                 break
                 
             # Get a proxy (first attempt can be direct if no working proxy known)
@@ -271,9 +271,10 @@ def _get_youtube_transcript_with_cookies(video_id):
                         'quiet': False,      # ENABLE LOGS to see what's happening
                         'no_warnings': False,
                         # Optimization settings to fail fast on bad proxies
-                        'socket_timeout': 5, # 5 seconds timeout
+                        'socket_timeout': 10, # 10 seconds timeout
                         'retries': 1,        # Retry only once internally
                         'fragment_retries': 1,
+                        'force_ipv4': True,  # Avoid IPv6 issues
                         # Fix for "Requested format is not available"
                         'format': 'worst',   # We don't need video, so any format works. 'worst' is safest.
                         'extractor_args': {'youtube': {'player_client': ['web', 'android']}},
@@ -340,43 +341,43 @@ def _get_youtube_transcript_with_cookies(video_id):
                         print("⚠️ Direct connection failed, switching to proxies...")
                         proxy_manager._refresh_proxies()
         
-        # Final fallback attempt: Direct connection if we haven't tried it recently and have time
-        if time.time() - start_time < 28:
-            print("⚠️ All proxy attempts failed. Trying one last direct connection...")
-            try:
-                 with tempfile.TemporaryDirectory() as temp_dir:
-                    ydl_opts = {
-                        'skip_download': True,
-                        'writesubtitles': True,
-                        'writeautomaticsub': True,
-                        'subtitleslangs': ['en'],
-                        'subtitlesformat': 'vtt',
-                        'outtmpl': os.path.join(temp_dir, '%(id)s'),
-                        'quiet': False, # Enable logs
-                        'no_warnings': False,
-                        'socket_timeout': 5,
-                        'format': 'worst',
-                        'ignore_no_formats_error': True,
-                        'allow_unplayable_formats': True,
-                    }
-                    if cookies_file:
-                        ydl_opts['cookiefile'] = cookies_file
+        # Final fallback attempt: Direct connection ALWAYS runs if we get here
+        print("⚠️ All proxy attempts failed. Trying one last direct connection...")
+        try:
+             with tempfile.TemporaryDirectory() as temp_dir:
+                ydl_opts = {
+                    'skip_download': True,
+                    'writesubtitles': True,
+                    'writeautomaticsub': True,
+                    'subtitleslangs': ['en'],
+                    'subtitlesformat': 'vtt',
+                    'outtmpl': os.path.join(temp_dir, '%(id)s'),
+                    'quiet': False, # Enable logs
+                    'no_warnings': False,
+                    'socket_timeout': 10,
+                    'format': 'worst',
+                    'ignore_no_formats_error': True,
+                    'allow_unplayable_formats': True,
+                    'force_ipv4': True,
+                }
+                if cookies_file:
+                    ydl_opts['cookiefile'] = cookies_file
                         
-                    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                        ydl.extract_info(video_url, download=True)
-                        vtt_file = None
-                        files_in_dir = os.listdir(temp_dir)
-                        for filename in files_in_dir:
-                            if filename.endswith('.vtt'):
-                                vtt_file = os.path.join(temp_dir, filename)
-                                break
-                        if vtt_file:
-                            with open(vtt_file, 'r', encoding='utf-8') as f:
-                                return _parse_vtt(f.read()), 0
-                        else:
-                             print(f"⚠️ Fallback: No VTT file. Dir contents: {files_in_dir}")
-            except Exception as e:
-                print(f"❌ Final fallback failed: {e}")
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                    ydl.extract_info(video_url, download=True)
+                    vtt_file = None
+                    files_in_dir = os.listdir(temp_dir)
+                    for filename in files_in_dir:
+                        if filename.endswith('.vtt'):
+                            vtt_file = os.path.join(temp_dir, filename)
+                            break
+                    if vtt_file:
+                        with open(vtt_file, 'r', encoding='utf-8') as f:
+                            return _parse_vtt(f.read()), 0
+                    else:
+                            print(f"⚠️ Fallback: No VTT file. Dir contents: {files_in_dir}")
+        except Exception as e:
+            print(f"❌ Final fallback failed: {e}")
 
         raise Exception(f"Failed after {max_retries} attempts. Last error: {last_error}")
         
@@ -391,7 +392,7 @@ def _get_youtube_transcript_with_cookies(video_id):
 @app.route('/api/extract-transcript', methods=['POST'])
 def extract_transcript():
     """Extract transcript from YouTube video"""
-    DEPLOYMENT_ID = "v2025.11.21.20"
+    DEPLOYMENT_ID = "v2025.11.21.21"
     try:
         data = request.json
         youtube_url = data.get('url', '')
@@ -429,7 +430,7 @@ def diagnostics():
     scraperapi_key = os.getenv('SCRAPERAPI_KEY', '')
     
     diagnostics_info = {
-        'deployment_id': 'v2025.11.21.20',
+        'deployment_id': 'v2025.11.21.21',
         'cookies_configured': bool(cookies_content),
         'cookies_line_count': len(cookies_content.splitlines()) if cookies_content else 0,
         'cookies_has_header': cookies_content.startswith('# Netscape') if cookies_content else False,
