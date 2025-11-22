@@ -442,18 +442,12 @@ function toggleInputSection(forceState = null) {
 
     if (shouldCollapse) {
         inputSection.classList.add('collapsed');
-        toggleInputBtn.innerHTML = `
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 5v14M5 12h14" />
-            </svg>
-        `; // Plus icon
+        document.getElementById('iconMinus').classList.add('hidden');
+        document.getElementById('iconPlus').classList.remove('hidden');
     } else {
         inputSection.classList.remove('collapsed');
-        toggleInputBtn.innerHTML = `
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M5 12h14" />
-            </svg>
-        `; // Minus icon
+        document.getElementById('iconMinus').classList.remove('hidden');
+        document.getElementById('iconPlus').classList.add('hidden');
     }
 }
 
