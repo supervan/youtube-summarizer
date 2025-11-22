@@ -437,14 +437,18 @@ function resetApp() {
 
 // Toggle Input Section
 function toggleInputSection(forceState = null) {
+    console.log('🔄 Toggle called! forceState:', forceState);
     const isCollapsed = inputSection.classList.contains('collapsed');
+    console.log('   Current collapsed state:', isCollapsed);
     const shouldCollapse = forceState !== null ? !forceState : !isCollapsed;
+    console.log('   Should collapse:', shouldCollapse);
 
     const iconMinus = document.getElementById('iconMinus');
     const iconPlus = document.getElementById('iconPlus');
 
     if (shouldCollapse) {
         // Collapse
+        console.log('   → Collapsing...');
         inputSection.classList.add('collapsed');
         inputSection.setAttribute('style', 'max-height: 0 !important; opacity: 0 !important; margin-bottom: 0 !important; overflow: hidden !important;');
 
@@ -456,6 +460,7 @@ function toggleInputSection(forceState = null) {
         }
     } else {
         // Expand
+        console.log('   → Expanding...');
         inputSection.classList.remove('collapsed');
         inputSection.setAttribute('style', 'max-height: 500px !important; opacity: 1 !important; margin-bottom: 1.5rem !important; overflow: hidden !important;');
 
@@ -466,6 +471,7 @@ function toggleInputSection(forceState = null) {
             iconPlus.setAttribute('style', 'display: none !important;');
         }
     }
+    console.log('   ✅ Toggle complete');
 }
 
 // Hide all result cards
