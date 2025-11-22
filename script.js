@@ -22,7 +22,9 @@ const toggleInputBtn = document.getElementById('toggleInputBtn');
 const resetBtn = document.getElementById('resetBtn');
 
 const videoInfoCard = document.getElementById('videoInfoCard');
-// videoThumbnail removed, using youtubePlayer instead
+const videoThumbnail = document.getElementById('videoThumbnail');
+const thumbnailContainer = document.getElementById('thumbnailContainer');
+const playVideoBtn = document.getElementById('playVideoBtn');
 const videoTitle = document.getElementById('videoTitle');
 const transcriptLength = document.getElementById('transcriptLength');
 
@@ -42,6 +44,12 @@ const installModal = document.getElementById('installModal');
 const closeModal = document.getElementById('closeModal');
 const androidInstructions = document.getElementById('androidInstructions');
 const iosInstructions = document.getElementById('iosInstructions');
+
+// Mind Map Modal elements
+const mindMapModal = document.getElementById('mindMapModal');
+const closeMindMapModal = document.getElementById('closeMindMapModal');
+const fullScreenMindMap = document.getElementById('fullScreenMindMap');
+const expandMindMapBtn = document.getElementById('expandMindMapBtn');
 
 // API Configuration
 const API_BASE = window.location.origin;
@@ -162,14 +170,27 @@ function setupEventListeners() {
         }
     });
 
-    closeModal.addEventListener('click', () => {
-        installModal.classList.add('hidden');
-    });
-
     // Close modal when clicking outside
     installModal.addEventListener('click', (e) => {
         if (e.target === installModal) {
             installModal.classList.add('hidden');
+        }
+    });
+
+    // Thumbnail Play Button
+    playVideoBtn.addEventListener('click', () => {
+        startVideo();
+    });
+
+    // Mind Map Modal
+    expandMindMapBtn.addEventListener('click', openMindMapModal);
+    document.getElementById('mindMapContent').addEventListener('click', openMindMapModal);
+    closeMindMapModal.addEventListener('click', () => {
+        mindMapModal.classList.add('hidden');
+    });
+    mindMapModal.addEventListener('click', (e) => {
+        if (e.target === mindMapModal) {
+            mindMapModal.classList.add('hidden');
         }
     });
 }
@@ -481,9 +502,10 @@ function setLoading(isLoading) {
 // Show Skeleton Loading
 function showSkeletonLoading() {
     // Video Info Skeleton
-    // Hide player temporarily or show skeleton overlay
+    // Hide player and thumbnail
     const playerContainer = document.getElementById('playerContainer');
     if (playerContainer) playerContainer.classList.add('hidden');
+    if (thumbnailContainer) thumbnailContainer.classList.add('hidden');
 
     // Create skeleton if not exists
     let skeletonThumb = videoInfoCard.querySelector('.skeleton-thumbnail');
@@ -620,17 +642,21 @@ function showVideoInfo(videoId, data) {
     const skeletonThumb = videoInfoCard.querySelector('.skeleton-thumbnail');
     if (skeletonThumb) skeletonThumb.classList.add('hidden');
 
-    // Show player container
+    // Show thumbnail, hide player initially
     const playerContainer = document.getElementById('playerContainer');
-    if (playerContainer) playerContainer.classList.remove('hidden');
+    if (playerContainer) playerContainer.classList.add('hidden');
 
-    // Load video into player
-    if (player && player.loadVideoById) {
-        player.loadVideoById(videoId);
+    if (thumbnailContainer) {
+        thumbnailContainer.classList.remove('hidden');
+        videoThumbnail.src = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+    }
+
+    // Prepare player (but don't auto-play yet)
+    if (player && player.cueVideoById) {
+        player.cueVideoById(videoId);
     } else {
-        // Fallback if player not ready yet (rare)
         setTimeout(() => {
-            if (player && player.loadVideoById) player.loadVideoById(videoId);
+            if (player && player.cueVideoById) player.cueVideoById(videoId);
         }, 1000);
     }
 
@@ -696,8 +722,24 @@ function formatMarkdown(text) {
         .replace(/\n/g, '<br>');
 }
 
+// Start video playback (switch from thumbnail to player)
+function startVideo() {
+    if (thumbnailContainer) thumbnailContainer.classList.add('hidden');
+    const playerContainer = document.getElementById('playerContainer');
+    if (playerContainer) playerContainer.classList.remove('hidden');
+
+    if (player && player.playVideo) {
+        player.playVideo();
+    }
+}
+
 // Seek video to timestamp
 window.seekTo = function (seconds) {
+    // Ensure player is visible
+    if (thumbnailContainer && !thumbnailContainer.classList.contains('hidden')) {
+        startVideo();
+    }
+
     if (player && player.seekTo) {
         player.seekTo(seconds, true);
         player.playVideo();
@@ -733,6 +775,12 @@ async function handleMindMapRequest() {
             const graphDefinition = data.mermaid;
             const { svg } = await mermaid.render('graphDiv', graphDefinition);
             content.innerHTML = svg;
+
+            // Also render for modal (with a different ID to avoid conflicts)
+            const { svg: modalSvg } = await mermaid.render('graphDivModal', graphDefinition);
+            fullScreenMindMap.innerHTML = modalSvg;
+
+            expandMindMapBtn.classList.remove('hidden');
 
         } else {
             alert('Failed to generate mind map');
