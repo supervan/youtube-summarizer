@@ -436,7 +436,6 @@ function resetApp() {
 }
 
 // Toggle Input Section
-// Toggle Input Section
 function toggleInputSection(forceState = null) {
     const isCollapsed = inputSection.classList.contains('collapsed');
     const shouldCollapse = forceState !== null ? !forceState : !isCollapsed;
@@ -445,32 +444,26 @@ function toggleInputSection(forceState = null) {
     const iconPlus = document.getElementById('iconPlus');
 
     if (shouldCollapse) {
+        // Collapse
         inputSection.classList.add('collapsed');
-        inputSection.style.maxHeight = '0';
-        inputSection.style.opacity = '0';
-        inputSection.style.marginBottom = '0';
+        inputSection.setAttribute('style', 'max-height: 0 !important; opacity: 0 !important; margin-bottom: 0 !important; overflow: hidden !important;');
 
         if (iconMinus) {
-            iconMinus.style.display = 'none';
-            iconMinus.classList.add('hidden');
+            iconMinus.setAttribute('style', 'display: none !important;');
         }
         if (iconPlus) {
-            iconPlus.style.display = 'block';
-            iconPlus.classList.remove('hidden');
+            iconPlus.setAttribute('style', 'display: block !important;');
         }
     } else {
+        // Expand
         inputSection.classList.remove('collapsed');
-        inputSection.style.maxHeight = '500px';
-        inputSection.style.opacity = '1';
-        inputSection.style.marginBottom = '1.5rem'; // Restore margin if needed
+        inputSection.setAttribute('style', 'max-height: 500px !important; opacity: 1 !important; margin-bottom: 1.5rem !important; overflow: hidden !important;');
 
         if (iconMinus) {
-            iconMinus.style.display = 'block';
-            iconMinus.classList.remove('hidden');
+            iconMinus.setAttribute('style', 'display: block !important;');
         }
         if (iconPlus) {
-            iconPlus.style.display = 'none';
-            iconPlus.classList.add('hidden');
+            iconPlus.setAttribute('style', 'display: none !important;');
         }
     }
 }
