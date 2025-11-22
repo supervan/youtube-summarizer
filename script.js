@@ -440,39 +440,18 @@ function toggleInputSection(forceState = null) {
     const isCollapsed = inputSection.classList.contains('collapsed');
     const shouldCollapse = forceState !== null ? !forceState : !isCollapsed;
 
-    const iconMinus = document.getElementById('iconMinus');
-    const iconPlus = document.getElementById('iconPlus');
-
     if (shouldCollapse) {
         // Collapse
         inputSection.classList.add('collapsed');
-        // Force immediate style update
-        requestAnimationFrame(() => {
-            inputSection.style.cssText = 'display: none !important;';
-        });
-
-        if (iconMinus) {
-            iconMinus.setAttribute('style', 'display: none !important;');
-        }
-        if (iconPlus) {
-            iconPlus.setAttribute('style', 'display: block !important;');
-        }
+        inputSection.style.display = 'none';
+        document.getElementById('iconMinus').style.display = 'none';
+        document.getElementById('iconPlus').style.display = 'block';
     } else {
         // Expand
         inputSection.classList.remove('collapsed');
-        // Force immediate style update with double requestAnimationFrame to ensure it takes
-        requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-                inputSection.style.cssText = 'display: block !important;';
-            });
-        });
-
-        if (iconMinus) {
-            iconMinus.setAttribute('style', 'display: block !important;');
-        }
-        if (iconPlus) {
-            iconPlus.setAttribute('style', 'display: none !important;');
-        }
+        inputSection.style.display = 'block';
+        document.getElementById('iconMinus').style.display = 'block';
+        document.getElementById('iconPlus').style.display = 'none';
     }
 }
 
