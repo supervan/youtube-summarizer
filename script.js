@@ -625,6 +625,7 @@ function showSummary(summary) {
     summaryContent.innerHTML = formattedSummary;
     summaryCard.classList.remove('hidden');
     copyBtn.classList.remove('hidden'); // Show copy button
+    document.getElementById('podcastBtn').classList.remove('hidden'); // Show podcast button
     summaryCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
