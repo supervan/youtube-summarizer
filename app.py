@@ -9,6 +9,7 @@ import shutil
 import time
 import random
 import requests
+import json
 from dotenv import load_dotenv
 from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled, NoTranscriptFound
 
@@ -525,6 +526,138 @@ Transcript:
 {transcript}"""
     
     return prompt
+
+@app.route('/api/features', methods=['GET'])
+def get_features():
+    """Get feature flags from features.json"""
+    try:
+        with open('features.json', 'r') as f:
+            features = json.load(f)
+        return jsonify(features)
+    except Exception as e:
+        # Default fallback if file missing or error
+        return jsonify({
+            "chat": True,
+            "steps": True,
+            "quiz": True
+        })
+
+@app.route('/api/chat', methods=['POST'])
+def chat_with_video():
+    """Chat with the video transcript"""
+    try:
+        data = request.json
+        transcript = data.get('transcript', '')
+        question = data.get('question', '')
+        
+        if not transcript or not question:
+            return jsonify({'error': 'Transcript and question are required'}), 400
+
+        api_key = os.getenv('GEMINI_API_KEY')
+        if not api_key:
+            return jsonify({'error': 'API key not configured'}), 500
+            
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-2.5-flash')
+        
+        prompt = f"""You are a helpful assistant answering questions based ONLY on the provided video transcript.
+        
+Transcript:
+{transcript}
+
+Question: {question}
+
+Answer (be concise and direct, use markdown for formatting):"""
+
+        response = model.generate_content(prompt)
+        return jsonify({'success': True, 'answer': response.text})
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/steps', methods=['POST'])
+def extract_steps():
+    """Extract actionable steps from the transcript"""
+    try:
+        data = request.json
+        transcript = data.get('transcript', '')
+        
+        if not transcript:
+            return jsonify({'error': 'Transcript is required'}), 400
+
+        api_key = os.getenv('GEMINI_API_KEY')
+        if not api_key:
+            return jsonify({'error': 'API key not configured'}), 500
+            
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-2.5-flash')
+        
+        prompt = f"""Analyze the following transcript and determine if it contains instructions, a tutorial, or actionable advice.
+        
+If it DOES:
+Extract the steps into a clear, numbered list. Use bold for the step title and normal text for the details.
+Format as Markdown.
+
+If it DOES NOT (e.g. it's just a vlog or opinion piece without steps):
+Return exactly: "NO_STEPS_FOUND"
+
+Transcript:
+{transcript}"""
+
+        response = model.generate_content(prompt)
+        return jsonify({'success': True, 'steps': response.text})
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/quiz', methods=['POST'])
+def generate_quiz():
+    """Generate a 5-question quiz from the transcript"""
+    try:
+        data = request.json
+        transcript = data.get('transcript', '')
+        
+        if not transcript:
+            return jsonify({'error': 'Transcript is required'}), 400
+
+        api_key = os.getenv('GEMINI_API_KEY')
+        if not api_key:
+            return jsonify({'error': 'API key not configured'}), 500
+            
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-2.5-flash')
+        
+        # Force JSON response for the quiz
+        prompt = f"""Generate a 5-question multiple choice quiz based on this transcript.
+        Return the result as a raw JSON array of objects (no markdown formatting, no code blocks).
+        
+        Format:
+        [
+            {{
+                "question": "Question text?",
+                "options": ["Option A", "Option B", "Option C", "Option D"],
+                "correct_index": 0  // 0-3 indicating the correct option
+            }}
+        ]
+
+        Transcript:
+        {transcript}"""
+
+        response = model.generate_content(prompt)
+        
+        # Clean up potential markdown code blocks if the model ignores instructions
+        text = response.text.strip()
+        if text.startswith('```json'):
+            text = text[7:]
+        if text.startswith('```'):
+            text = text[3:]
+        if text.endswith('```'):
+            text = text[:-3]
+            
+        return jsonify({'success': True, 'quiz': json.loads(text)})
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     print("🚀 YouTube Summarizer Server Starting...")

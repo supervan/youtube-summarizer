@@ -132,6 +132,76 @@
             </div>
         </div>
 
+        <!-- AI Features Section -->
+        <div id="featuresContainer" class="hidden">
+            <!-- Feature Tabs -->
+            <div class="feature-tabs">
+                <button class="feature-tab hidden" id="tabChat" data-target="chatSection">
+                    <span class="tab-icon">💬</span> Chat
+                </button>
+                <button class="feature-tab hidden" id="tabSteps" data-target="stepsSection">
+                    <span class="tab-icon">📝</span> Steps
+                </button>
+                <button class="feature-tab hidden" id="tabQuiz" data-target="quizSection">
+                    <span class="tab-icon">🧠</span> Quiz
+                </button>
+            </div>
+
+            <!-- Chat Section -->
+            <div id="chatSection" class="feature-content hidden">
+                <div class="chat-container">
+                    <div id="chatHistory" class="chat-history">
+                        <div class="chat-message ai">
+                            <div class="message-content">
+                                <p>Hi! Ask me anything about this video.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <form id="chatForm" class="chat-input-area">
+                        <input type="text" id="chatInput" placeholder="Ask a question..." required>
+                        <button type="submit" class="icon-btn-primary">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
+                            </svg>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Steps Section -->
+            <div id="stepsSection" class="feature-content hidden">
+                <div class="steps-container">
+                    <div id="stepsContent" class="steps-list">
+                        <!-- Steps will be loaded here -->
+                    </div>
+                    <button id="generateStepsBtn" class="btn btn-secondary">
+                        Generate Steps
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quiz Section -->
+            <div id="quizSection" class="feature-content hidden">
+                <div class="quiz-container">
+                    <div id="quizContent" class="quiz-questions hidden">
+                        <!-- Questions will be loaded here -->
+                    </div>
+                    <div id="quizStartView">
+                        <p>Test your knowledge with a 5-question quiz based on this video.</p>
+                        <button id="startQuizBtn" class="btn btn-secondary">
+                            Start Quiz
+                        </button>
+                    </div>
+                    <div id="quizScore" class="quiz-score hidden">
+                        <h3>Quiz Complete!</h3>
+                        <p>You scored <span id="scoreValue">0</span>/5</p>
+                        <button id="retryQuizBtn" class="btn btn-small">Try Again</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Error Section -->
         <div class="card error-card hidden" id="errorCard">
             <div class="error-content">
