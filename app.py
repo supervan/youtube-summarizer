@@ -217,14 +217,21 @@ class FreeProxyManager:
         test_batch = top_proxies + random_proxies
         random.shuffle(test_batch)
         
+        # Limit the number of checks to avoid hanging for too long
+        max_checks = 15 
+        
         for i, proxy_url in enumerate(test_batch):
+            if i >= max_checks:
+                print(f"⚠️ Reached maximum validation checks ({max_checks}). Stopping validation.")
+                break
+
             if self._check_proxy(proxy_url):
                 self.verified_proxies.append(proxy_url)
                 print(f"   ✅ Working proxy found: {proxy_url}")
-                if len(self.verified_proxies) >= 5: # Stop after finding 5 good ones
+                if len(self.verified_proxies) >= 3: # Stop after finding 3 good ones (reduced from 5)
                     break
             
-            if i % 10 == 0:
+            if i % 5 == 0:
                 print(f"   Checked {i} proxies...")
         
         print(f"🎉 Found {len(self.verified_proxies)} verified working proxies")
@@ -235,8 +242,8 @@ class FreeProxyManager:
         """
         try:
             proxies = {'http': proxy_url, 'https': proxy_url}
-            # Use a timeout of 5 seconds, slightly longer for SOCKS handshakes
-            resp = requests.get('https://www.youtube.com/results?search_query=test', proxies=proxies, timeout=5)
+            # Reduced timeout from 5s to 3s to fail faster
+            resp = requests.get('https://www.youtube.com/results?search_query=test', proxies=proxies, timeout=3)
             return resp.status_code == 200
         except:
             return False
@@ -296,11 +303,11 @@ def _get_youtube_transcript_with_cookies(video_id):
     """
     """Extract transcript from YouTube video using yt-dlp with free proxy rotation."""
     
-    # Try up to 10 times with different proxies (reduced from 20 to avoid timeout)
-    max_retries = 10
+    # Try up to 5 times with different proxies (reduced from 10)
+    max_retries = 5
     last_error = None
     
-    # Global timeout safety - stop trying if we've spent more than 25 seconds
+    # Global timeout safety - stop trying if we've spent more than 30 seconds (reduced from 50)
     start_time = time.time()
     
     video_url = f"https://www.youtube.com/watch?v={video_id}"
@@ -330,9 +337,51 @@ def _get_youtube_transcript_with_cookies(video_id):
             transcript_list = YouTubeTranscriptApi.get_transcript(video_id, cookies=cookies_file)
         except Exception as e:
             print(f"⚠️ Direct YouTubeTranscriptApi failed: {e}")
+            
+            # METHOD 1.5: Try yt-dlp Direct Connection (Often works when API is blocked)
+            # We try this BEFORE proxies to avoid the heavy proxy refresh cost
+            print("🚀 Attempting Method 1.5: yt-dlp Direct Connection...")
+            try:
+                 with tempfile.TemporaryDirectory() as temp_dir:
+                    ydl_opts = {
+                        'skip_download': True,
+                        'writesubtitles': True,
+                        'writeautomaticsub': True,
+                        'subtitleslangs': ['en'],
+                        'subtitlesformat': 'vtt',
+                        'outtmpl': os.path.join(temp_dir, '%(id)s'),
+                        'quiet': False, # Enable logs
+                        'no_warnings': False,
+                        'socket_timeout': 10,
+                        'format': 'worst',
+                        'ignore_no_formats_error': True,
+                        'allow_unplayable_formats': True,
+                        'force_ipv4': True,
+                    }
+                    if cookies_file:
+                        ydl_opts['cookiefile'] = cookies_file
+                            
+                    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                        info = ydl.extract_info(video_url, download=True)
+                        video_title = info.get('title', 'Unknown Title')
+                        
+                        vtt_file = None
+                        files_in_dir = os.listdir(temp_dir)
+                        for filename in files_in_dir:
+                            if filename.endswith('.vtt'):
+                                vtt_file = os.path.join(temp_dir, filename)
+                                break
+                        if vtt_file:
+                            with open(vtt_file, 'r', encoding='utf-8') as f:
+                                print("✅ Method 1.5 Success! yt-dlp direct worked.")
+                                return _parse_vtt(f.read()), video_title, 0
+            except Exception as ydl_e:
+                print(f"⚠️ Method 1.5 failed: {ydl_e}")
+                print("🔄 Falling back to proxies...")
+
             # Try with proxies
             transcript_list = None
-            for attempt in range(5): # Try 5 proxies
+            for attempt in range(3): # Try 3 proxies (reduced from 5)
                 proxy = proxy_manager.get_proxy()
                 if not proxy:
                     break
@@ -376,22 +425,25 @@ def _get_youtube_transcript_with_cookies(video_id):
         
     except Exception as e:
         print(f"⚠️ Method 1 failed: {e}")
-        print("🔄 Switching to Method 2: yt-dlp with proxy rotation...")
-
+        
     # METHOD 2: yt-dlp with Proxy Rotation (Fallback)
     try:
         for attempt in range(max_retries):
             # Check global timeout
-            if time.time() - start_time > 50:
-                print("⚠️ Global timeout reached (50s), stopping retries")
+            if time.time() - start_time > 30:
+                print("⚠️ Global timeout reached (30s), stopping retries")
                 break
                 
             # Get a proxy (first attempt can be direct if no working proxy known)
-            proxies = proxy_manager.get_proxy() if attempt > 0 else None
+            # Since we already tried direct, we MUST use a proxy here
+            proxies = proxy_manager.get_proxy()
             
-            proxy_url = proxies['http'] if proxies else None
-            proxy_msg = f"via proxy {proxy_url}" if proxy_url else "direct connection"
-            print(f"🚀 Attempt {attempt+1}/{max_retries}: Fetching transcript {proxy_msg}")
+            if not proxies:
+                 print("⚠️ No proxies available, skipping proxy attempt")
+                 continue
+
+            proxy_url = proxies['http']
+            print(f"🚀 Attempt {attempt+1}/{max_retries}: Fetching transcript via proxy {proxy_url}")
             
             # Create a temporary directory for this attempt
             with tempfile.TemporaryDirectory() as temp_dir:
@@ -407,7 +459,7 @@ def _get_youtube_transcript_with_cookies(video_id):
                         'quiet': False,      # ENABLE LOGS to see what's happening
                         'no_warnings': False,
                         # Optimization settings to fail fast on bad proxies
-                        'socket_timeout': 10, # 10 seconds timeout
+                        'socket_timeout': 5, # Reduced from 10s to 5s
                         'retries': 1,        # Retry only once internally
                         'fragment_retries': 1,
                         'force_ipv4': True,  # Avoid IPv6 issues
@@ -418,9 +470,8 @@ def _get_youtube_transcript_with_cookies(video_id):
                         'allow_unplayable_formats': True,
                     }
                     
-                    # Add proxy if available
-                    if proxy_url:
-                        ydl_opts['proxy'] = proxy_url
+                    # Add proxy
+                    ydl_opts['proxy'] = proxy_url
                         
                     # Add cookies if available
                     if cookies_file:
@@ -440,7 +491,7 @@ def _get_youtube_transcript_with_cookies(video_id):
                                 break
                         
                         if vtt_file:
-                            print(f"✅ Success! Downloaded VTT file {proxy_msg}")
+                            print(f"✅ Success! Downloaded VTT file via proxy")
                             
                             # Read and parse the VTT file
                             with open(vtt_file, 'r', encoding='utf-8') as f:
@@ -454,8 +505,7 @@ def _get_youtube_transcript_with_cookies(video_id):
                             print(f"   Extracted {len(full_text)} chars")
                             
                             # Remember this working proxy for next time
-                            if proxies:
-                                proxy_manager.report_success(proxy_url)
+                            proxy_manager.report_success(proxy_url)
                                 
                             return full_text, video_title, len(cookies_content) if cookies_content else 0
                         else:
@@ -465,62 +515,9 @@ def _get_youtube_transcript_with_cookies(video_id):
                 except Exception as e:
                     print(f"❌ Attempt {attempt+1} failed: {str(e)}")
                     last_error = e
-                    
-                    # Critical: Log the specific error if the first direct attempt fails
-                    if attempt == 0 and not proxies:
-                        print(f"⚠️ DIRECT CONNECTION FAILED: {str(e)}")
-                        
-                    # If proxy failed, mark it
-                    if proxies:
-                        proxy_manager.mark_failed(proxies)
-                    # If direct connection failed, force proxy next time
-                    elif attempt == 0:
-                        print("⚠️ Direct connection failed, switching to proxies...")
-                        proxy_manager._refresh_proxies()
+                    proxy_manager.mark_failed(proxies)
         
-        # Final fallback attempt: Direct connection ALWAYS runs if we get here
-        print("⚠️ All proxy attempts failed. Trying one last direct connection...")
-        try:
-             with tempfile.TemporaryDirectory() as temp_dir:
-                ydl_opts = {
-                    'skip_download': True,
-                    'writesubtitles': True,
-                    'writeautomaticsub': True,
-                    'subtitleslangs': ['en'],
-                    'subtitlesformat': 'vtt',
-                    'outtmpl': os.path.join(temp_dir, '%(id)s'),
-                    'quiet': False, # Enable logs
-                    'no_warnings': False,
-                    'socket_timeout': 10,
-                    'format': 'worst',
-                    'ignore_no_formats_error': True,
-                    'allow_unplayable_formats': True,
-                    'force_ipv4': True,
-                }
-                if cookies_file:
-                    ydl_opts['cookiefile'] = cookies_file
-                        
-                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                    info = ydl.extract_info(video_url, download=True)
-                    video_title = info.get('title', 'Unknown Title')
-                    
-                    vtt_file = None
-                    files_in_dir = os.listdir(temp_dir)
-                    for filename in files_in_dir:
-                        if filename.endswith('.vtt'):
-                            vtt_file = os.path.join(temp_dir, filename)
-                            break
-                    if vtt_file:
-                        with open(vtt_file, 'r', encoding='utf-8') as f:
-                            return _parse_vtt(f.read()), video_title, 0
-                    else:
-                            print(f"⚠️ Fallback: No VTT file. Dir contents: {files_in_dir}")
-                            raise Exception(f"No subtitle file downloaded. Dir contents: {files_in_dir}")
-        except Exception as e:
-            print(f"❌ Final fallback failed: {e}")
-            # Capture the specific fallback error to return to the user
-            last_error = f"Proxy attempts failed. Direct fallback failed: {str(e)}"
-
+        # We already tried direct connection in Method 1.5, so if we fail here, we are done.
         raise Exception(f"Failed after {max_retries} attempts. {last_error}")
         
     finally:
