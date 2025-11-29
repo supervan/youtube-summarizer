@@ -638,7 +638,7 @@ def build_summary_prompt(transcript, length, tone):
     
     # Length instructions
     length_instructions = {
-        'short': 'Provide a single short paragraph summary using simple language suitable for a 13-year-old.',
+        'short': 'Provide a very short summary (approx. 2-3 sentences) using simple language suitable for a 13-year-old.',
         'medium': 'Provide a balanced summary with an overview, key points (3-5 bullet points), and a brief conclusion.',
         'long': 'Provide a comprehensive, detailed summary covering all major topics, subtopics, important details, examples, and conclusions.'
     }
@@ -653,8 +653,44 @@ def build_summary_prompt(transcript, length, tone):
         'technical': 'Direct, technical, and dense tone. Omit all introductions, greetings, and conversational transition phrases. Verbosity is useless; reduce it to zero. The information will be presented directly to an audience of university students. Focus purely on facts, data, and technical details.'
     }
     
+    # Specific prompts for Sarcastic and Witty tones
+    specific_prompts = {
+        ('sarcastic', 'short'): """I need a Short summary (approx. 2-3 sentences). Tone: Extremely sarcastic. Act like a bored, cynical internet commentator who feels like watching this video was a massive waste of time. Mock the main point of the video relentlessly.""",
+        
+        ('sarcastic', 'medium'): """I need a Medium length summary (2 paragraphs). Tone: Heavy sarcasm and biting irony. Instructions:
+Summarize the content but frame it as if the creator is stating the obvious or trying too hard.
+Use rhetorical questions to highlight absurdities.
+End with a backhanded compliment about the video.""",
+
+        ('sarcastic', 'long'): """I need a Long, detailed summary. Tone: Scathing, dry, and hilariously negative. Instructions:
+Break the summary down into bullet points, but title each bullet point with a sarcastic header.
+Deeply analyze the 'insights' of the video and explain why they are underwhelming.
+Critique the presenter's style or logic using satire.
+Conclude with a 'Final Verdict' that discourages anyone else from watching it.""",
+
+        ('witty', 'short'): """I need a Short summary (approx. 2-3 sentences). Tone: Sharp, witty, and clever. Instructions: Distill the video down to its absolute essence using wordplay or a clever analogy. Make me laugh, but make me think.""",
+
+        ('witty', 'medium'): """I need a Medium length summary (2 paragraphs). Tone: High-brow humor and wit. Instructions:
+Summarize the narrative arc of the video with the flair of a stand-up comedian.
+Point out the irony in the video's content.
+Use sophisticated vocabulary and clever metaphors to explain the topic.""",
+
+        ('witty', 'long'): """I need a Long, detailed summary. Tone: Witty, observational, and charmingly humorous. Instructions:
+Provide a detailed breakdown of the video's chapters, but rewrite the concepts as if you are a humorous columnist for a magazine.
+Look for 'unintentional comedy' in the video and highlight it.
+Use puns related to the specific topic of the video.
+End with a witty philosophical observation based on the video's conclusion."""
+    }
+
     # Build the prompt
-    if tone == 'technical':
+    if (tone, length) in specific_prompts:
+        prompt = f"""{specific_prompts[(tone, length)]}
+
+IMPORTANT: You MUST include timestamps [MM:SS] from the transcript for every key point or major topic change.
+
+Transcript:
+{transcript}"""
+    elif tone == 'technical':
         # Special format for technical tone - no fluff
         prompt = f"""{tone_instructions[tone]}
 
@@ -824,6 +860,8 @@ def generate_podcast():
     try:
         data = request.json
         transcript = data.get('transcript', '')
+        length = data.get('length', 'medium')
+        tone = data.get('tone', 'conversational')
         
         if not transcript:
             return jsonify({'error': 'Transcript is required'}), 400
@@ -835,12 +873,36 @@ def generate_podcast():
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel('gemini-flash-latest')
         
+        # Tone instructions for podcast
+        tone_map = {
+            'conversational': 'natural, friendly, and enthusiastic',
+            'professional': 'professional, structured, and insightful',
+            'academic': 'intellectual, precise, and analytical',
+            'witty': 'humorous, witty, and fun',
+            'sarcastic': 'sarcastic, cynical, and dryly humorous',
+            'technical': 'dense, factual, and straight to the point'
+        }
+        
+        # Length instructions for podcast
+        length_map = {
+            'short': 'Keep it brief (about 1-2 minutes reading time). Focus only on the main takeaway.',
+            'medium': 'Standard length (about 2-3 minutes reading time). Cover key points.',
+            'long': 'Detailed discussion (about 3-5 minutes reading time). Explore topics in depth.'
+        }
+        
+        selected_tone = tone_map.get(tone, tone_map['conversational'])
+        selected_length = length_map.get(length, length_map['medium'])
+        
         prompt = f"""Convert this transcript into an engaging podcast dialogue between two hosts, 'Alex' (Host A) and 'Jamie' (Host B).
         
+        Settings:
+        - Tone: {selected_tone}
+        - Length: {selected_length}
+        
         Rules:
-        1. Make it sound natural, conversational, and enthusiastic.
+        1. Make it sound {selected_tone}.
         2. Alex introduces the topic. Jamie asks insightful questions or adds details.
-        3. Keep it concise (about 2-3 minutes of reading time).
+        3. {selected_length}
         4. Return the result as a JSON array of objects.
         
         Format:

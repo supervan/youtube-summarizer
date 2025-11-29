@@ -719,7 +719,11 @@ async function handleSubmit(e) {
 
     // Check History Cache
     const history = JSON.parse(localStorage.getItem('yt_summary_history') || '[]');
-    const cachedItem = history.find(item => item.id === videoId);
+    const cachedItem = history.find(item =>
+        item.id === videoId &&
+        item.length === summaryLengthSelect.value &&
+        item.tone === summaryToneSelect.value
+    );
 
     if (cachedItem) {
         console.log('Loading from cache:', videoId);
@@ -776,7 +780,7 @@ async function handleSubmit(e) {
         showSummary(summaryData.summary);
 
         // Save to history
-        saveToHistory(videoId, transcriptData.title, summaryData.summary, transcriptData.transcript);
+        saveToHistory(videoId, transcriptData.title, summaryData.summary, transcriptData.transcript, summaryLengthSelect.value, summaryToneSelect.value);
 
         // Show enabled features
         showFeatures();
@@ -795,19 +799,21 @@ async function handleSubmit(e) {
 }
 
 // Save to History
-function saveToHistory(videoId, title, summary, transcript) {
+function saveToHistory(videoId, title, summary, transcript, length, tone) {
     const historyItem = {
         id: videoId,
         title: title,
         summary: summary,
         transcript: transcript,
+        length: length,
+        tone: tone,
         timestamp: Date.now()
     };
 
     let history = JSON.parse(localStorage.getItem('yt_summary_history') || '[]');
 
-    // Remove duplicate if exists
-    history = history.filter(item => item.id !== videoId);
+    // Remove duplicate if exists (same video AND same params)
+    history = history.filter(item => !(item.id === videoId && item.length === length && item.tone === tone));
 
     // Add new item to top
     history.unshift(historyItem);
@@ -833,8 +839,29 @@ function loadHistory() {
         return;
     }
 
+    const toneIcons = {
+        'conversational': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>',
+        'professional': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>',
+        'academic': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>',
+        'witty': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>',
+        'sarcastic': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M16 12l-2-2-2 2-2-2-2 2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>',
+        'technical': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>'
+    };
+
+    const lengthIcons = {
+        'short': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="12" x2="3" y2="12"></line></svg>',
+        'medium': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="10" x2="3" y2="10"></line><line x1="21" y1="14" x2="3" y2="14"></line></svg>',
+        'long': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="6" x2="3" y2="6"></line><line x1="21" y1="12" x2="3" y2="12"></line><line x1="21" y1="18" x2="3" y2="18"></line></svg>'
+    };
+
     history.forEach(item => {
         const date = new Date(item.timestamp).toLocaleDateString();
+        const lengthLabel = item.length ? item.length.charAt(0).toUpperCase() + item.length.slice(1) : '';
+        const toneLabel = item.tone ? item.tone.charAt(0).toUpperCase() + item.tone.slice(1) : '';
+
+        const toneIcon = item.tone ? (toneIcons[item.tone] || toneIcons['conversational']) : '';
+        const lengthIcon = item.length ? (lengthIcons[item.length] || lengthIcons['medium']) : '';
+
         const el = document.createElement('div');
         el.className = 'log-item';
         el.innerHTML = `
@@ -842,7 +869,7 @@ function loadHistory() {
                 <img src="https://img.youtube.com/vi/${item.id}/mqdefault.jpg" alt="Thumbnail" class="log-thumbnail">
                 <div class="log-play-icon">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-                        <path d="M8 5v14l11-7z"/>
+                        <path d="M8 5v14l11-7z" />
                     </svg>
                 </div>
             </div>
@@ -850,16 +877,21 @@ function loadHistory() {
                 <h4 class="log-item-title">${item.title || 'Video Summary'}</h4>
                 <div class="log-meta">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"/>
-                        <polyline points="12 6 12 12 16 14"/>
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
                     </svg>
                     ${date}
+                </div>
+                <div class="log-params">
+                    ${lengthLabel ? `<span class="inline-tone-icon" title="Length: ${lengthLabel}">${lengthIcon} ${lengthLabel}</span>` : ''}
+                    ${(lengthLabel && toneLabel) ? '<span class="mx-1">•</span>' : ''}
+                    ${toneLabel ? `<span class="inline-tone-icon" title="Tone: ${toneLabel}">${toneIcon} ${toneLabel}</span>` : ''}
                 </div>
             </div>
             <button class="log-open-btn">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M5 12h14"/>
-                    <path d="m12 5 7 7-7 7"/>
+                    <path d="M5 12h14" />
+                    <path d="m12 5 7 7-7 7" />
                 </svg>
             </button>
         `;
@@ -1101,7 +1133,11 @@ async function handlePodcastRequest(e) {
         const response = await fetch(`${API_BASE}/api/podcast`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ transcript: currentTranscript })
+            body: JSON.stringify({
+                transcript: currentTranscript,
+                length: summaryLengthSelect.value,
+                tone: summaryToneSelect.value
+            })
         });
         const data = await response.json();
 
