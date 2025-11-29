@@ -141,9 +141,15 @@ function setupEventListeners() {
         toggleResultsBtn.addEventListener('click', () => toggleResultsSection());
     }
 
+    // Clear History
+    if (clearHistoryBtn) {
+        clearHistoryBtn.addEventListener('click', clearHistory);
+    }
+
     // Scroll to Log (Toggle visibility)
     scrollToLogBtn.addEventListener('click', () => {
         if (logSection.classList.contains('hidden')) {
+            loadHistory(); // Reload history to ensure it's up to date
             logSection.classList.remove('hidden');
             scrollToLogBtn.classList.add('active');
             setTimeout(() => {
@@ -216,7 +222,20 @@ function setupEventListeners() {
     if (resetBtn) {
         resetBtn.addEventListener('click', resetApp);
         // Show/Hide reset button based on input
+        const updateResetBtnVisibility = () => {
+            if (youtubeUrlInput.value.trim()) {
+                resetBtn.classList.remove('hidden');
+            } else {
+                resetBtn.classList.add('hidden');
+            }
+        };
+
+        // Initial check
+        updateResetBtnVisibility();
+
         youtubeUrlInput.addEventListener('input', () => {
+            updateResetBtnVisibility();
+
             const url = youtubeUrlInput.value.trim();
             if (url) {
                 // Auto-load from history if match found
@@ -498,17 +517,18 @@ function resetApp() {
         const contentQuiz = document.getElementById('contentQuiz');
         if (contentQuiz) contentQuiz.classList.add('hidden');
 
-        const chatHistory = document.getElementById('chatHistory');
-        if (chatHistory) chatHistory.innerHTML = '<div class="chat-message ai"><div class="message-content"><p>Hi! Ask me anything about this video.</p></div></div>';
+        // PRESERVE HISTORY: Do not clear chat or steps content
+        // const chatHistory = document.getElementById('chatHistory');
+        // if (chatHistory) chatHistory.innerHTML = '<div class="chat-message ai"><div class="message-content"><p>Hi! Ask me anything about this video.</p></div></div>';
 
-        const stepsContent = document.getElementById('stepsContent');
-        if (stepsContent) stepsContent.innerHTML = '';
+        // const stepsContent = document.getElementById('stepsContent');
+        // if (stepsContent) stepsContent.innerHTML = '';
 
-        if (typeof resetQuiz === 'function') resetQuiz();
+        // if (typeof resetQuiz === 'function') resetQuiz();
 
-        // Reset defaults
-        if (summaryLengthSelect) summaryLengthSelect.value = 'short';
-        if (summaryToneSelect) summaryToneSelect.value = 'conversational';
+        // PRESERVE SETTINGS: Do not reset defaults
+        // if (summaryLengthSelect) summaryLengthSelect.value = 'short';
+        // if (summaryToneSelect) summaryToneSelect.value = 'conversational';
 
         // Ensure Chat tab is active
         const chatTab = document.querySelector('.tab-btn[data-tab="chat"]');
@@ -530,8 +550,8 @@ function resetApp() {
         if (actionButtons) actionButtons.classList.add('hidden');
 
         // Ensure reset button is visible if input has value (though we just cleared it, so maybe hide it?)
-        // Actually, the input listener handles visibility. Since we cleared input, we should probably hide it or let the listener handle it.
-        // But for now, let's just leave it.
+        const resetBtn = document.getElementById('resetBtn');
+        if (resetBtn) resetBtn.classList.add('hidden');
 
     } catch (error) {
         console.error('Error resetting app:', error);
@@ -554,6 +574,12 @@ function toggleInputSection(forceCollapse = null) {
     } else {
         card.classList.remove('collapsed');
         if (btn) btn.classList.remove('collapsed');
+
+        // Ensure reset button is visible if input has text
+        const resetBtn = document.getElementById('resetBtn');
+        if (resetBtn && youtubeUrlInput && youtubeUrlInput.value.trim()) {
+            resetBtn.classList.remove('hidden');
+        }
     }
 }
 
@@ -859,13 +885,20 @@ function loadHistoryItem(item) {
     currentTranscript = item.transcript;
     youtubeUrlInput.value = `https://www.youtube.com/watch?v=${item.id}`;
 
+    // Ensure reset button is visible
+    const resetBtn = document.getElementById('resetBtn');
+    if (resetBtn) resetBtn.classList.remove('hidden');
+
     // Show UI
     showVideoInfo(item.id, { title: item.title, length: item.transcript.length });
     showSummary(item.summary);
     showFeatures();
 
     // Collapse input
-    toggleInputSection(false);
+    toggleInputSection(true);
+
+    // Expand results
+    toggleResultsSection(false);
 
     // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -899,7 +932,7 @@ function toggleHistorySection() {
 // Show video information
 function showVideoInfo(videoId, data) {
     // Update thumbnail
-    videoThumbnail.src = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+    videoThumbnail.src = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
 
     // Reset player
     const playerDiv = document.getElementById('player');

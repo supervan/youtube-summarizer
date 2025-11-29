@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TL;DW - YouTube Summarizer</title>
-    <link rel="stylesheet" href="style.css?v=505">
+    <link rel="stylesheet" href="style.css?v=523">
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -78,7 +78,7 @@
                         </svg>
                         <input type="url" id="youtubeUrl" class="url-input" placeholder="Paste YouTube URL here..."
                             required>
-                        <button type="button" id="resetBtn" class="reset-btn" title="Reset">
+                        <button type="button" id="resetBtn" class="reset-btn" title="Reset" onclick="resetApp()">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M18 6 6 18" />
@@ -385,7 +385,7 @@
         </div>
     </div>
 
-    <script src="script.js?v=513"></script>
+    <script src="script.js?v=522"></script>
     <script>
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js?t=' + Date.now());
