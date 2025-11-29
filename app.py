@@ -646,7 +646,10 @@ def build_summary_prompt(transcript, length, tone):
     # Tone instructions
     tone_instructions = {
         'conversational': 'Use a friendly, conversational tone that is easy to read and engaging. Use natural language and explain concepts clearly.',
-        'professional': 'Use a formal, professional tone suitable for business or academic contexts. Be clear, objective, and well-structured.',
+        'professional': 'Use a formal, professional tone suitable for business contexts. Be clear, objective, and well-structured.',
+        'academic': 'Use a formal, academic tone. Focus on rigorous analysis, cite specific concepts from the transcript, and use precise terminology. Structure the summary like a research abstract or literature review.',
+        'witty': 'Use a witty, humorous, and entertaining tone. Make the summary fun to read while still conveying the key information. Use clever analogies or light jokes where appropriate.',
+        'sarcastic': 'Use a sarcastic, cynical, and ironic tone. Point out the obvious with dry humor. Be snarky but still accurate about the content.',
         'technical': 'Direct, technical, and dense tone. Omit all introductions, greetings, and conversational transition phrases. Verbosity is useless; reduce it to zero. The information will be presented directly to an audience of university students. Focus purely on facts, data, and technical details.'
     }
     
