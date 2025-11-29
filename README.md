@@ -11,10 +11,15 @@ https://youtube.supervan.uk/
 
 - 🎬 **YouTube Transcript Extraction** - Automatically extracts video transcripts
 - 🤖 **AI-Powered Summaries** - Uses Google Gemini AI for intelligent summarization
+- 🎧 **Audio Podcast Generation** - Converts summaries into engaging 2-host audio dialogues
+- 📜 **History Log** - Automatically saves your recent summaries for easy access
+- 💬 **Interactive Chat** - Ask questions and chat with the video content
+- 🧠 **Mind Map Visualization** - View a visual breakdown of the video's key concepts
+- 📝 **Quiz Mode** - Test your understanding with auto-generated quizzes
+- 📱 **PWA Support** - Install as a native app on mobile and desktop
 - 📏 **Customizable Length** - Choose from short, medium, or long summaries
 - 🎯 **Adjustable Tone** - Select conversational, professional, or technical (direct & dense) tone
 - 🎨 **Beautiful UI** - Modern dark mode design with glassmorphism effects
-- 📱 **Responsive Design** - Works seamlessly on desktop and mobile
 - 📋 **Copy to Clipboard** - Easy one-click summary copying
 
 ## 🔒 Security & Privacy
@@ -146,7 +151,28 @@ Generates an AI summary of the transcript.
   "summary": "AI-generated summary..."
 }
 ```
+```
 
+### `POST /api/podcast`
+Generates an audio podcast script from the transcript.
+
+**Request Body:**
+```json
+{
+  "transcript": "Full transcript text..."
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "script": [
+      {"speaker": "Alex", "text": "..."},
+      {"speaker": "Jamie", "text": "..."}
+  ]
+}
+```
 ## ⚠️ Troubleshooting
 
 ### "No transcript found for this video"

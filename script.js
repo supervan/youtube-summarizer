@@ -17,21 +17,25 @@ const submitBtn = document.getElementById('submitBtn');
 const btnText = document.getElementById('btnText');
 const btnLoader = document.getElementById('btnLoader');
 
-const inputSection = document.getElementById('inputSection');
-const toggleInputBtn = document.getElementById('toggleInputBtn');
-const resetBtn = document.getElementById('resetBtn');
-
-const videoInfoCard = document.getElementById('videoInfoCard');
+// Results Section Elements
+const resultsContainer = document.getElementById('resultsContainer');
 const videoThumbnail = document.getElementById('videoThumbnail');
-const thumbnailContainer = document.getElementById('thumbnailContainer');
-const playVideoBtn = document.getElementById('playVideoBtn');
+const videoPlayerWrapper = document.getElementById('videoPlayerWrapper');
 const videoTitle = document.getElementById('videoTitle');
-const transcriptLength = document.getElementById('transcriptLength');
-
-const summaryCard = document.getElementById('summaryCard');
-const summaryContent = document.getElementById('summaryContent');
+const summaryText = document.getElementById('summaryText');
 const copyBtn = document.getElementById('copyBtn');
-// readAloudBtn and voiceSelect removed
+const podcastBtn = document.getElementById('podcastBtn');
+
+// Log Section Elements
+const logSection = document.getElementById('logSection');
+const logList = document.getElementById('logList');
+const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+const scrollToLogBtn = document.getElementById('scrollToLogBtn');
+
+// Tabs
+const tabs = document.querySelectorAll('.tab-btn');
+const tabContents = document.querySelectorAll('.chat-container, #contentSteps, #contentQuiz');
+
 let voices = [];
 
 const errorCard = document.getElementById('errorCard');
@@ -51,6 +55,9 @@ const closeMindMapModal = document.getElementById('closeMindMapModal');
 const fullScreenMindMap = document.getElementById('fullScreenMindMap');
 const expandMindMapBtn = document.getElementById('expandMindMapBtn');
 
+// Input Section
+const inputSection = document.querySelector('.input-card');
+
 // API Configuration
 const API_BASE = window.location.origin;
 
@@ -60,6 +67,7 @@ let currentTranscript = '';
 let enabledFeatures = {};
 let player; // YouTube Player instance
 let deferredPrompt; // For PWA install prompt
+const MAX_HISTORY_ITEMS = 5;
 
 // Load YouTube IFrame API
 const tag = document.createElement('script');
@@ -69,8 +77,8 @@ firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
 // YouTube API Callback
 window.onYouTubeIframeAPIReady = function () {
-    player = new YT.Player('youtubePlayer', {
-        height: '360',
+    player = new YT.Player('player', {
+        height: '100%',
         width: '100%',
         videoId: '', // Will be set later
         playerVars: {
@@ -85,6 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // checkInstallPrompt called via event listener now
     handleSharedContent();
     fetchFeatures(); // Fetch feature flags
+    loadHistory(); // Load recent summaries
 });
 
 // Capture PWA install prompt
@@ -95,7 +104,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
     deferredPrompt = e;
     // Update UI to notify the user they can add to home screen
     const installPrompt = document.getElementById('installPrompt');
-    installPrompt.classList.remove('hidden');
+    if (installPrompt) installPrompt.classList.remove('hidden');
 
     // Hide manual instructions if we have the native prompt
     const androidInstructions = document.getElementById('androidInstructions');
@@ -118,15 +127,47 @@ async function fetchFeatures() {
 function setupEventListeners() {
     summarizerForm.addEventListener('submit', handleSubmit);
     copyBtn.addEventListener('click', copySummary);
-    // readAloudBtn listener removed
-    toggleInputBtn.addEventListener('click', () => toggleInputSection());
 
-    // Voice selection removed
-    resetBtn.addEventListener('click', resetApp);
+    // Scroll to Log (Toggle visibility)
+    scrollToLogBtn.addEventListener('click', () => {
+        if (logSection.classList.contains('hidden')) {
+            logSection.classList.remove('hidden');
+            scrollToLogBtn.classList.add('active');
+            setTimeout(() => {
+                logSection.scrollIntoView({ behavior: 'smooth' });
+            }, 100);
+        } else {
+            logSection.classList.add('hidden');
+            scrollToLogBtn.classList.remove('active');
+        }
+    });
 
-    // Feature Tabs
-    document.querySelectorAll('.feature-tab').forEach(tab => {
+    // Play button overlay
+    const playOverlay = videoPlayerWrapper.querySelector('.play-overlay');
+    if (playOverlay) {
+        playOverlay.addEventListener('click', startVideo);
+    }
+
+    // Tabs
+    tabs.forEach(tab => {
         tab.addEventListener('click', () => switchTab(tab));
+    });
+
+    // Video Player Interaction
+    videoPlayerWrapper.addEventListener('click', () => {
+        const playerDiv = document.getElementById('player');
+        const thumb = document.getElementById('videoThumbnail');
+        const overlay = videoPlayerWrapper.querySelector('.play-overlay');
+        const badge = videoPlayerWrapper.querySelector('.live-badge');
+
+        playerDiv.classList.remove('hidden');
+        thumb.classList.add('hidden');
+        overlay.classList.add('hidden');
+        badge.classList.add('hidden');
+
+        if (player && player.playVideo) {
+            player.playVideo();
+        }
     });
 
     // Chat
@@ -135,87 +176,84 @@ function setupEventListeners() {
         if (e.key === 'Enter') handleChatSubmit(e);
     });
 
-    // Steps
-    document.getElementById('generateStepsBtn').addEventListener('click', handleStepsRequest);
+    // Podcast Button
+    const podcastBtn = document.getElementById('podcastBtn');
+    if (podcastBtn) {
+        // Remove any existing listeners by cloning (optional, but safer to just add one unique listener if we control init)
+        // Since we are in init(), we should just add it.
+        podcastBtn.replaceWith(podcastBtn.cloneNode(true));
+        const newPodcastBtn = document.getElementById('podcastBtn');
 
-    // Quiz
-    document.getElementById('startQuizBtn').addEventListener('click', handleQuizRequest);
-    document.getElementById('retryQuizBtn').addEventListener('click', resetQuiz);
+        newPodcastBtn.addEventListener('click', handlePodcastRequest);
+    }
 
-    // Podcast
-    document.getElementById('podcastBtn').addEventListener('click', handlePodcastRequest);
-    document.getElementById('podcastPlayPauseBtn').addEventListener('click', togglePodcastPlayback);
-    document.getElementById('podcastStopBtn').addEventListener('click', stopPodcast);
+    // Reset Button
+    const resetBtn = document.getElementById('resetBtn');
+    if (resetBtn) {
+        resetBtn.addEventListener('click', resetApp);
+        // Show/Hide reset button based on input
+        youtubeUrlInput.addEventListener('input', () => {
+            const url = youtubeUrlInput.value.trim();
+            if (url) {
+                // Auto-load from history if match found
+                const videoId = extractVideoId(url);
+                if (videoId) {
+                    const history = JSON.parse(localStorage.getItem('yt_summary_history') || '[]');
+                    const cachedItem = history.find(item => item.id === videoId);
+                    if (cachedItem) {
+                        console.log('Auto-loading from cache:', videoId);
+                        loadHistoryItem(cachedItem);
+                    }
+                }
+            }
+        });
+    }
 
-    // Install prompt listeners
-    installLink.addEventListener('click', async (e) => {
-        e.preventDefault();
-
-        if (deferredPrompt) {
-            // Show the install prompt
-            deferredPrompt.prompt();
-            // Wait for the user to respond to the prompt
-            const { outcome } = await deferredPrompt.userChoice;
-            console.log(`User response to the install prompt: ${outcome}`);
-            // We've used the prompt, so it can't be used again, discard it
-            deferredPrompt = null;
-            // Hide the prompt button
-            installPrompt.classList.add('hidden');
-        } else {
-            // Fallback to manual instructions
-            installModal.classList.remove('hidden');
-        }
-    });
-
-    // Close modal when clicking outside
-    installModal.addEventListener('click', (e) => {
-        if (e.target === installModal) {
-            installModal.classList.add('hidden');
-        }
-    });
-
-    closeModal.addEventListener('click', () => {
-        installModal.classList.add('hidden');
-    });
+    // Toggle Summary Button
+    const toggleSummaryBtn = document.getElementById('toggleSummaryBtn');
+    if (toggleSummaryBtn) {
+        toggleSummaryBtn.addEventListener('click', () => {
+            const summaryContent = document.getElementById('summaryText');
+            if (summaryContent.classList.contains('hidden')) {
+                summaryContent.classList.remove('hidden');
+                toggleSummaryBtn.classList.remove('collapsed');
+            } else {
+                summaryContent.classList.add('hidden');
+                toggleSummaryBtn.classList.add('collapsed');
+            }
+        });
+    }
 }
 
 // Switch Feature Tabs
 function switchTab(selectedTab) {
-    // Deactivate all tabs and hide content
-    document.querySelectorAll('.feature-tab').forEach(tab => tab.classList.remove('active'));
-    document.querySelectorAll('.feature-content').forEach(content => content.classList.add('hidden'));
+    // Deactivate all tabs
+    tabs.forEach(tab => {
+        tab.classList.remove('active');
+        tab.classList.add('inactive');
+    });
 
-    // Activate selected tab and show content
+    // Hide all content
+    document.getElementById('contentChat').classList.add('hidden');
+    document.getElementById('contentSteps').classList.add('hidden');
+    document.getElementById('contentQuiz').classList.add('hidden');
+
+    // Activate selected
     selectedTab.classList.add('active');
-    const targetId = selectedTab.dataset.target;
+    selectedTab.classList.remove('inactive');
+
+    // Show content
+    const targetId = 'content' + selectedTab.dataset.tab.charAt(0).toUpperCase() + selectedTab.dataset.tab.slice(1);
     document.getElementById(targetId).classList.remove('hidden');
 }
 
-// Show available features
+// Show available features (Tabs)
 function showFeatures() {
-    const container = document.getElementById('featuresContainer');
-    let hasFeatures = false;
-
-    if (enabledFeatures.chat) {
-        document.getElementById('tabChat').classList.remove('hidden');
-        hasFeatures = true;
-    }
-    if (enabledFeatures.steps) {
-        document.getElementById('tabSteps').classList.remove('hidden');
-        hasFeatures = true;
-    }
-    if (enabledFeatures.quiz) {
-        document.getElementById('tabQuiz').classList.remove('hidden');
-        hasFeatures = true;
-    }
-
-
-    if (hasFeatures) {
-        container.classList.remove('hidden');
-        // Activate first available tab
-        const firstTab = container.querySelector('.feature-tab:not(.hidden)');
-        if (firstTab) switchTab(firstTab);
-    }
+    // In the new design, we just show the results container which contains the tabs
+    // We can assume all features are available or check flags if needed
+    // For now, let's just ensure the Chat tab is active by default
+    const chatTab = document.querySelector('.tab-btn[data-tab="chat"]');
+    if (chatTab) switchTab(chatTab);
 }
 
 // --- Chat Feature ---
@@ -418,57 +456,93 @@ function resetApp() {
     youtubeUrlInput.value = '';
     hideAllCards();
     window.speechSynthesis.cancel(); // Stop speaking
-    toggleInputSection(true); // Ensure input is expanded
 
     // Reset features
-    document.getElementById('featuresContainer').classList.add('hidden');
-    document.getElementById('chatHistory').innerHTML = '<div class="chat-message ai"><div class="message-content"><p>Hi! Ask me anything about this video.</p></div></div>';
-    document.getElementById('stepsContent').innerHTML = '';
-    document.getElementById('generateStepsBtn').classList.remove('hidden');
-    document.getElementById('generateStepsBtn').disabled = false;
-    document.getElementById('generateStepsBtn').textContent = 'Generate Steps';
+    document.getElementById('contentChat').classList.remove('hidden'); // Default tab
+    document.getElementById('contentSteps').classList.add('hidden');
+    document.getElementById('contentQuiz').classList.add('hidden');
+
+    const chatHistory = document.getElementById('chatHistory');
+    if (chatHistory) chatHistory.innerHTML = '<div class="chat-message ai"><div class="message-content"><p>Hi! Ask me anything about this video.</p></div></div>';
+
+    const stepsContent = document.getElementById('stepsContent');
+    if (stepsContent) stepsContent.innerHTML = '';
+    // Actually HTML has contentSteps, contentQuiz. Inside them is just text for now.
+    // If we had dynamic content, we'd clear it.
+
     resetQuiz();
 
     // Reset defaults
-    summaryLengthSelect.value = 'short';
+    summaryLengthSelect.value = 'medium';
     summaryToneSelect.value = 'conversational';
+
+    // Ensure Chat tab is active
+    const chatTab = document.querySelector('.tab-btn[data-tab="chat"]');
+    if (chatTab) switchTab(chatTab);
+
+    // Hide reset button
+    // const resetBtn = document.getElementById('resetBtn');
+    // if (resetBtn) resetBtn.classList.add('hidden'); // User wants it visible always
+
+    // Expand input section
+    toggleInputSection(false);
+
+    // Hide action buttons
+    const actionButtons = document.querySelector('.action-buttons');
+    if (actionButtons) actionButtons.classList.add('hidden');
 }
 
 // Toggle Input Section
 function toggleInputSection(forceState = null) {
-    if (!inputSection) return;
+    if (!inputSection) {
+        // In new design, inputSection variable points to the ID 'inputSection' which might not exist
+        // We need to target the .input-card class or add an ID to the input card
+        const card = document.querySelector('.input-card');
+        if (card) {
+            const isCollapsed = card.classList.contains('collapsed');
+            const shouldCollapse = forceState !== null ? !forceState : !isCollapsed;
 
+            if (shouldCollapse) {
+                card.classList.add('collapsed');
+            } else {
+                card.classList.remove('collapsed');
+            }
+        }
+        return;
+    }
+    // Fallback if ID exists
     const isCollapsed = inputSection.classList.contains('collapsed');
     const shouldCollapse = forceState !== null ? !forceState : !isCollapsed;
-    const btn = document.getElementById('toggleInputBtn');
 
     if (shouldCollapse) {
         inputSection.classList.add('collapsed');
-        inputSection.style.setProperty('display', 'none', 'important');
-        if (btn) btn.classList.add('collapsed');
     } else {
         inputSection.classList.remove('collapsed');
-        inputSection.style.setProperty('display', 'block', 'important');
-        if (btn) btn.classList.remove('collapsed');
     }
 }
 
 // Hide all result cards
 function hideAllCards() {
-    videoInfoCard.classList.add('hidden');
-    summaryCard.classList.add('hidden');
-    errorCard.classList.add('hidden');
-    document.getElementById('featuresContainer').classList.add('hidden');
-    window.speechSynthesis.cancel(); // Stop speaking
+    resultsContainer.classList.add('hidden');
+    // Stop speaking if any
+    window.speechSynthesis.cancel();
 }
 
 // Show error
 function showError(message) {
-    hideAllCards();
+    // Don't hide everything, just stop loading state
+    setLoading(false);
+
+    // If we have results shown (e.g. partial load), keep them? 
+    // Or if it's a total failure, maybe hide results but keep input open.
+    // Let's just show the error card.
+
     errorMessage.textContent = message;
     errorCard.classList.remove('hidden');
     errorCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    toggleInputSection(true); // Expand input on error
+
+    // Ensure input is visible so they can try again
+    toggleInputSection(false);
 }
 
 // Set loading state
@@ -479,30 +553,36 @@ function setLoading(isLoading) {
 }
 
 // Show Skeleton Loading
-function showSkeletonLoading() {
-    // Video Info Skeleton
-    // Hide player and thumbnail
-    const playerContainer = document.getElementById('playerContainer');
-    if (playerContainer) playerContainer.classList.add('hidden');
-    if (thumbnailContainer) thumbnailContainer.classList.add('hidden');
+function showSkeletonLoading(videoId) {
+    // Show results container
+    resultsContainer.classList.remove('hidden');
 
-    // Create skeleton if not exists
-    let skeletonThumb = videoInfoCard.querySelector('.skeleton-thumbnail');
-    if (!skeletonThumb) {
-        skeletonThumb = document.createElement('div');
-        skeletonThumb.className = 'skeleton skeleton-thumbnail';
-        videoInfoCard.querySelector('.video-preview').prepend(skeletonThumb);
+    // Show Thumbnail immediately if we have ID
+    if (videoId) {
+        videoThumbnail.src = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+        videoThumbnail.classList.remove('hidden');
+
+        // Reset player wrapper to show thumbnail
+        const playerDiv = document.getElementById('player');
+        const overlay = videoPlayerWrapper.querySelector('.play-overlay');
+        const badge = videoPlayerWrapper.querySelector('.live-badge');
+
+        playerDiv.classList.add('hidden');
+        overlay.classList.remove('hidden');
+        badge.classList.remove('hidden');
+
+        // Clear previous title/player content
+        videoPlayerWrapper.querySelector('.skeleton')?.remove();
     } else {
-        skeletonThumb.classList.remove('hidden');
+        // Fallback to skeleton if no ID (shouldn't happen in this flow)
+        videoPlayerWrapper.innerHTML = `
+            <div class="skeleton" style="width: 100%; height: 100%;"></div>
+        `;
     }
 
-    videoTitle.innerHTML = '<div class="skeleton skeleton-text title"></div>';
-    transcriptLength.innerHTML = '<div class="skeleton skeleton-text short"></div>';
-
-    videoInfoCard.classList.remove('hidden');
-
-    // Summary Skeleton
-    summaryContent.innerHTML = `
+    // Reset Summary to Skeleton
+    summaryText.innerHTML = `
+        <div class="skeleton skeleton-text title"></div>
         <div class="skeleton skeleton-text"></div>
         <div class="skeleton skeleton-text"></div>
         <div class="skeleton skeleton-text short"></div>
@@ -511,9 +591,9 @@ function showSkeletonLoading() {
         <div class="skeleton skeleton-text"></div>
         <div class="skeleton skeleton-text"></div>
     `;
-    summaryCard.classList.remove('hidden');
-    summaryCard.classList.remove('hidden');
-    copyBtn.classList.add('hidden'); // Ensure copy button is hidden
+
+    // Scroll to results
+    resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // Extract video ID from URL
@@ -555,10 +635,21 @@ async function handleSubmit(e) {
         return;
     }
 
+    // Check History Cache
+    const history = JSON.parse(localStorage.getItem('yt_summary_history') || '[]');
+    const cachedItem = history.find(item => item.id === videoId);
+
+    if (cachedItem) {
+        console.log('Loading from cache:', videoId);
+        loadHistoryItem(cachedItem);
+        return;
+    }
+
     hideAllCards();
     setLoading(true);
-    toggleInputSection(false); // Collapse input
-    showSkeletonLoading(); // Show skeletons
+    hideAllCards();
+    setLoading(true);
+    showSkeletonLoading(videoId); // Show thumbnail immediately
 
     try {
         // Step 1: Extract transcript
@@ -604,8 +695,14 @@ async function handleSubmit(e) {
         // Show summary
         showSummary(summaryData.summary);
 
+        // Save to history
+        saveToHistory(videoId, transcriptData.title, summaryData.summary, transcriptData.transcript);
+
         // Show enabled features
         showFeatures();
+
+        // Collapse input only after success
+        toggleInputSection(false);
 
     } catch (error) {
         showError(error.message);
@@ -614,23 +711,141 @@ async function handleSubmit(e) {
     }
 }
 
+// Save to History
+function saveToHistory(videoId, title, summary, transcript) {
+    const historyItem = {
+        id: videoId,
+        title: title,
+        summary: summary,
+        transcript: transcript,
+        timestamp: Date.now()
+    };
+
+    let history = JSON.parse(localStorage.getItem('yt_summary_history') || '[]');
+
+    // Remove duplicate if exists
+    history = history.filter(item => item.id !== videoId);
+
+    // Add new item to top
+    history.unshift(historyItem);
+
+    // Limit size
+    if (history.length > MAX_HISTORY_ITEMS) {
+        history = history.slice(0, MAX_HISTORY_ITEMS);
+    }
+
+    localStorage.setItem('yt_summary_history', JSON.stringify(history));
+    loadHistory();
+}
+
+// Load History
+function loadHistory() {
+    const history = JSON.parse(localStorage.getItem('yt_summary_history') || '[]');
+
+    // Clear list
+    logList.innerHTML = '';
+
+    if (history.length === 0) {
+        logList.innerHTML = '<div class="text-slate-500 text-sm text-center py-4">No recent history</div>';
+        return;
+    }
+
+    history.forEach(item => {
+        const date = new Date(item.timestamp).toLocaleDateString();
+        const el = document.createElement('div');
+        el.className = 'log-item';
+        el.innerHTML = `
+            <div class="log-thumbnail-wrapper">
+                <img src="https://img.youtube.com/vi/${item.id}/mqdefault.jpg" alt="Thumbnail" class="log-thumbnail">
+                <div class="log-play-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                        <path d="M8 5v14l11-7z"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="log-info">
+                <h4 class="log-item-title">${item.title || 'Video Summary'}</h4>
+                <div class="log-meta">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    ${date}
+                </div>
+            </div>
+            <button class="log-open-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M5 12h14"/>
+                    <path d="m12 5 7 7-7 7"/>
+                </svg>
+            </button>
+        `;
+        el.addEventListener('click', () => loadHistoryItem(item));
+        logList.appendChild(el);
+    });
+}
+
+function loadHistoryItem(item) {
+    hideAllCards();
+
+    // Set global state
+    currentTranscript = item.transcript;
+    youtubeUrlInput.value = `https://www.youtube.com/watch?v=${item.id}`;
+
+    // Show UI
+    showVideoInfo(item.id, { title: item.title, length: item.transcript.length });
+    showSummary(item.summary);
+    showFeatures();
+
+    // Collapse input
+    toggleInputSection(false);
+
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function clearHistory() {
+    if (confirm('Clear all recent summaries?')) {
+        localStorage.removeItem('yt_summary_history');
+        loadHistory();
+    }
+}
+
+function toggleHistorySection() {
+    const list = document.getElementById('recentHistoryList');
+    const btn = document.getElementById('toggleHistoryBtn');
+
+    if (list.classList.contains('collapsed')) {
+        // Expand
+        list.classList.remove('collapsed');
+        list.style.display = 'flex';
+        btn.classList.remove('collapsed');
+    } else {
+        // Collapse
+        list.classList.add('collapsed');
+        list.style.display = 'none';
+        btn.classList.add('collapsed');
+    }
+}
+
 // Show video information
 // Show video information
 function showVideoInfo(videoId, data) {
-    // Remove skeleton
-    const skeletonThumb = videoInfoCard.querySelector('.skeleton-thumbnail');
-    if (skeletonThumb) skeletonThumb.classList.add('hidden');
+    // Update thumbnail
+    videoThumbnail.src = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
 
-    // Show thumbnail, hide player initially
-    const playerContainer = document.getElementById('playerContainer');
-    if (playerContainer) playerContainer.classList.add('hidden');
+    // Reset player
+    const playerDiv = document.getElementById('player');
+    const thumb = document.getElementById('videoThumbnail');
+    const overlay = videoPlayerWrapper.querySelector('.play-overlay');
+    const badge = videoPlayerWrapper.querySelector('.live-badge');
 
-    if (thumbnailContainer) {
-        thumbnailContainer.classList.remove('hidden');
-        videoThumbnail.src = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
-    }
+    playerDiv.classList.add('hidden');
+    thumb.classList.remove('hidden');
+    overlay.classList.remove('hidden');
+    badge.classList.remove('hidden');
 
-    // Prepare player (but don't auto-play yet)
+    // Prepare player
     if (player && player.cueVideoById) {
         player.cueVideoById(videoId);
     } else {
@@ -640,31 +855,36 @@ function showVideoInfo(videoId, data) {
     }
 
     videoTitle.textContent = data.title || `Video ID: ${videoId}`;
-    transcriptLength.textContent = `Transcript: ${data.length} characters`;
 
-    videoInfoCard.classList.remove('hidden');
-    videoInfoCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    // Show results container
+    resultsContainer.classList.remove('hidden');
+
+    // Ensure thumbnail container is visible (if we have a specific container for it)
+    // In new design, videoPlayerWrapper contains the thumbnail.
+    // Make sure it's visible.
+    videoPlayerWrapper.classList.remove('hidden');
 }
 
 // Show summary
 function showSummary(summary) {
-    // Convert markdown-style formatting to HTML
+    // Format markdown
     let formattedSummary = formatMarkdown(summary);
+    summaryText.innerHTML = formattedSummary;
 
-    summaryContent.innerHTML = formattedSummary;
-    summaryCard.classList.remove('hidden');
-    copyBtn.classList.remove('hidden'); // Show copy button
-    document.getElementById('podcastBtn').classList.remove('hidden'); // Show podcast button
-    summaryCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    // Ensure results are visible
+    resultsContainer.classList.remove('hidden');
+    resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    // Show action buttons
+    const actionButtons = document.querySelector('.action-buttons');
+    if (actionButtons) actionButtons.classList.remove('hidden');
 }
 
-// Populate Voice List removed
-// Toggle Read Aloud removed
-// updateReadButton removed
+
 
 // Copy summary to clipboard
 async function copySummary() {
-    const text = summaryContent.innerText;
+    const text = summaryText.innerText;
     const url = youtubeUrlInput.value.trim();
     const clipboardText = url ? `${url}\n\n${text}` : text;
 
@@ -689,24 +909,60 @@ async function copySummary() {
     }
 }
 
-// Format markdown to HTML (basic implementation)
+// Format markdown to HTML (improved implementation)
 function formatMarkdown(text) {
-    return text
-        .replace(/### (.*?)(\n|$)/g, '<h4>$1</h4>')
-        .replace(/## (.*?)(\n|$)/g, '<h3>$1</h3>')
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\* (.*?)(\n|$)/g, '<li>$1</li>')
-        .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
-        .replace(/\[(\d{1,2}):(\d{2})\]/g, '<a href="#" class="timestamp-link" onclick="seekTo($1 * 60 + $2 * 1); return false;">[$1:$2]</a>') // Timestamp linking
-        .replace(/\n\n/g, '</p><p>')
-        .replace(/\n/g, '<br>');
+    if (!text) return '';
+
+    // 1. Code blocks
+    text = text.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+
+    // 2. Inline code
+    text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+    // 3. Headers
+    text = text.replace(/^### (.*$)/gm, '<h4>$1</h4>');
+    text = text.replace(/^## (.*$)/gm, '<h3>$1</h3>');
+    text = text.replace(/^# (.*$)/gm, '<h2>$1</h2>');
+
+    // 4. Bold and Italic
+    text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+    // 5. Blockquotes
+    text = text.replace(/^> (.*$)/gm, '<blockquote>$1</blockquote>');
+
+    // 6. Lists (Unordered) - Simple implementation
+    // Replace lines starting with * or - with <li>
+    text = text.replace(/^[\*\-] (.*$)/gm, '<li>$1</li>');
+
+    // Wrap adjacent <li> in <ul> (This is a bit tricky with regex only, but let's try a simple approach)
+    // We'll wrap the whole block of <li>s
+    text = text.replace(/(<li>.*<\/li>(\n|$))+/g, '<ul>$&</ul>');
+
+    // 7. Timestamps
+    text = text.replace(/\[(\d{1,2}):(\d{2})\]/g, '<a href="#" class="timestamp-link" onclick="seekTo($1 * 60 + $2 * 1); return false;">[$1:$2]</a>');
+
+    // 8. Paragraphs (double newlines)
+    text = text.replace(/\n\n/g, '<br><br>');
+
+    // Cleanup <ul><br> issues if any
+    text = text.replace(/<\/ul><br><br>/g, '</ul>');
+
+    return text;
 }
 
 // Start video playback (switch from thumbnail to player)
 function startVideo() {
-    if (thumbnailContainer) thumbnailContainer.classList.add('hidden');
-    const playerContainer = document.getElementById('playerContainer');
-    if (playerContainer) playerContainer.classList.remove('hidden');
+    // Hide thumbnail and overlay
+    videoThumbnail.classList.add('hidden');
+    const overlay = videoPlayerWrapper.querySelector('.play-overlay');
+    if (overlay) overlay.classList.add('hidden');
+    const badge = videoPlayerWrapper.querySelector('.live-badge');
+    if (badge) badge.classList.add('hidden');
+
+    // Show player
+    const playerElement = document.getElementById('player');
+    if (playerElement) playerElement.classList.remove('hidden');
 
     if (player && player.playVideo) {
         player.playVideo();
@@ -715,11 +971,7 @@ function startVideo() {
 
 // Seek video to timestamp
 window.seekTo = function (seconds) {
-    // Ensure player is visible
-    if (thumbnailContainer && !thumbnailContainer.classList.contains('hidden')) {
-        startVideo();
-    }
-
+    startVideo();
     if (player && player.seekTo) {
         player.seekTo(seconds, true);
         player.playVideo();
@@ -728,8 +980,11 @@ window.seekTo = function (seconds) {
 
 
 // --- Podcast Feature ---
-async function handlePodcastRequest() {
-    const btn = document.getElementById('podcastBtn');
+async function handlePodcastRequest(e) {
+    // Use event target if available, fallback to ID
+    const btn = e ? e.currentTarget : document.getElementById('podcastBtn');
+    if (!btn) return;
+
     const originalText = btn.innerHTML;
 
     if (window.speechSynthesis.speaking) {
@@ -767,13 +1022,13 @@ async function handlePodcastRequest() {
                 btn.innerHTML = originalText;
             });
         } else {
-            alert('Failed to generate podcast');
-            btn.disabled = false;
-            btn.innerHTML = originalText;
+            showToast(data.error || 'Failed to generate podcast', 'error');
         }
     } catch (error) {
-        console.error(error);
-        alert('Network error');
+        console.error('Podcast generation failed:', error);
+        showToast('Network error', 'error');
+    } finally {
+        // Ensure button is re-enabled and text restored in all cases
         btn.disabled = false;
         btn.innerHTML = originalText;
     }
@@ -1000,4 +1255,28 @@ function checkInstallPrompt() {
             iosInstructions.classList.remove('hidden');
         }
     }
+}
+
+// Toast Notification
+function showToast(message, type = 'info') {
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+
+    // Add to document
+    document.body.appendChild(toast);
+
+    // Trigger animation
+    requestAnimationFrame(() => {
+        toast.classList.add('show');
+    });
+
+    // Remove after 3 seconds
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            toast.remove();
+        }, 300);
+    }, 3000);
 }
