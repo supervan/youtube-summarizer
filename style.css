@@ -185,9 +185,10 @@ body {
     /* backdrop-blur-sm */
     margin-bottom: 1.5rem;
     transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-    max-height: 500px;
+    /* max-height: 500px; - Removed to fix collapse issue */
     opacity: 1;
     overflow: hidden;
+    position: relative;
 }
 
 .input-card.collapsed .input-content {
@@ -203,6 +204,8 @@ body {
     align-items: center;
     justify-content: space-between;
     margin-bottom: 1rem;
+    padding-right: 2rem;
+    /* Space for absolute toggle button */
 }
 
 .input-card.collapsed .section-header {
@@ -229,6 +232,9 @@ body {
     align-items: center;
     justify-content: center;
     transition: all 0.2s;
+    position: absolute;
+    top: 1.25rem;
+    right: 1.25rem;
 }
 
 .section-toggle-btn:hover {
@@ -376,6 +382,9 @@ body {
     padding: 1rem;
     border-radius: 1rem;
     border: 1px solid var(--slate-800);
+    position: relative;
+    padding-right: 3rem;
+    /* Space for button */
 }
 
 .results-content-wrapper {

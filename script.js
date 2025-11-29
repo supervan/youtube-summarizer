@@ -481,52 +481,61 @@ function resetQuiz() {
 
 // Reset Application
 function resetApp() {
-    youtubeUrlInput.value = '';
-    hideAllCards();
-    window.speechSynthesis.cancel(); // Stop speaking
-    stopPodcast(); // Stop podcast if playing
+    console.log('Resetting app...');
+    try {
+        youtubeUrlInput.value = '';
+        hideAllCards();
+        window.speechSynthesis.cancel(); // Stop speaking
+        if (typeof stopPodcast === 'function') stopPodcast(); // Stop podcast if playing
 
-    // Reset features
-    document.getElementById('contentChat').classList.remove('hidden'); // Default tab
-    document.getElementById('contentSteps').classList.add('hidden');
-    document.getElementById('contentQuiz').classList.add('hidden');
+        // Reset features
+        const contentChat = document.getElementById('contentChat');
+        if (contentChat) contentChat.classList.remove('hidden'); // Default tab
 
-    const chatHistory = document.getElementById('chatHistory');
-    if (chatHistory) chatHistory.innerHTML = '<div class="chat-message ai"><div class="message-content"><p>Hi! Ask me anything about this video.</p></div></div>';
+        const contentSteps = document.getElementById('contentSteps');
+        if (contentSteps) contentSteps.classList.add('hidden');
 
-    const stepsContent = document.getElementById('stepsContent');
-    if (stepsContent) stepsContent.innerHTML = '';
-    // Actually HTML has contentSteps, contentQuiz. Inside them is just text for now.
-    // If we had dynamic content, we'd clear it.
+        const contentQuiz = document.getElementById('contentQuiz');
+        if (contentQuiz) contentQuiz.classList.add('hidden');
 
-    resetQuiz();
+        const chatHistory = document.getElementById('chatHistory');
+        if (chatHistory) chatHistory.innerHTML = '<div class="chat-message ai"><div class="message-content"><p>Hi! Ask me anything about this video.</p></div></div>';
 
-    // Reset defaults
-    summaryLengthSelect.value = 'medium';
-    summaryToneSelect.value = 'conversational';
+        const stepsContent = document.getElementById('stepsContent');
+        if (stepsContent) stepsContent.innerHTML = '';
 
-    // Ensure Chat tab is active
-    const chatTab = document.querySelector('.tab-btn[data-tab="chat"]');
-    if (chatTab) switchTab(chatTab);
+        if (typeof resetQuiz === 'function') resetQuiz();
 
-    // Hide reset button
-    // const resetBtn = document.getElementById('resetBtn');
-    // if (resetBtn) resetBtn.classList.add('hidden'); // User wants it visible always
+        // Reset defaults
+        if (summaryLengthSelect) summaryLengthSelect.value = 'short';
+        if (summaryToneSelect) summaryToneSelect.value = 'conversational';
 
-    // Expand input section
-    toggleInputSection(false); // false means expand (don't collapse)
+        // Ensure Chat tab is active
+        const chatTab = document.querySelector('.tab-btn[data-tab="chat"]');
+        if (chatTab) switchTab(chatTab);
 
-    // Hide tabs
-    if (tabsContainer) tabsContainer.classList.add('hidden');
-    if (tabContent) tabContent.classList.add('hidden');
+        // Expand input section
+        toggleInputSection(false); // false means expand (don't collapse)
 
-    // Hide results content
-    if (resultsContent) resultsContent.classList.add('hidden');
-    if (toggleResultsBtn) toggleResultsBtn.classList.add('collapsed');
+        // Hide tabs
+        if (tabsContainer) tabsContainer.classList.add('hidden');
+        if (tabContent) tabContent.classList.add('hidden');
 
-    // Hide action buttons
-    const actionButtons = document.querySelector('.action-buttons');
-    if (actionButtons) actionButtons.classList.add('hidden');
+        // Hide results content
+        if (resultsContent) resultsContent.classList.add('hidden');
+        if (toggleResultsBtn) toggleResultsBtn.classList.add('collapsed');
+
+        // Hide action buttons
+        const actionButtons = document.querySelector('.action-buttons');
+        if (actionButtons) actionButtons.classList.add('hidden');
+
+        // Ensure reset button is visible if input has value (though we just cleared it, so maybe hide it?)
+        // Actually, the input listener handles visibility. Since we cleared input, we should probably hide it or let the listener handle it.
+        // But for now, let's just leave it.
+
+    } catch (error) {
+        console.error('Error resetting app:', error);
+    }
 }
 
 // Toggle Input Section
