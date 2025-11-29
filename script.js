@@ -16,6 +16,7 @@ const summaryToneSelect = document.getElementById('summaryTone');
 const submitBtn = document.getElementById('submitBtn');
 const btnText = document.getElementById('btnText');
 const btnLoader = document.getElementById('btnLoader');
+const toggleInputBtn = document.getElementById('toggleInputBtn');
 
 // Results Section Elements
 const resultsContainer = document.getElementById('resultsContainer');
@@ -25,6 +26,10 @@ const videoTitle = document.getElementById('videoTitle');
 const summaryText = document.getElementById('summaryText');
 const copyBtn = document.getElementById('copyBtn');
 const podcastBtn = document.getElementById('podcastBtn');
+const toggleResultsBtn = document.getElementById('toggleResultsBtn');
+const resultsContent = document.getElementById('resultsContent');
+const tabsContainer = document.getElementById('tabsContainer');
+const tabContent = document.getElementById('tabContent');
 
 // Log Section Elements
 const logSection = document.getElementById('logSection');
@@ -127,6 +132,14 @@ async function fetchFeatures() {
 function setupEventListeners() {
     summarizerForm.addEventListener('submit', handleSubmit);
     copyBtn.addEventListener('click', copySummary);
+
+    // Section Toggles
+    if (toggleInputBtn) {
+        toggleInputBtn.addEventListener('click', () => toggleInputSection());
+    }
+    if (toggleResultsBtn) {
+        toggleResultsBtn.addEventListener('click', () => toggleResultsSection());
+    }
 
     // Scroll to Log (Toggle visibility)
     scrollToLogBtn.addEventListener('click', () => {
@@ -260,11 +273,15 @@ function switchTab(selectedTab) {
 
 // Show available features (Tabs)
 function showFeatures() {
-    // In the new design, we just show the results container which contains the tabs
-    // We can assume all features are available or check flags if needed
-    // For now, let's just ensure the Chat tab is active by default
-    const chatTab = document.querySelector('.tab-btn[data-tab="chat"]');
-    if (chatTab) switchTab(chatTab);
+    if (tabsContainer) tabsContainer.classList.remove('hidden');
+    if (tabContent) tabContent.classList.remove('hidden');
+
+    // Ensure Chat tab is active by default if none active
+    const activeTab = document.querySelector('.tab-btn.active');
+    if (!activeTab) {
+        const chatTab = document.querySelector('.tab-btn[data-tab="chat"]');
+        if (chatTab) switchTab(chatTab);
+    }
 }
 
 // --- Chat Feature ---
@@ -467,6 +484,7 @@ function resetApp() {
     youtubeUrlInput.value = '';
     hideAllCards();
     window.speechSynthesis.cancel(); // Stop speaking
+    stopPodcast(); // Stop podcast if playing
 
     // Reset features
     document.getElementById('contentChat').classList.remove('hidden'); // Default tab
@@ -496,7 +514,15 @@ function resetApp() {
     // if (resetBtn) resetBtn.classList.add('hidden'); // User wants it visible always
 
     // Expand input section
-    toggleInputSection(false);
+    toggleInputSection(false); // false means expand (don't collapse)
+
+    // Hide tabs
+    if (tabsContainer) tabsContainer.classList.add('hidden');
+    if (tabContent) tabContent.classList.add('hidden');
+
+    // Hide results content
+    if (resultsContent) resultsContent.classList.add('hidden');
+    if (toggleResultsBtn) toggleResultsBtn.classList.add('collapsed');
 
     // Hide action buttons
     const actionButtons = document.querySelector('.action-buttons');
@@ -504,31 +530,40 @@ function resetApp() {
 }
 
 // Toggle Input Section
-function toggleInputSection(forceState = null) {
-    if (!inputSection) {
-        // In new design, inputSection variable points to the ID 'inputSection' which might not exist
-        // We need to target the .input-card class or add an ID to the input card
-        const card = document.querySelector('.input-card');
-        if (card) {
-            const isCollapsed = card.classList.contains('collapsed');
-            const shouldCollapse = forceState !== null ? !forceState : !isCollapsed;
+function toggleInputSection(forceCollapse = null) {
+    const card = document.querySelector('.input-card');
+    const btn = document.getElementById('toggleInputBtn');
 
-            if (shouldCollapse) {
-                card.classList.add('collapsed');
-            } else {
-                card.classList.remove('collapsed');
-            }
-        }
-        return;
-    }
-    // Fallback if ID exists
-    const isCollapsed = inputSection.classList.contains('collapsed');
-    const shouldCollapse = forceState !== null ? !forceState : !isCollapsed;
+    if (!card) return;
+
+    const isCollapsed = card.classList.contains('collapsed');
+    const shouldCollapse = forceCollapse !== null ? forceCollapse : !isCollapsed;
 
     if (shouldCollapse) {
-        inputSection.classList.add('collapsed');
+        card.classList.add('collapsed');
+        if (btn) btn.classList.add('collapsed');
     } else {
-        inputSection.classList.remove('collapsed');
+        card.classList.remove('collapsed');
+        if (btn) btn.classList.remove('collapsed');
+    }
+}
+
+// Toggle Results Section
+function toggleResultsSection(forceCollapse = null) {
+    const content = document.getElementById('resultsContent');
+    const btn = document.getElementById('toggleResultsBtn');
+
+    if (!content) return;
+
+    const isHidden = content.classList.contains('hidden');
+    const shouldCollapse = forceCollapse !== null ? forceCollapse : !isHidden;
+
+    if (shouldCollapse) {
+        content.classList.add('hidden');
+        if (btn) btn.classList.add('collapsed');
+    } else {
+        content.classList.remove('hidden');
+        if (btn) btn.classList.remove('collapsed');
     }
 }
 
@@ -552,6 +587,7 @@ function showError(message) {
     errorCard.classList.remove('hidden');
     errorCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
+    // Ensure input is visible so they can try again
     // Ensure input is visible so they can try again
     toggleInputSection(false);
 }
@@ -658,8 +694,6 @@ async function handleSubmit(e) {
 
     hideAllCards();
     setLoading(true);
-    hideAllCards();
-    setLoading(true);
     showSkeletonLoading(videoId); // Show thumbnail immediately
 
     try {
@@ -713,7 +747,10 @@ async function handleSubmit(e) {
         showFeatures();
 
         // Collapse input only after success
-        toggleInputSection(false);
+        toggleInputSection(true);
+
+        // Expand results
+        toggleResultsSection(false);
 
     } catch (error) {
         showError(error.message);
@@ -798,6 +835,16 @@ function loadHistory() {
 
 function loadHistoryItem(item) {
     hideAllCards();
+    stopPodcast(); // Stop podcast if playing
+
+    // Clear previous feature data
+    const chatHistory = document.getElementById('chatHistory');
+    if (chatHistory) chatHistory.innerHTML = '<div class="chat-message ai"><div class="message-content"><p>Hi! Ask me anything about this video.</p></div></div>';
+
+    const stepsContent = document.getElementById('stepsContent');
+    if (stepsContent) stepsContent.innerHTML = '';
+
+    resetQuiz();
 
     // Set global state
     currentTranscript = item.transcript;
