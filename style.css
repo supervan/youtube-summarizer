@@ -971,6 +971,50 @@ body {
     border-left: 4px solid var(--red-500);
 }
 
+/* --- Error Card --- */
+.error-card {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 1rem;
+    padding: 1rem;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    animation: slideDown 0.3s ease-out;
+}
+
+.error-icon {
+    color: var(--red-500);
+    padding-top: 0.25rem;
+}
+
+.error-content h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--red-500);
+    margin-bottom: 0.25rem;
+}
+
+.error-content p {
+    font-size: 0.875rem;
+    color: var(--slate-300);
+}
+
+.close-error-btn {
+    background: none;
+    border: none;
+    color: var(--slate-400);
+    cursor: pointer;
+    padding: 0.25rem;
+    margin-left: auto;
+    transition: color 0.2s;
+}
+
+.close-error-btn:hover {
+    color: white;
+}
+
 /* --- Podcast Controls --- */
 .podcast-controls {
     margin-top: 1rem;

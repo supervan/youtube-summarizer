@@ -614,7 +614,7 @@ def summarize():
         genai.configure(api_key=api_key)
         
         # Use Gemini 2.5 Flash model for summarization
-        model = genai.GenerativeModel('gemini-2.5-flash')
+        model = genai.GenerativeModel('gemini-flash-latest')
         
         # Build prompt based on preferences
         prompt = build_summary_prompt(transcript, length, tone)
@@ -712,7 +712,7 @@ def chat_with_video():
             return jsonify({'error': 'API key not configured'}), 500
             
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-2.5-flash')
+        model = genai.GenerativeModel('gemini-flash-latest')
         
         prompt = f"""You are a helpful assistant answering questions based ONLY on the provided video transcript.
         
@@ -744,7 +744,7 @@ def extract_steps():
             return jsonify({'error': 'API key not configured'}), 500
             
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-2.5-flash')
+        model = genai.GenerativeModel('gemini-flash-latest')
         
         prompt = f"""Analyze the following transcript and determine if it contains instructions, a tutorial, or actionable advice.
         
@@ -779,7 +779,7 @@ def generate_quiz():
             return jsonify({'error': 'API key not configured'}), 500
             
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-2.5-flash')
+        model = genai.GenerativeModel('gemini-flash-latest')
         
         # Force JSON response for the quiz
         prompt = f"""Generate a 5-question multiple choice quiz based on this transcript.
@@ -830,7 +830,7 @@ def generate_podcast():
             return jsonify({'error': 'API key not configured'}), 500
             
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-2.5-flash')
+        model = genai.GenerativeModel('gemini-flash-latest')
         
         prompt = f"""Convert this transcript into an engaging podcast dialogue between two hosts, 'Alex' (Host A) and 'Jamie' (Host B).
         

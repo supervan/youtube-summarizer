@@ -187,6 +187,17 @@ function setupEventListeners() {
         newPodcastBtn.addEventListener('click', handlePodcastRequest);
     }
 
+    // Podcast Controls
+    const playPauseBtn = document.getElementById('podcastPlayPauseBtn');
+    if (playPauseBtn) {
+        playPauseBtn.addEventListener('click', togglePodcastPlay);
+    }
+
+    const stopBtn = document.getElementById('stopPodcastBtn');
+    if (stopBtn) {
+        stopBtn.addEventListener('click', stopPodcast);
+    }
+
     // Reset Button
     const resetBtn = document.getElementById('resetBtn');
     if (resetBtn) {
