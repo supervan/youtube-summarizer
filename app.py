@@ -598,8 +598,10 @@ def summarize():
     try:
         data = request.json
         transcript = data.get('transcript', '')
-        length = data.get('length', 'medium')  # short, medium, long
+        length = data.get('length', 'short')  # short, medium, long
         tone = data.get('tone', 'conversational')  # conversational, professional, technical
+        
+        print(f"📝 Generating SUMMARY with Tone: {tone}, Length: {length}")
         
         if not transcript:
             return jsonify({'error': 'Transcript is required'}), 400
@@ -636,87 +638,126 @@ def summarize():
 def build_summary_prompt(transcript, length, tone):
     """Build a customized prompt based on user preferences"""
     
-    # Length instructions
+    # Length descriptions (for reference)
     length_instructions = {
-        'short': 'Provide a very short summary (approx. 2-3 sentences) using simple language suitable for a 13-year-old.',
-        'medium': 'Provide a balanced summary with an overview, key points (3-5 bullet points), and a brief conclusion.',
-        'long': 'Provide a comprehensive, detailed summary covering all major topics, subtopics, important details, examples, and conclusions.'
+        'short': 'approx. 1-2 sentences',
+        'medium': 'approx. 1 paragraphs with bullet points',
+        'long': 'comprehensive and detailed'
     }
     
-    # Tone instructions
-    tone_instructions = {
-        'conversational': 'Use a friendly, conversational tone that is easy to read and engaging. Use natural language and explain concepts clearly.',
-        'professional': 'Use a formal, professional tone suitable for business contexts. Be clear, objective, and well-structured.',
-        'academic': 'Use a formal, academic tone. Focus on rigorous analysis, cite specific concepts from the transcript, and use precise terminology. Structure the summary like a research abstract or literature review.',
-        'witty': 'Use a witty, humorous, and entertaining tone. Make the summary fun to read while still conveying the key information. Use clever analogies or light jokes where appropriate.',
-        'sarcastic': 'Use a sarcastic, cynical, and ironic tone. Point out the obvious with dry humor. Be snarky but still accurate about the content.',
-        'technical': 'Direct, technical, and dense tone. Omit all introductions, greetings, and conversational transition phrases. Verbosity is useless; reduce it to zero. The information will be presented directly to an audience of university students. Focus purely on facts, data, and technical details.'
-    }
-    
-    # Specific prompts for Sarcastic and Witty tones
+    # Specific prompts for all combinations
     specific_prompts = {
-        ('sarcastic', 'short'): """I need a Short summary (approx. 2-3 sentences). Tone: Extremely sarcastic. Act like a bored, cynical internet commentator who feels like watching this video was a massive waste of time. Mock the main point of the video relentlessly.""",
+        # Conversational
+        ('conversational', 'short'): """Provide a very short summary (MAXIMUM 2 sentences).
+Tone: Friendly, conversational, and easy to read. Use natural language.
+CRITICAL: Do not exceed 2 sentences.
+Transcript:
+{transcript}""",
         
-        ('sarcastic', 'medium'): """I need a Medium length summary (2 paragraphs). Tone: Heavy sarcasm and biting irony. Instructions:
-Summarize the content but frame it as if the creator is stating the obvious or trying too hard.
-Use rhetorical questions to highlight absurdities.
-End with a backhanded compliment about the video.""",
+        ('conversational', 'medium'): """Provide a balanced summary with an overview, key points (3-5 bullet points) (max of 1 short paragraph, 3-4 sentences), and a brief conclusion.
+Tone: Friendly, conversational, and easy to read. Use natural language.
+Transcript:
+{transcript}""",
+        
+        ('conversational', 'long'): """Provide a comprehensive, detailed summary covering all major topics, subtopics, important details, examples, and conclusions.
+Tone: Friendly, conversational, and easy to read. Use natural language.
+Transcript:
+{transcript}""",
 
-        ('sarcastic', 'long'): """I need a Long, detailed summary. Tone: Scathing, dry, and hilariously negative. Instructions:
-Break the summary down into bullet points, but title each bullet point with a sarcastic header.
-Deeply analyze the 'insights' of the video and explain why they are underwhelming.
-Critique the presenter's style or logic using satire.
-Conclude with a 'Final Verdict' that discourages anyone else from watching it.""",
+        # Professional
+        ('professional', 'short'): """Provide a very short summary (MAXIMUM 2 sentences).
+Tone: Formal, professional, and objective. Suitable for business contexts.
+CRITICAL: Do not exceed 2 sentences.
+Transcript:
+{transcript}""",
 
-        ('witty', 'short'): """I need a Short summary (approx. 2-3 sentences). Tone: Sharp, witty, and clever. Instructions: Distill the video down to its absolute essence using wordplay or a clever analogy. Make me laugh, but make me think.""",
+        ('professional', 'medium'): """Provide a balanced summary with an overview, key points (3-5 bullet points) (max of 1 short paragraph, 3-4 sentences), and a brief conclusion.
+Tone: Formal, professional, and objective. Suitable for business contexts.
+Transcript:
+{transcript}""",
 
-        ('witty', 'medium'): """I need a Medium length summary (2 paragraphs). Tone: High-brow humor and wit. Instructions:
+        ('professional', 'long'): """Provide a comprehensive, detailed summary covering all major topics, subtopics, important details, examples, and conclusions.
+Tone: Formal, professional, and objective. Suitable for business contexts.
+Transcript:
+{transcript}""",
+
+        # Technical
+        ('technical', 'short'): """Provide a very short summary (MAXIMUM 2 sentences).
+Tone: Direct, technical, and dense. Omit all introductions. Focus purely on facts.
+CRITICAL: Do not exceed 2 sentences.
+Transcript:
+{transcript}""",
+
+        ('technical', 'medium'): """Provide a balanced summary with an overview, key points (3-5 bullet points) (max of 1 short paragraph, 3-4 sentences), and a brief conclusion.
+Tone: Direct, technical, and dense. Omit all introductions, greetings, and conversational transition phrases. Verbosity is useless; reduce it to zero. The information will be presented directly to an audience of university students. Focus purely on facts, data, and technical details.
+Transcript:
+{transcript}""",
+
+        ('technical', 'long'): """Provide a comprehensive, detailed summary covering all major topics, subtopics, important details, examples, and conclusions.
+Tone: Direct, technical, and dense. Omit all introductions, greetings, and conversational transition phrases. Verbosity is useless; reduce it to zero. The information will be presented directly to an audience of university students. Focus purely on facts, data, and technical details.
+Transcript:
+{transcript}""",
+
+        # Witty
+        ('witty', 'short'): """I need a Short summary (MAXIMUM 2 sentences). Tone: Sharp, witty, and clever.
+CRITICAL: Do not exceed 2 sentences.
+Transcript:
+{transcript}""",
+
+        ('witty', 'medium'): """I need a Medium length summary (1 short paragraph, 3-4 sentences). Tone: High-brow humor and wit. Instructions:
 Summarize the narrative arc of the video with the flair of a stand-up comedian.
 Point out the irony in the video's content.
-Use sophisticated vocabulary and clever metaphors to explain the topic.""",
+Use sophisticated vocabulary and clever metaphors to explain the topic.
+Transcript:
+{transcript}""",
 
         ('witty', 'long'): """I need a Long, detailed summary. Tone: Witty, observational, and charmingly humorous. Instructions:
 Provide a detailed breakdown of the video's chapters, but rewrite the concepts as if you are a humorous columnist for a magazine.
 Look for 'unintentional comedy' in the video and highlight it.
 Use puns related to the specific topic of the video.
-End with a witty philosophical observation based on the video's conclusion."""
+End with a witty philosophical observation based on the video's conclusion.
+Transcript:
+{transcript}""",
+
+        # Sarcastic
+        ('sarcastic', 'short'): """I need a Short summary (MAXIMUM 2 sentences). Tone: Extremely sarcastic.
+CRITICAL: Do not exceed 2 sentences.
+Transcript:
+{transcript}""",
+        
+        ('sarcastic', 'medium'): """I need a Medium length summary (1 short paragraph, 3-4 sentences). Tone: Heavy sarcasm and biting irony. Instructions:
+Summarize the content but frame it as if the creator is stating the obvious or trying too hard.
+Use rhetorical questions to highlight absurdities.
+End with a backhanded compliment about the video.
+Transcript:
+{transcript}""",
+
+        ('sarcastic', 'long'): """I need a Long, detailed summary. Tone: Scathing, dry, and hilariously negative. Instructions:
+Break the summary down into bullet points, but title each bullet point with a sarcastic header.
+Deeply analyze the 'insights' of the video and explain why they are underwhelming.
+Critique the presenter's style or logic using satire.
+Conclude with a 'Final Verdict' that discourages anyone else from watching it.
+Transcript:
+{transcript}"""
     }
 
-    # Build the prompt
-    if (tone, length) in specific_prompts:
-        prompt = f"""{specific_prompts[(tone, length)]}
-
-IMPORTANT: You MUST include timestamps [MM:SS] from the transcript for every key point or major topic change.
-
+    # Get the prompt template
+    prompt_template = specific_prompts.get((tone, length))
+    
+    # Fallback if combination not found (should not happen with full coverage)
+    if not prompt_template:
+        prompt_template = f"""Please summarize the following YouTube video transcript.
+Length: {length_instructions.get(length, 'medium')}
+Tone: {tone}
 Transcript:
-{transcript}"""
-    elif tone == 'technical':
-        # Special format for technical tone - no fluff
-        prompt = f"""{tone_instructions[tone]}
+{{transcript}}"""
 
-{length_instructions[length]}
-
-IMPORTANT: Include timestamps [MM:SS] for key points where possible, referencing the transcript.
-
-Transcript:
-{transcript}"""
-    else:
-        # Standard format for conversational and professional tones
-        prompt = f"""Please summarize the following YouTube video transcript.
-
-**Length**: {length_instructions[length]}
-
-**Tone**: {tone_instructions[tone]}
-
-**Structure your summary appropriately based on the length:**
-- Short: Single paragraph with key takeaways
-- Medium: Overview + Key Points (bullet list) + Conclusion
-- Long: Detailed sections with Overview, Main Topics, Key Points, Important Details, Examples, and Conclusion
-
-**IMPORTANT**: You MUST include timestamps [MM:SS] from the transcript for every key point or major topic change. This allows the user to jump to that part of the video.
-
-Transcript:
-{transcript}"""
+    # Inject transcript and common instructions
+    prompt = prompt_template.format(transcript=transcript)
+    
+    # Append timestamp instruction only for medium and long summaries
+    if length in ['medium', 'long']:
+        prompt += "\n\nIMPORTANT: You MUST include timestamps [MM:SS] from the transcript for every key point or major topic change."
     
     return prompt
 
@@ -862,6 +903,8 @@ def generate_podcast():
         transcript = data.get('transcript', '')
         length = data.get('length', 'medium')
         tone = data.get('tone', 'conversational')
+        
+        print(f"🎙️ Generating podcast with Tone: {tone}, Length: {length}")
         
         if not transcript:
             return jsonify({'error': 'Transcript is required'}), 400

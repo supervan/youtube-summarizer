@@ -8,6 +8,27 @@
  * 4. Managing the chat interface for querying the video content.
  */
 
+// Global Error Handler
+window.onerror = function (msg, url, line, col, error) {
+    console.error("Script Error:", msg, "Line:", line, error);
+    // alert("Script Error: " + msg + "\nLine: " + line); // Uncomment for aggressive debugging
+};
+
+// Icons
+const TONE_ICONS = {
+    'conversational': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>',
+    'professional': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>',
+    'witty': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>',
+    'sarcastic': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M16 12l-2-2-2 2-2-2-2 2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>',
+    'technical': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>'
+};
+
+const LENGTH_ICONS = {
+    'short': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="12" x2="3" y2="12"></line></svg>',
+    'medium': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="10" x2="3" y2="10"></line><line x1="21" y1="14" x2="3" y2="14"></line></svg>',
+    'long': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="6" x2="3" y2="6"></line><line x1="21" y1="12" x2="3" y2="12"></line><line x1="21" y1="18" x2="3" y2="18"></line></svg>'
+};
+
 // DOM Elements
 const summarizerForm = document.getElementById('summarizerForm');
 const youtubeUrlInput = document.getElementById('youtubeUrl');
@@ -42,6 +63,171 @@ const tabs = document.querySelectorAll('.tab-btn');
 const tabContents = document.querySelectorAll('.chat-container, #contentSteps, #contentQuiz');
 
 let voices = [];
+let isReading = false;
+let isPaused = false;
+let currentCharIndex = 0;
+let isSwappingVoice = false;
+
+function populateVoiceList() {
+    if (!window.speechSynthesis) return;
+
+    voices = window.speechSynthesis.getVoices();
+    const voiceSelect = document.getElementById('voiceSelect');
+    if (!voiceSelect) return;
+
+    // Select 3 voices: 1 Male, 2 Female (Best guess)
+    // Common names: "Google US English" (Female), "Google UK English Male", "Google UK English Female"
+    // "Microsoft David" (Male), "Microsoft Zira" (Female)
+
+    let selectedVoices = [];
+
+    // Try to find specific high-quality voices first
+    const googleUS = voices.find(v => v.name === 'Google US English'); // Often Female
+    const googleUKFemale = voices.find(v => v.name === 'Google UK English Female');
+    const googleUKMale = voices.find(v => v.name === 'Google UK English Male');
+
+    const microsoftDavid = voices.find(v => v.name.includes('David')); // Male
+    const microsoftZira = voices.find(v => v.name.includes('Zira')); // Female
+    const microsoftMark = voices.find(v => v.name.includes('Mark')); // Male
+
+    // Build list
+    if (googleUS) selectedVoices.push({ name: 'Mary', voice: googleUS });
+    else if (microsoftZira) selectedVoices.push({ name: 'Mary', voice: microsoftZira });
+
+    if (googleUKFemale) selectedVoices.push({ name: 'Angela', voice: googleUKFemale });
+
+    if (googleUKMale) selectedVoices.push({ name: 'John', voice: googleUKMale });
+    else if (microsoftDavid) selectedVoices.push({ name: 'John', voice: microsoftDavid });
+    else if (microsoftMark) selectedVoices.push({ name: 'John', voice: microsoftMark });
+
+    // Fallback if we don't have enough
+    if (selectedVoices.length < 3) {
+        const englishVoices = voices.filter(v => v.lang.includes('en') && !selectedVoices.some(sv => sv.voice === v));
+        const fallbackNames = ['Mary', 'Angela', 'John'];
+        englishVoices.slice(0, 3 - selectedVoices.length).forEach((v, i) => {
+            const name = fallbackNames[selectedVoices.length] || `Voice ${selectedVoices.length + 1}`;
+            selectedVoices.push({ name: `${name}`, voice: v });
+        });
+    }
+
+    voiceSelect.innerHTML = '';
+
+    selectedVoices.forEach((sv) => {
+        const option = document.createElement('option');
+        option.textContent = sv.name;
+        option.value = sv.voice.name; // Use actual name as value
+        voiceSelect.appendChild(option);
+    });
+
+    // Add change listener for hot-swap
+    voiceSelect.onchange = handleVoiceChange;
+}
+
+function handleVoiceChange() {
+    if (isReading && !isPaused) {
+        // Hot swap
+        isSwappingVoice = true;
+        window.speechSynthesis.cancel();
+        // Use a small timeout to ensure the cancel completes and state is clean before speaking again
+        setTimeout(() => {
+            speakSummary(currentCharIndex);
+        }, 50);
+        // Do NOT reset isSwappingVoice here. It will be reset in the onend handler of the cancelled utterance.
+    }
+}
+
+// Move initialization to DOMContentLoaded
+// populateVoiceList();
+if (window.speechSynthesis && speechSynthesis.onvoiceschanged !== undefined) {
+    speechSynthesis.onvoiceschanged = populateVoiceList;
+}
+
+function speakSummary(startIndex = 0) {
+    const text = document.getElementById('summaryText').textContent;
+    const utterance = new SpeechSynthesisUtterance(text.substring(startIndex));
+
+    const voiceSelect = document.getElementById('voiceSelect');
+    const selectedVoiceName = voiceSelect.value;
+
+    if (selectedVoiceName) {
+        utterance.voice = voices.find(v => v.name === selectedVoiceName);
+    }
+
+    // Track progress
+    utterance.onboundary = (event) => {
+        if (event.name === 'word') {
+            // event.charIndex is relative to the start of the current utterance text
+            // So we add it to our global startIndex
+            currentCharIndex = startIndex + event.charIndex;
+        }
+    };
+
+    utterance.onend = () => {
+        if (isSwappingVoice) {
+            isSwappingVoice = false; // Reset flag here
+            return;
+        }
+
+        isReading = false;
+        isPaused = false;
+        currentCharIndex = 0;
+        updateReadAloudButton('start');
+    };
+
+    window.speechSynthesis.speak(utterance);
+}
+
+function updateReadAloudButton(state) {
+    const btn = document.getElementById('readAloudBtn');
+    if (!btn) return;
+
+    if (state === 'playing') {
+        btn.innerHTML = `
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="6" y="4" width="4" height="16"></rect>
+                <rect x="14" y="4" width="4" height="16"></rect>
+            </svg>
+            Pause
+        `;
+    } else if (state === 'paused') {
+        btn.innerHTML = `
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+            Resume
+        `;
+    } else {
+        btn.innerHTML = `
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+            </svg>
+            Read Aloud
+        `;
+    }
+}
+
+function toggleReadAloud() {
+    if (isReading && !isPaused) {
+        // Pause
+        window.speechSynthesis.pause();
+        isPaused = true;
+        updateReadAloudButton('paused');
+    } else if (isReading && isPaused) {
+        // Resume
+        window.speechSynthesis.resume();
+        isPaused = false;
+        updateReadAloudButton('playing');
+    } else {
+        // Start
+        window.speechSynthesis.cancel(); // Stop any other speech
+        currentCharIndex = 0;
+        speakSummary(0);
+        isReading = true;
+        isPaused = false;
+        updateReadAloudButton('playing');
+    }
+}
 
 const errorCard = document.getElementById('errorCard');
 const errorMessage = document.getElementById('errorMessage');
@@ -99,6 +285,7 @@ document.addEventListener('DOMContentLoaded', () => {
     handleSharedContent();
     fetchFeatures(); // Fetch feature flags
     loadHistory(); // Load recent summaries
+    populateVoiceList(); // Initialize voices
 });
 
 // Capture PWA install prompt
@@ -209,12 +396,18 @@ function setupEventListeners() {
     // Podcast Controls
     const playPauseBtn = document.getElementById('podcastPlayPauseBtn');
     if (playPauseBtn) {
-        playPauseBtn.addEventListener('click', togglePodcastPlay);
+        playPauseBtn.addEventListener('click', togglePodcastPlayback);
     }
 
     const stopBtn = document.getElementById('stopPodcastBtn');
     if (stopBtn) {
         stopBtn.addEventListener('click', stopPodcast);
+    }
+
+    // Read Aloud
+    const readAloudBtn = document.getElementById('readAloudBtn');
+    if (readAloudBtn) {
+        readAloudBtn.addEventListener('click', toggleReadAloud);
     }
 
     // Reset Button
@@ -703,6 +896,19 @@ function extractVideoId(url) {
 async function handleSubmit(e) {
     e.preventDefault();
 
+    // Stop any active playback
+    if (isReading) {
+        window.speechSynthesis.cancel();
+        isReading = false;
+        isPaused = false;
+        currentCharIndex = 0;
+        updateReadAloudButton('start');
+    }
+
+    // Clear previous metadata
+    const summaryFooter = document.getElementById('summaryFooter');
+    if (summaryFooter) summaryFooter.innerHTML = '';
+
     const youtubeUrl = youtubeUrlInput.value.trim();
 
     if (!youtubeUrl) {
@@ -839,39 +1045,29 @@ function loadHistory() {
         return;
     }
 
-    const toneIcons = {
-        'conversational': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>',
-        'professional': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>',
-        'academic': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>',
-        'witty': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>',
-        'sarcastic': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M16 12l-2-2-2 2-2-2-2 2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>',
-        'technical': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>'
-    };
-
-    const lengthIcons = {
-        'short': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="12" x2="3" y2="12"></line></svg>',
-        'medium': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="10" x2="3" y2="10"></line><line x1="21" y1="14" x2="3" y2="14"></line></svg>',
-        'long': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="6" x2="3" y2="6"></line><line x1="21" y1="12" x2="3" y2="12"></line><line x1="21" y1="18" x2="3" y2="18"></line></svg>'
-    };
+    if (history.length === 0) {
+        logList.innerHTML = '<div class="text-slate-500 text-sm text-center py-4">No recent history</div>';
+        return;
+    }
 
     history.forEach(item => {
         const date = new Date(item.timestamp).toLocaleDateString();
         const lengthLabel = item.length ? item.length.charAt(0).toUpperCase() + item.length.slice(1) : '';
         const toneLabel = item.tone ? item.tone.charAt(0).toUpperCase() + item.tone.slice(1) : '';
 
-        const toneIcon = item.tone ? (toneIcons[item.tone] || toneIcons['conversational']) : '';
-        const lengthIcon = item.length ? (lengthIcons[item.length] || lengthIcons['medium']) : '';
+        const toneIcon = item.tone ? (TONE_ICONS[item.tone] || TONE_ICONS['conversational']) : '';
+        const lengthIcon = item.length ? (LENGTH_ICONS[item.length] || LENGTH_ICONS['medium']) : '';
 
         const el = document.createElement('div');
         el.className = 'log-item';
         el.innerHTML = `
             <div class="log-thumbnail-wrapper">
                 <img src="https://img.youtube.com/vi/${item.id}/mqdefault.jpg" alt="Thumbnail" class="log-thumbnail">
-                <div class="log-play-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-                        <path d="M8 5v14l11-7z" />
+                <button id="stopPodcastBtn" class="podcast-action-btn" title="Stop">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <rect x="6" y="6" width="12" height="12" />
                     </svg>
-                </div>
+                </button>
             </div>
             <div class="log-info">
                 <h4 class="log-item-title">${item.title || 'Video Summary'}</h4>
@@ -923,6 +1119,11 @@ function loadHistoryItem(item) {
 
     // Show UI
     showVideoInfo(item.id, { title: item.title, length: item.transcript.length });
+
+    // Update dropdowns to match history item
+    if (item.length && summaryLengthSelect) summaryLengthSelect.value = item.length;
+    if (item.tone && summaryToneSelect) summaryToneSelect.value = item.tone;
+
     showSummary(item.summary);
     showFeatures();
 
@@ -999,9 +1200,26 @@ function showVideoInfo(videoId, data) {
 
 // Show summary
 function showSummary(summary) {
-    // Format markdown
-    let formattedSummary = formatMarkdown(summary);
-    summaryText.innerHTML = formattedSummary;
+    // Update summary text
+    summaryText.innerHTML = formatMarkdown(summary);
+
+    // Update metadata footer
+    const summaryFooter = document.getElementById('summaryFooter');
+    if (summaryFooter) {
+        const lengthText = summaryLengthSelect.options[summaryLengthSelect.selectedIndex].text;
+        const toneText = summaryToneSelect.options[summaryToneSelect.selectedIndex].text;
+        const lengthVal = summaryLengthSelect.value;
+        const toneVal = summaryToneSelect.value;
+
+        const lengthIcon = LENGTH_ICONS[lengthVal] || LENGTH_ICONS['medium'];
+        const toneIcon = TONE_ICONS[toneVal] || TONE_ICONS['conversational'];
+
+        summaryFooter.innerHTML = `
+            ${lengthText ? `<span class="inline-tone-icon" title="Length: ${lengthText}">${lengthIcon} ${lengthText}</span>` : ''}
+            ${(lengthText && toneText) ? '<span class="mx-1">•</span>' : ''}
+            ${toneText ? `<span class="inline-tone-icon" title="Tone: ${toneText}">${toneIcon} ${toneText}</span>` : ''}
+        `;
+    }
 
     // Ensure results are visible
     resultsContainer.classList.remove('hidden');
@@ -1139,6 +1357,10 @@ async function handlePodcastRequest(e) {
                 tone: summaryToneSelect.value
             })
         });
+        console.log('Sending podcast request:', {
+            length: summaryLengthSelect.value,
+            tone: summaryToneSelect.value
+        });
         const data = await response.json();
 
         if (data.success) {
@@ -1151,6 +1373,11 @@ async function handlePodcastRequest(e) {
                 </svg>
                 Stop Podcast
             `;
+
+            // Show controls
+            const controls = document.getElementById('podcastControls');
+            controls.classList.remove('hidden');
+            controls.style.display = 'flex';
 
             playPodcastScript(data.script, () => {
                 // On end
@@ -1176,50 +1403,60 @@ let isPodcastPaused = false;
 let podcastScript = [];
 let currentLineIndex = 0;
 let podcastVoices = { a: null, b: null };
+let podcastOnEndCallback = null;
+let podcastTimer = null;
+let podcastStartTime = 0;
+let podcastElapsedTime = 0;
+let podcastTotalDuration = 0;
 
-async function handlePodcastRequest() {
-    const btn = document.getElementById('podcastBtn');
-    const originalText = btn.innerHTML;
+function calculateDuration(script) {
+    // Estimate duration: ~150 words per minute (2.5 words/sec)
+    const totalWords = script.reduce((acc, line) => acc + line.text.split(/\s+/).length, 0);
+    return Math.ceil(totalWords / 2.5);
+}
 
-    // If already playing, just scroll to controls
-    if (isPodcastPlaying) {
-        document.getElementById('podcastControls').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        return;
-    }
+function formatTime(seconds) {
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m}:${s.toString().padStart(2, '0')}`;
+}
 
-    btn.disabled = true;
-    btn.innerHTML = '<div class="loader" style="width: 16px; height: 16px;"></div> Generating...';
-
-    try {
-        const response = await fetch(`${API_BASE}/api/podcast`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ transcript: currentTranscript })
-        });
-        const data = await response.json();
-
-        if (data.success) {
-            // Show controls
-            const controls = document.getElementById('podcastControls');
-            controls.classList.remove('hidden');
-            controls.style.display = 'flex';
-
-            // Start playback
-            podcastScript = data.script;
-            playPodcastScript(podcastScript);
-        } else {
-            alert('Failed to generate podcast');
-        }
-    } catch (error) {
-        console.error(error);
-        alert('Network error');
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = originalText;
+function updatePodcastTime() {
+    const timeDisplay = document.getElementById('podcastTimeDisplay');
+    if (timeDisplay) {
+        timeDisplay.textContent = `${formatTime(podcastElapsedTime)} / ${formatTime(podcastTotalDuration)}`;
     }
 }
 
-function playPodcastScript(script) {
+function startPodcastTimer() {
+    stopPodcastTimer();
+    podcastStartTime = Date.now() - (podcastElapsedTime * 1000);
+    podcastTimer = setInterval(() => {
+        podcastElapsedTime = Math.floor((Date.now() - podcastStartTime) / 1000);
+        // Cap at total duration
+        if (podcastElapsedTime > podcastTotalDuration) podcastElapsedTime = podcastTotalDuration;
+        updatePodcastTime();
+    }, 1000);
+}
+
+function stopPodcastTimer() {
+    if (podcastTimer) {
+        clearInterval(podcastTimer);
+        podcastTimer = null;
+    }
+}
+
+
+
+function playPodcastScript(script, onEnd) {
+    // Update global script
+    podcastScript = script;
+    podcastOnEndCallback = onEnd;
+
+    // Calculate duration
+    podcastTotalDuration = calculateDuration(script);
+    podcastElapsedTime = 0;
+
     // Reset state
     window.speechSynthesis.cancel();
     isPodcastPlaying = true;
@@ -1227,9 +1464,9 @@ function playPodcastScript(script) {
     currentLineIndex = 0;
 
     // Update UI
-    // Update UI
     updatePodcastUI('playing');
-    updatePodcastProgress();
+    updatePodcastTime();
+    startPodcastTimer();
 
     const voices = window.speechSynthesis.getVoices();
     // Select two distinct voices
@@ -1256,7 +1493,7 @@ function speakNextLine() {
     utterance.onend = () => {
         if (isPodcastPlaying && !isPodcastPaused) {
             currentLineIndex++;
-            updatePodcastProgress();
+            // updatePodcastProgress(); // Removed
             speakNextLine();
         }
     };
@@ -1265,7 +1502,7 @@ function speakNextLine() {
         console.error('Speech error:', e);
         if (isPodcastPlaying && !isPodcastPaused) {
             currentLineIndex++;
-            updatePodcastProgress();
+            // updatePodcastProgress(); // Removed
             speakNextLine();
         }
     };
@@ -1284,11 +1521,13 @@ function togglePodcastPlayback() {
         if (!window.speechSynthesis.speaking) {
             speakNextLine();
         }
+        startPodcastTimer();
         updatePodcastUI('playing');
     } else {
         // Pause
         isPodcastPaused = true;
         window.speechSynthesis.pause();
+        stopPodcastTimer();
         updatePodcastUI('paused');
     }
 }
@@ -1298,9 +1537,17 @@ function stopPodcast() {
     isPodcastPaused = false;
     currentLineIndex = 0;
     window.speechSynthesis.cancel();
+    stopPodcastTimer();
+    podcastElapsedTime = 0;
+    updatePodcastTime();
 
     // Hide controls
     document.getElementById('podcastControls').classList.add('hidden');
+
+    if (podcastOnEndCallback) {
+        podcastOnEndCallback();
+        podcastOnEndCallback = null;
+    }
 }
 
 function updatePodcastUI(state) {
@@ -1309,31 +1556,23 @@ function updatePodcastUI(state) {
 
     if (state === 'playing') {
         playPauseBtn.innerHTML = `
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="6" y="4" width="4" height="16"></rect>
                 <rect x="14" y="4" width="4" height="16"></rect>
             </svg>
-            Pause
         `;
         statusText.textContent = 'Playing...';
     } else {
         playPauseBtn.innerHTML = `
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none">
                 <polygon points="5 3 19 12 5 21 5 3"></polygon>
             </svg>
-            Resume
         `;
         statusText.textContent = 'Paused';
     }
 }
 
-function updatePodcastProgress() {
-    if (!podcastScript.length) return;
-
-    const progress = Math.min(100, Math.round((currentLineIndex / podcastScript.length) * 100));
-    document.getElementById('podcastProgressBar').style.width = `${progress}%`;
-    document.getElementById('podcastProgressText').textContent = `${progress}%`;
-}
+// function updatePodcastProgress() { ... } // Removed
 
 // Handle shared content from Web Share Target
 function handleSharedContent() {
