@@ -1782,8 +1782,8 @@ body {
 
 /* Logo Image */
 .logo-image {
-    height: 7rem;
-    /* Increased from 3.5rem */
+    height: 4.9rem;
+    /* Reduced by 30% from 7rem */
     width: auto;
     object-fit: contain;
     display: block;
