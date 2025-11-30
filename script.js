@@ -858,6 +858,18 @@ function hideAllCards() {
     resultsContainer.classList.add('hidden');
     // Stop speaking if any
     window.speechSynthesis.cancel();
+
+    // Clear Error State
+    const errorState = document.getElementById('videoErrorState');
+    if (errorState) errorState.remove();
+
+    // Reset visibility of main components
+    videoPlayerWrapper.classList.remove('hidden');
+    const summaryContent = document.querySelector('.summary-content-wrapper');
+    if (summaryContent) summaryContent.classList.remove('hidden');
+
+    // Hide old error card if visible
+    errorCard.classList.add('hidden');
 }
 
 // Show error
@@ -1008,14 +1020,20 @@ async function handleSubmit(e) {
     showSkeletonLoading(videoId); // Show thumbnail immediately
 
     try {
-        // Step 1: Extract transcript
+        // Step 1: Extract transcript (with 60s timeout)
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 seconds
+
         const transcriptResponse = await fetch(`${API_BASE}/api/extract-transcript`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ url: youtubeUrl })
+            body: JSON.stringify({ url: youtubeUrl }),
+            signal: controller.signal
         });
+
+        clearTimeout(timeoutId); // Clear timeout on response
 
         const transcriptData = await transcriptResponse.json();
 
@@ -1064,10 +1082,67 @@ async function handleSubmit(e) {
         toggleResultsSection(false);
 
     } catch (error) {
-        showError(error.message);
+        console.error('Summarize error:', error);
+
+        // Handle Timeout specifically
+        if (error.name === 'AbortError') {
+            showVideoLoadError('Request Timed Out. The video might be too long or the server is busy. Please try again.');
+        }
+        // Check for specific errors that should show the "Video Unavailable" UI
+        // SyntaxError usually means the response wasn't JSON (e.g. 500/524 HTML error page)
+        else if (error instanceof SyntaxError || error.message.includes('Unexpected token') || error.message.includes('JSON')) {
+            showVideoLoadError('Server Timeout or Invalid Response. The video might be too long or unavailable.');
+        } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+            showVideoLoadError('Network Error. Please check your connection.');
+        } else {
+            // For other errors, we can also use the nice UI if we want, or fallback to toast
+            showVideoLoadError(error.message || 'Something went wrong while processing the video.');
+        }
     } finally {
         setLoading(false);
     }
+}
+
+// Show Video Load Error (In-place UI)
+function showVideoLoadError(message) {
+    // Hide skeleton/loading
+    // We want to keep the results container visible but replace content
+    resultsContainer.classList.remove('hidden');
+
+    // Hide video player wrapper (which contains thumbnail)
+    videoPlayerWrapper.classList.add('hidden');
+
+    // Hide summary content
+    const summaryContent = document.querySelector('.summary-content-wrapper');
+    if (summaryContent) summaryContent.classList.add('hidden');
+
+    // Remove any existing error container
+    const existingError = document.getElementById('videoErrorState');
+    if (existingError) existingError.remove();
+
+    // Create error container
+    const errorContainer = document.createElement('div');
+    errorContainer.id = 'videoErrorState';
+    errorContainer.className = 'video-error-state';
+
+    errorContainer.innerHTML = `
+        <div class="error-icon-wrapper">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+        </div>
+        <h3 class="error-title">Oops! Video Unavailable</h3>
+        <p class="error-message">${message}</p>
+        <button onclick="resetApp()" class="try-again-btn">Try Another Video</button>
+    `;
+
+    // Insert into results container
+    resultsContainer.appendChild(errorContainer);
+
+    // Ensure input is visible
+    toggleInputSection(false);
 }
 
 // Save to History
@@ -1447,32 +1522,34 @@ function showSummary(summary) {
 
 
 
-// Copy summary to clipboard
-async function copySummary() {
-    const text = summaryText.innerText;
-    const url = youtubeUrlInput.value.trim();
-    const title = videoTitle.textContent || '';
-    const clipboardText = url ? `${title}\n${url}\n\n${text}` : text;
+// Copy Summary
+function copySummary() {
+    const summaryText = document.getElementById('summaryText').innerText;
+    const videoTitle = document.getElementById('videoTitle').textContent;
 
-    try {
-        await navigator.clipboard.writeText(clipboardText);
+    // Get current video ID and create short URL
+    const videoId = extractVideoId(youtubeUrlInput.value);
+    const shortUrl = videoId ? `https://youtu.be/${videoId}` : youtubeUrlInput.value;
 
-        // Visual feedback
-        const originalText = copyBtn.innerHTML;
+    const clipboardText = `${videoTitle}\n${shortUrl}\n\n${summaryText}`;
+
+    navigator.clipboard.writeText(clipboardText).then(() => {
+        const copyBtn = document.getElementById('copyBtn');
+        const originalContent = copyBtn.innerHTML;
+
         copyBtn.innerHTML = `
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                <path d="M13.5 2L6 9.5L2.5 6" stroke="currentColor" fill="none" stroke-width="2"/>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
             </svg>
             Copied!
         `;
 
         setTimeout(() => {
-            copyBtn.innerHTML = originalText;
+            copyBtn.innerHTML = originalContent;
         }, 2000);
-
-    } catch (error) {
-        console.error('Failed to copy:', error);
-    }
+    }).catch(err => {
+        showError('Failed to copy summary');
+    });
 }
 
 // Format markdown to HTML (improved implementation)
@@ -1573,16 +1650,13 @@ async function handlePodcastRequest(e) {
                 tone: summaryToneSelect.value
             })
         });
-        // Sending podcast request
-        length: summaryLengthSelect.value,
-            tone: summaryToneSelect.value
-    });
-    const data = await response.json();
 
-    if (data.success) {
-        btn.disabled = false;
-        btn.classList.add('btn-active');
-        btn.innerHTML = `
+        const data = await response.json();
+
+        if (data.success) {
+            btn.disabled = false;
+            btn.classList.add('btn-active');
+            btn.innerHTML = `
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <rect x="6" y="4" width="4" height="16"></rect>
                     <rect x="14" y="4" width="4" height="16"></rect>
@@ -1590,27 +1664,27 @@ async function handlePodcastRequest(e) {
                 Stop Podcast
             `;
 
-        // Show controls
-        const controls = document.getElementById('podcastControls');
-        controls.classList.remove('hidden');
-        controls.style.display = 'flex';
+            // Show controls
+            const controls = document.getElementById('podcastControls');
+            controls.classList.remove('hidden');
+            controls.style.display = 'flex';
 
-        playPodcastScript(data.script, () => {
-            // On end
-            btn.classList.remove('btn-active');
-            btn.innerHTML = originalText;
-        });
-    } else {
-        showToast(data.error || 'Failed to generate podcast', 'error');
+            playPodcastScript(data.script, () => {
+                // On end
+                btn.classList.remove('btn-active');
+                btn.innerHTML = originalText;
+            });
+        } else {
+            showToast(data.error || 'Failed to generate podcast', 'error');
+        }
+    } catch (error) {
+        console.error('Podcast generation failed:', error);
+        showToast('Network error', 'error');
+    } finally {
+        // Ensure button is re-enabled and text restored in all cases
+        btn.disabled = false;
+        btn.innerHTML = originalText;
     }
-} catch (error) {
-    console.error('Podcast generation failed:', error);
-    showToast('Network error', 'error');
-} finally {
-    // Ensure button is re-enabled and text restored in all cases
-    btn.disabled = false;
-    btn.innerHTML = originalText;
-}
 }
 
 // --- Podcast Feature ---

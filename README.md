@@ -21,7 +21,9 @@ https://yt.supervan.uk/
 - 📏 **Customizable Length** - Choose from short, medium, or long summaries
 - 🎯 **Adjustable Tone** - Select conversational, professional, or technical (direct & dense) tone
 - 🎨 **Beautiful UI** - Modern dark mode design with glassmorphism effects and **YouTube-like layout**
-- 📋 **Copy to Clipboard** - Easy one-click summary copying with video title included
+- 📋 **Copy to Clipboard** - Easy one-click summary copying with video title and **short URL** included
+- 🛡️ **Robust Error Handling** - Friendly "Video Unavailable" screen for timeouts and server errors
+- ⏱️ **Request Timeout** - 60-second timeout to prevent infinite loading states
 
 ## 🔒 Security & Privacy
 
