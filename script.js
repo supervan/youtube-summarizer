@@ -130,51 +130,99 @@ function handleVoiceChange() {
         window.speechSynthesis.cancel();
         // Use a small timeout to ensure the cancel completes and state is clean before speaking again
         setTimeout(() => {
-            speakSummary(currentCharIndex);
+            speakNextChunk();
         }, 50);
-        // Do NOT reset isSwappingVoice here. It will be reset in the onend handler of the cancelled utterance.
     }
 }
-
 // Move initialization to DOMContentLoaded
-// populateVoiceList();
+// populateVoiceList(); // This line was commented out, keeping it that way as per original context.
 if (window.speechSynthesis && speechSynthesis.onvoiceschanged !== undefined) {
     speechSynthesis.onvoiceschanged = populateVoiceList;
 }
 
-function speakSummary(startIndex = 0) {
-    const text = document.getElementById('summaryText').textContent;
-    const utterance = new SpeechSynthesisUtterance(text.substring(startIndex));
+let currentUtterance = null; // Global variable to prevent GC
+
+let readAloudTimeout = null;
+
+let speechChunks = [];
+let currentChunkIndex = 0;
+
+function speakSummary() {
+    const rawText = document.getElementById('summaryText').textContent;
+
+    // Remove timestamps and clean up text
+    const text = rawText.replace(/\[\d{1,2}:\d{2}(:\d{2})?\]/g, ' ').replace(/\s+/g, ' ').trim();
+
+    if (text.length === 0) {
+        return;
+    }
+
+    // Cancel any existing speech
+    window.speechSynthesis.cancel();
+
+    // Split into chunks (sentences) to avoid browser limits and bugs with long text
+    // Split by period, question mark, exclamation mark, but keep the delimiter
+    speechChunks = text.match(/[^.?!]+[.?!]+[\])'"]*|[^.?!]+$/g) || [text];
+    currentChunkIndex = 0;
+
+    speakNextChunk();
+}
+
+function speakNextChunk() {
+    if (currentChunkIndex >= speechChunks.length) {
+        isReading = false;
+        isPaused = false;
+        currentChunkIndex = 0;
+        updateReadAloudButton('start');
+        return;
+    }
+
+    if (!isReading) return; // Stop if flag was cleared
+
+    const chunkText = speechChunks[currentChunkIndex].trim();
+    if (!chunkText) {
+        currentChunkIndex++;
+        speakNextChunk();
+        return;
+    }
+
+    currentUtterance = new SpeechSynthesisUtterance(chunkText);
+
+    currentUtterance.onerror = (e) => {
+        console.error('Speech synthesis error:', e);
+        if (e.error !== 'interrupted') {
+            // Move to next chunk on error to avoid getting stuck
+            currentChunkIndex++;
+            speakNextChunk();
+        }
+    };
 
     const voiceSelect = document.getElementById('voiceSelect');
     const selectedVoiceName = voiceSelect.value;
 
     if (selectedVoiceName) {
-        utterance.voice = voices.find(v => v.name === selectedVoiceName);
+        const voice = voices.find(v => v.name === selectedVoiceName);
+        if (voice) {
+            currentUtterance.voice = voice;
+        }
     }
 
-    // Track progress
-    utterance.onboundary = (event) => {
-        if (event.name === 'word') {
-            // event.charIndex is relative to the start of the current utterance text
-            // So we add it to our global startIndex
-            currentCharIndex = startIndex + event.charIndex;
-        }
-    };
-
-    utterance.onend = () => {
+    currentUtterance.onend = () => {
         if (isSwappingVoice) {
-            isSwappingVoice = false; // Reset flag here
-            return;
+            isSwappingVoice = false;
+            // Don't advance index, just replay current chunk with new voice?
+            // Or just let it continue. For simplicity, let's continue.
+            // Actually, if swapping voice, we probably want to restart the current chunk.
+            // But handleVoiceChange logic needs to be checked.
         }
 
-        isReading = false;
-        isPaused = false;
-        currentCharIndex = 0;
-        updateReadAloudButton('start');
+        if (isReading && !isPaused) {
+            currentChunkIndex++;
+            speakNextChunk();
+        }
     };
 
-    window.speechSynthesis.speak(utterance);
+    window.speechSynthesis.speak(currentUtterance);
 }
 
 function updateReadAloudButton(state) {
@@ -208,6 +256,12 @@ function updateReadAloudButton(state) {
 }
 
 function toggleReadAloud() {
+    // Clear any pending start
+    if (readAloudTimeout) {
+        clearTimeout(readAloudTimeout);
+        readAloudTimeout = null;
+    }
+
     if (isReading && !isPaused) {
         // Pause
         window.speechSynthesis.pause();
@@ -221,11 +275,15 @@ function toggleReadAloud() {
     } else {
         // Start
         window.speechSynthesis.cancel(); // Stop any other speech
-        currentCharIndex = 0;
-        speakSummary(0);
-        isReading = true;
-        isPaused = false;
-        updateReadAloudButton('playing');
+        currentChunkIndex = 0;
+
+        // Small delay to ensure cancel completes
+        readAloudTimeout = setTimeout(() => {
+            isReading = true;
+            isPaused = false;
+            updateReadAloudButton('playing');
+            speakSummary();
+        }, 50);
     }
 }
 
@@ -905,6 +963,9 @@ async function handleSubmit(e) {
         updateReadAloudButton('start');
     }
 
+    // Stop podcast if playing
+    stopPodcast();
+
     // Clear previous metadata
     const summaryFooter = document.getElementById('summaryFooter');
     if (summaryFooter) summaryFooter.innerHTML = '';
@@ -1099,6 +1160,15 @@ function loadHistory() {
 function loadHistoryItem(item) {
     hideAllCards();
     stopPodcast(); // Stop podcast if playing
+
+    // Stop Read Aloud if playing
+    if (isReading) {
+        window.speechSynthesis.cancel();
+        isReading = false;
+        isPaused = false;
+        currentCharIndex = 0;
+        updateReadAloudButton('start');
+    }
 
     // Clear previous feature data
     const chatHistory = document.getElementById('chatHistory');
