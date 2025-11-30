@@ -618,12 +618,15 @@ body {
     }
 
     .buttons-row {
-        justify-content: space-between;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
         width: 100%;
     }
 
     .read-aloud-group {
-        flex: 1;
+        grid-column: span 2;
+        width: 100%;
     }
 
     .read-aloud-group .action-btn {
@@ -633,10 +636,11 @@ body {
 
     .voice-select {
         width: 100%;
+        text-align: center;
     }
 
     .buttons-row>.action-btn {
-        flex: 1;
+        width: 100%;
         justify-content: center;
     }
 }
