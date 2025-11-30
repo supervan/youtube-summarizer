@@ -76,8 +76,8 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 2rem;
-    /* mb-8 */
+    margin-bottom: 0;
+    /* Removed padding below image */
 }
 
 .logo-section {
@@ -1494,7 +1494,9 @@ body {
 .timestamp-link:hover {
     color: var(--purple-400);
     text-decoration: underline;
-}/* Video Metadata (YouTube Style) */
+}
+
+/* Video Metadata (YouTube Style) */
 .video-metadata {
     padding: 1rem;
     background: var(--slate-900);
@@ -1558,7 +1560,9 @@ body {
 .meta-dot {
     font-size: 0.5rem;
     color: var(--slate-500);
-}/* Video Metadata (Refined YouTube Style) */
+}
+
+/* Video Metadata (Refined YouTube Style) */
 .video-metadata {
     padding: 0.5rem 0;
     background: transparent;
@@ -1662,7 +1666,9 @@ body {
         width: 100%;
         justify-content: flex-start;
     }
-}/* New Metadata Container (Below Thumbnail) */
+}
+
+/* New Metadata Container (Below Thumbnail) */
 .video-metadata-container {
     margin-top: 1rem;
     margin-bottom: 1.5rem;
@@ -1714,7 +1720,9 @@ body {
         width: 100%;
         justify-content: flex-start;
     }
-}/* Video Error State */
+}
+
+/* Video Error State */
 .video-error-state {
     display: flex;
     flex-direction: column;
@@ -1770,4 +1778,14 @@ body {
 .try-again-btn:hover {
     background: var(--slate-600);
     transform: translateY(-1px);
+}
+
+/* Logo Image */
+.logo-image {
+    height: 7rem;
+    /* Increased from 3.5rem */
+    width: auto;
+    object-fit: contain;
+    display: block;
+    /* Remove inline spacing */
 }
