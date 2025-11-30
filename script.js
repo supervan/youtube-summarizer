@@ -1527,11 +1527,11 @@ function copySummary() {
     const summaryText = document.getElementById('summaryText').innerText;
     const videoTitle = document.getElementById('videoTitle').textContent;
 
-    // Get current video ID and create short URL
     const videoId = extractVideoId(youtubeUrlInput.value);
     const shortUrl = videoId ? `https://youtu.be/${videoId}` : youtubeUrlInput.value;
 
-    const clipboardText = `${videoTitle}\n${shortUrl}\n\n${summaryText}`;
+    const promoText = "\n\nSummarized by TL;DW - https://yt.supervan.uk\n(Installable as an App on Mobile & Desktop)";
+    const clipboardText = `${videoTitle}\n${shortUrl}\n\n${summaryText}${promoText}`;
 
     navigator.clipboard.writeText(clipboardText).then(() => {
         const copyBtn = document.getElementById('copyBtn');
