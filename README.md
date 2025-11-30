@@ -12,15 +12,16 @@ https://yt.supervan.uk/
 - 🎬 **YouTube Transcript Extraction** - Automatically extracts video transcripts
 - 🤖 **AI-Powered Summaries** - Uses Google Gemini AI for intelligent summarization
 - 🎧 **Audio Podcast Generation** - Converts summaries into engaging 2-host audio dialogues
-- 📜 **History Log** - Automatically saves your recent summaries for easy access
+- 📜 **History Log** - Automatically saves your recent summaries for easy access with **pagination**
+- 📊 **Rich Metadata** - Displays Uploader, Subscriber Count, Views, and Upload Date
 - 💬 **Interactive Chat** - Ask questions and chat with the video content
 - 🧠 **Mind Map Visualization** - View a visual breakdown of the video's key concepts
 - 📝 **Quiz Mode** - Test your understanding with auto-generated quizzes
 - 📱 **PWA Support** - Install as a native app on mobile and desktop
 - 📏 **Customizable Length** - Choose from short, medium, or long summaries
 - 🎯 **Adjustable Tone** - Select conversational, professional, or technical (direct & dense) tone
-- 🎨 **Beautiful UI** - Modern dark mode design with glassmorphism effects
-- 📋 **Copy to Clipboard** - Easy one-click summary copying
+- 🎨 **Beautiful UI** - Modern dark mode design with glassmorphism effects and **YouTube-like layout**
+- 📋 **Copy to Clipboard** - Easy one-click summary copying with video title included
 
 ## 🔒 Security & Privacy
 
@@ -40,48 +41,56 @@ https://yt.supervan.uk/
 
 ### Installation
 
-1. **Clone or download this repository**
+1.  **Clone or download this repository**
 
-2. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
+2.  **Install dependencies**
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-3. **Configure your API key**
-   
-   Create a `.env` file in the project root:
-   ```bash
-   cp .env.example .env
-   ```
-   
-   Edit the `.env` file and add your Gemini API key:
-   ```
-   GEMINI_API_KEY=your_actual_api_key_here
-   ```
+3.  **Configure your API key**
 
-4. **Run the application**
-   ```bash
-   python3 app.py
-   ```
+    Create a `.env` file in the project root:
+    ```bash
+    cp .env.example .env
+    ```
 
-5. **Open your browser**
-   
-   Navigate to `http://localhost:5000`
+    Edit the `.env` file and add your Gemini API key:
+    ```
+    GEMINI_API_KEY=your_actual_api_key_here
+    ```
+
+4.  **Run the application**
+    ```bash
+    python3 app.py
+    ```
+
+5.  **Open your browser**
+
+    Navigate to `http://localhost:5000`
 
 That's it! You're ready to start summarizing YouTube videos.
 
 ## 📖 How to Use
 
-1. **Start the server** (if not already running)
-   ```bash
-   python3 app.py
-   ```
+1.  **Start the server** (if not already running)
+    ```bash
+    python3 app.py
+    ```
 
-2. **Open the application** in your browser at `http://localhost:5000`
+2.  **Open the application** in your browser at `http://localhost:5000`
 
-3. **Paste a YouTube URL** into the input field
+3.  **Paste a YouTube URL** into the input field
 
-4. **Click "Summarize"** and wait for the magic to happen!
+4.  **Click "Summarize"** and wait for the magic to happen!
+
+5.  **Explore Features**:
+    -   **Summary**: Read the AI-generated summary.
+    -   **Podcast**: Listen to a generated audio discussion.
+    -   **Chat**: Ask questions about the video.
+    -   **Mind Map**: Visualize key concepts.
+    -   **Quiz**: Test your knowledge.
+    -   **History**: View past summaries with rich metadata and pagination.
 
 The application will:
 -   Extract the video transcript
@@ -96,6 +105,7 @@ The application will:
 -   **Flask 3.0.0** - Web framework
 -   **Flask-CORS 4.0.0** - Cross-origin resource sharing
 -   **youtube-transcript-api 1.2.3** - YouTube transcript extraction
+-   **yt-dlp** - Advanced video metadata extraction
 -   **google-generativeai 0.8.5** - Google Gemini AI integration
 -   **python-dotenv 1.0.0** - Environment variable management
 
@@ -106,6 +116,7 @@ The application will:
 
 - Dark mode with vibrant gradient accents
 - Glassmorphism card effects
+- **YouTube-style Metadata Display**
 - Smooth animations and transitions
 - Responsive layout for all screen sizes
 - Custom scrollbars

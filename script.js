@@ -316,7 +316,7 @@ let currentTranscript = '';
 let enabledFeatures = {};
 let player; // YouTube Player instance
 let deferredPrompt; // For PWA install prompt
-const MAX_HISTORY_ITEMS = 5;
+// const MAX_HISTORY_ITEMS = 5; // Moved to top of loadHistory logic
 
 // Load YouTube IFrame API
 const tag = document.createElement('script');
@@ -495,7 +495,7 @@ function setupEventListeners() {
                     const history = JSON.parse(localStorage.getItem('yt_summary_history') || '[]');
                     const cachedItem = history.find(item => item.id === videoId);
                     if (cachedItem) {
-                        console.log('Auto-loading from cache:', videoId);
+                        // Auto-loading from cache
                         loadHistoryItem(cachedItem);
                     }
                 }
@@ -751,7 +751,7 @@ function resetQuiz() {
 
 // Reset Application
 function resetApp() {
-    console.log('Resetting app...');
+    // Resetting app...
     try {
         youtubeUrlInput.value = '';
         hideAllCards();
@@ -768,9 +768,9 @@ function resetApp() {
         const contentQuiz = document.getElementById('contentQuiz');
         if (contentQuiz) contentQuiz.classList.add('hidden');
 
-        // PRESERVE HISTORY: Do not clear chat or steps content
-        // const chatHistory = document.getElementById('chatHistory');
-        // if (chatHistory) chatHistory.innerHTML = '<div class="chat-message ai"><div class="message-content"><p>Hi! Ask me anything about this video.</p></div></div>';
+        // Clear chat history
+        const chatHistory = document.getElementById('chatHistory');
+        if (chatHistory) chatHistory.innerHTML = '<div class="chat-message ai"><div class="message-content"><p>Hi! Ask me anything about this video.</p></div></div>';
 
         // const stepsContent = document.getElementById('stepsContent');
         // if (stepsContent) stepsContent.innerHTML = '';
@@ -993,12 +993,17 @@ async function handleSubmit(e) {
     );
 
     if (cachedItem) {
-        console.log('Loading from cache:', videoId);
+        // Loading from cache
         loadHistoryItem(cachedItem);
         return;
     }
 
     hideAllCards();
+
+    // Clear chat history for new video
+    const chatHistory = document.getElementById('chatHistory');
+    if (chatHistory) chatHistory.innerHTML = '<div class="chat-message ai"><div class="message-content"><p>Hi! Ask me anything about this video.</p></div></div>';
+
     setLoading(true);
     showSkeletonLoading(videoId); // Show thumbnail immediately
 
@@ -1047,7 +1052,7 @@ async function handleSubmit(e) {
         showSummary(summaryData.summary);
 
         // Save to history
-        saveToHistory(videoId, transcriptData.title, summaryData.summary, transcriptData.transcript, summaryLengthSelect.value, summaryToneSelect.value);
+        saveToHistory(videoId, transcriptData.title, summaryData.summary, transcriptData.transcript, summaryLengthSelect.value, summaryToneSelect.value, transcriptData.metadata);
 
         // Show enabled features
         showFeatures();
@@ -1066,7 +1071,8 @@ async function handleSubmit(e) {
 }
 
 // Save to History
-function saveToHistory(videoId, title, summary, transcript, length, tone) {
+// Save to History
+function saveToHistory(videoId, title, summary, transcript, length, tone, metadata) {
     const historyItem = {
         id: videoId,
         title: title,
@@ -1074,6 +1080,7 @@ function saveToHistory(videoId, title, summary, transcript, length, tone) {
         transcript: transcript,
         length: length,
         tone: tone,
+        metadata: metadata,
         timestamp: Date.now()
     };
 
@@ -1095,6 +1102,21 @@ function saveToHistory(videoId, title, summary, transcript, length, tone) {
 }
 
 // Load History
+const MAX_HISTORY_ITEMS = 50;
+let currentPage = 1;
+let itemsPerPage = window.innerWidth < 768 ? 5 : 10;
+
+// Listen for resize to update items per page
+window.addEventListener('resize', () => {
+    const newItemsPerPage = window.innerWidth < 768 ? 5 : 10;
+    if (newItemsPerPage !== itemsPerPage) {
+        itemsPerPage = newItemsPerPage;
+        currentPage = 1; // Reset to first page on layout change to avoid confusion
+        loadHistory();
+    }
+});
+
+// Load History
 function loadHistory() {
     const history = JSON.parse(localStorage.getItem('yt_summary_history') || '[]');
 
@@ -1106,12 +1128,18 @@ function loadHistory() {
         return;
     }
 
-    if (history.length === 0) {
-        logList.innerHTML = '<div class="text-slate-500 text-sm text-center py-4">No recent history</div>';
-        return;
-    }
+    // Pagination Logic
+    const totalPages = Math.ceil(history.length / itemsPerPage);
 
-    history.forEach(item => {
+    // Ensure current page is valid
+    if (currentPage > totalPages) currentPage = totalPages;
+    if (currentPage < 1) currentPage = 1;
+
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const currentItems = history.slice(startIndex, endIndex);
+
+    currentItems.forEach(item => {
         const date = new Date(item.timestamp).toLocaleDateString();
         const lengthLabel = item.length ? item.length.charAt(0).toUpperCase() + item.length.slice(1) : '';
         const toneLabel = item.tone ? item.tone.charAt(0).toUpperCase() + item.tone.slice(1) : '';
@@ -1124,11 +1152,6 @@ function loadHistory() {
         el.innerHTML = `
             <div class="log-thumbnail-wrapper">
                 <img src="https://img.youtube.com/vi/${item.id}/mqdefault.jpg" alt="Thumbnail" class="log-thumbnail">
-                <button id="stopPodcastBtn" class="podcast-action-btn" title="Stop">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                        <rect x="6" y="6" width="12" height="12" />
-                    </svg>
-                </button>
             </div>
             <div class="log-info">
                 <h4 class="log-item-title">${item.title || 'Video Summary'}</h4>
@@ -1140,9 +1163,8 @@ function loadHistory() {
                     ${date}
                 </div>
                 <div class="log-params">
-                    ${lengthLabel ? `<span class="inline-tone-icon" title="Length: ${lengthLabel}">${lengthIcon} ${lengthLabel}</span>` : ''}
-                    ${(lengthLabel && toneLabel) ? '<span class="mx-1">•</span>' : ''}
-                    ${toneLabel ? `<span class="inline-tone-icon" title="Tone: ${toneLabel}">${toneIcon} ${toneLabel}</span>` : ''}
+                    ${lengthLabel ? `<span class="meta-badge ${item.length}">${lengthIcon} ${lengthLabel}</span>` : ''}
+                    ${toneLabel ? `<span class="meta-badge ${item.tone}">${toneIcon} ${toneLabel}</span>` : ''}
                 </div>
             </div>
             <button class="log-open-btn">
@@ -1152,9 +1174,65 @@ function loadHistory() {
                 </svg>
             </button>
         `;
+        // Click on the whole item to load, except if clicking specific buttons if we add them later
         el.addEventListener('click', () => loadHistoryItem(item));
         logList.appendChild(el);
     });
+
+    // Render Pagination Controls
+    if (totalPages > 1) {
+        renderPaginationControls(totalPages);
+    }
+}
+
+function renderPaginationControls(totalPages) {
+    const controlsContainer = document.createElement('div');
+    controlsContainer.className = 'pagination-controls';
+
+    const prevBtn = document.createElement('button');
+    prevBtn.className = 'pagination-btn';
+    prevBtn.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m15 18-6-6 6-6"/>
+        </svg>
+        Previous
+    `;
+    prevBtn.disabled = currentPage === 1;
+    prevBtn.onclick = () => {
+        if (currentPage > 1) {
+            currentPage--;
+            loadHistory();
+            // Scroll to top of log list
+            document.getElementById('logSection').scrollIntoView({ behavior: 'smooth' });
+        }
+    };
+
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'pagination-btn';
+    nextBtn.innerHTML = `
+        Next
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m9 18 6-6-6-6"/>
+        </svg>
+    `;
+    nextBtn.disabled = currentPage === totalPages;
+    nextBtn.onclick = () => {
+        if (currentPage < totalPages) {
+            currentPage++;
+            loadHistory();
+            document.getElementById('logSection').scrollIntoView({ behavior: 'smooth' });
+        }
+    };
+
+    const pageInfo = document.createElement('span');
+    pageInfo.className = 'pagination-info';
+    pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+
+    controlsContainer.appendChild(prevBtn);
+    controlsContainer.appendChild(pageInfo);
+    controlsContainer.appendChild(nextBtn);
+
+    logList.appendChild(controlsContainer);
 }
 
 function loadHistoryItem(item) {
@@ -1188,7 +1266,7 @@ function loadHistoryItem(item) {
     if (resetBtn) resetBtn.classList.remove('hidden');
 
     // Show UI
-    showVideoInfo(item.id, { title: item.title, length: item.transcript.length });
+    showVideoInfo(item.id, { title: item.title, length: item.transcript.length, metadata: item.metadata });
 
     // Update dropdowns to match history item
     if (item.length && summaryLengthSelect) summaryLengthSelect.value = item.length;
@@ -1232,6 +1310,24 @@ function toggleHistorySection() {
 }
 
 // Show video information
+// Format number (e.g. 1200 -> 1.2k)
+function formatNumber(num) {
+    if (!num) return '0';
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+    if (num >= 1000) return (num / 1000).toFixed(0) + 'k'; // Lowercase k, no decimals for thousands usually in UI
+    return num.toString();
+}
+
+// Format date (YYYYMMDD -> Nov 28, 2025)
+function formatDate(dateStr) {
+    if (!dateStr || dateStr.length !== 8) return '';
+    const year = dateStr.substring(0, 4);
+    const month = dateStr.substring(4, 6);
+    const day = dateStr.substring(6, 8);
+    const date = new Date(`${year}-${month}-${day}`);
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
 // Show video information
 function showVideoInfo(videoId, data) {
     // Update thumbnail
@@ -1259,12 +1355,58 @@ function showVideoInfo(videoId, data) {
 
     videoTitle.textContent = data.title || `Video ID: ${videoId}`;
 
+    // Render Metadata if available
+    const metadata = data.metadata || {};
+    const uploader = metadata.uploader || 'Unknown Channel';
+    const subscribers = metadata.channel_follower_count ? formatNumber(metadata.channel_follower_count) + ' subscribers' : '';
+    const views = metadata.view_count ? formatNumber(metadata.view_count) + ' views' : '';
+    const uploadDate = formatDate(metadata.upload_date);
+
+    // Create or update metadata container BELOW the video player
+    let metaContainer = document.getElementById('videoMetadata');
+    if (!metaContainer) {
+        metaContainer = document.createElement('div');
+        metaContainer.id = 'videoMetadata';
+        metaContainer.className = 'video-metadata-container'; // Changed class name to avoid conflicts/styling issues
+        // Insert after videoPlayerWrapper
+        videoPlayerWrapper.parentNode.insertBefore(metaContainer, videoPlayerWrapper.nextSibling);
+    }
+
+    // Use a generic channel icon
+    const channelIcon = `
+        <div class="channel-icon-placeholder">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+            </svg>
+        </div>
+    `;
+
+    metaContainer.innerHTML = `
+        <h3 class="video-info-title">${data.title || `Video ID: ${videoId}`}</h3>
+        <div class="video-metadata-row">
+            <div class="meta-left">
+                ${channelIcon}
+                <div class="meta-channel-info">
+                    <div class="meta-channel-name">
+                        ${uploader}
+                        <svg class="verified-icon" viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                            <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-1.9 14.7L6 12.6l1.5-1.5 2.6 2.6 6.4-6.4 1.5 1.5-7.9 7.9z"/>
+                        </svg>
+                    </div>
+                    <div class="meta-sub-count">${subscribers}</div>
+                </div>
+                <button class="subscribe-btn">Subscribe</button>
+            </div>
+            <div class="meta-right">
+                <span class="meta-views">${views}</span>
+                ${(views && uploadDate) ? '<span class="meta-dot">•</span>' : ''}
+                <span class="meta-date">${uploadDate}</span>
+            </div>
+        </div>
+    `;
+
     // Show results container
     resultsContainer.classList.remove('hidden');
-
-    // Ensure thumbnail container is visible (if we have a specific container for it)
-    // In new design, videoPlayerWrapper contains the thumbnail.
-    // Make sure it's visible.
     videoPlayerWrapper.classList.remove('hidden');
 }
 
@@ -1284,10 +1426,13 @@ function showSummary(summary) {
         const lengthIcon = LENGTH_ICONS[lengthVal] || LENGTH_ICONS['medium'];
         const toneIcon = TONE_ICONS[toneVal] || TONE_ICONS['conversational'];
 
+        // Use short labels for badges (e.g. "Short", "Technical") instead of full text
+        const lengthLabel = lengthVal.charAt(0).toUpperCase() + lengthVal.slice(1);
+        const toneLabel = toneVal.charAt(0).toUpperCase() + toneVal.slice(1);
+
         summaryFooter.innerHTML = `
-            ${lengthText ? `<span class="inline-tone-icon" title="Length: ${lengthText}">${lengthIcon} ${lengthText}</span>` : ''}
-            ${(lengthText && toneText) ? '<span class="mx-1">•</span>' : ''}
-            ${toneText ? `<span class="inline-tone-icon" title="Tone: ${toneText}">${toneIcon} ${toneText}</span>` : ''}
+            ${lengthVal ? `<span class="meta-badge ${lengthVal}">${lengthIcon} ${lengthLabel}</span>` : ''}
+            ${toneVal ? `<span class="meta-badge ${toneVal}">${toneIcon} ${toneLabel}</span>` : ''}
         `;
     }
 
@@ -1306,7 +1451,8 @@ function showSummary(summary) {
 async function copySummary() {
     const text = summaryText.innerText;
     const url = youtubeUrlInput.value.trim();
-    const clipboardText = url ? `${url}\n\n${text}` : text;
+    const title = videoTitle.textContent || '';
+    const clipboardText = url ? `${title}\n${url}\n\n${text}` : text;
 
     try {
         await navigator.clipboard.writeText(clipboardText);
@@ -1427,16 +1573,16 @@ async function handlePodcastRequest(e) {
                 tone: summaryToneSelect.value
             })
         });
-        console.log('Sending podcast request:', {
-            length: summaryLengthSelect.value,
+        // Sending podcast request
+        length: summaryLengthSelect.value,
             tone: summaryToneSelect.value
-        });
-        const data = await response.json();
+    });
+    const data = await response.json();
 
-        if (data.success) {
-            btn.disabled = false;
-            btn.classList.add('btn-active');
-            btn.innerHTML = `
+    if (data.success) {
+        btn.disabled = false;
+        btn.classList.add('btn-active');
+        btn.innerHTML = `
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <rect x="6" y="4" width="4" height="16"></rect>
                     <rect x="14" y="4" width="4" height="16"></rect>
@@ -1444,27 +1590,27 @@ async function handlePodcastRequest(e) {
                 Stop Podcast
             `;
 
-            // Show controls
-            const controls = document.getElementById('podcastControls');
-            controls.classList.remove('hidden');
-            controls.style.display = 'flex';
+        // Show controls
+        const controls = document.getElementById('podcastControls');
+        controls.classList.remove('hidden');
+        controls.style.display = 'flex';
 
-            playPodcastScript(data.script, () => {
-                // On end
-                btn.classList.remove('btn-active');
-                btn.innerHTML = originalText;
-            });
-        } else {
-            showToast(data.error || 'Failed to generate podcast', 'error');
-        }
-    } catch (error) {
-        console.error('Podcast generation failed:', error);
-        showToast('Network error', 'error');
-    } finally {
-        // Ensure button is re-enabled and text restored in all cases
-        btn.disabled = false;
-        btn.innerHTML = originalText;
+        playPodcastScript(data.script, () => {
+            // On end
+            btn.classList.remove('btn-active');
+            btn.innerHTML = originalText;
+        });
+    } else {
+        showToast(data.error || 'Failed to generate podcast', 'error');
     }
+} catch (error) {
+    console.error('Podcast generation failed:', error);
+    showToast('Network error', 'error');
+} finally {
+    // Ensure button is re-enabled and text restored in all cases
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+}
 }
 
 // --- Podcast Feature ---

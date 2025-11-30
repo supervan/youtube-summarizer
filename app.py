@@ -298,48 +298,41 @@ proxy_manager = FreeProxyManager()
 
 def _get_youtube_transcript_with_cookies(video_id):
     """
-    Extract transcript from YouTube video using a multi-method approach.
+    Extract transcript and metadata from YouTube video.
     
-    Strategy:
-    1. Try `YouTubeTranscriptApi` first (fastest, often works without proxies).
-    2. Fallback to `yt-dlp` with proxy rotation if Method 1 fails.
-    3. Use a pool of free proxies to bypass IP blocks.
-    4. Support cookies for age-restricted content (if provided in env).
-    
-    Args:
-        video_id (str): The YouTube video ID.
-        
     Returns:
-        tuple: (transcript_text, video_title, cookie_count)
+        tuple: (transcript_text, metadata_dict, cookie_count)
     """
-    """Extract transcript from YouTube video using yt-dlp with free proxy rotation."""
     
-    # Try up to 5 times with different proxies (reduced from 10)
+    # Try up to 5 times with different proxies
     max_retries = 5
     last_error = None
-    
-    # Global timeout safety - stop trying if we've spent more than 30 seconds (reduced from 50)
     start_time = time.time()
-    
     video_url = f"https://www.youtube.com/watch?v={video_id}"
     
-    # Handle cookies if provided in environment
+    # Handle cookies
     cookies_content = os.getenv('YOUTUBE_COOKIES')
     cookies_file = None
-    
-    # Create a temporary cookies file if content exists
     if cookies_content:
         try:
             fd, cookies_file = tempfile.mkstemp(suffix='.txt', text=True)
             with os.fdopen(fd, 'w') as f:
                 f.write(cookies_content)
-            print(f"🍪 Loaded cookies from environment ({len(cookies_content)} chars)")
         except Exception as e:
             print(f"⚠️ Failed to create cookies file: {e}")
             cookies_file = None
             
-    # METHOD 1: Try YouTubeTranscriptApi (Fastest & often bypasses blocks)
-    # We'll try direct first, then with proxies if needed
+    # Default metadata
+    metadata = {
+        'title': 'Unknown Title',
+        'uploader': 'Unknown Uploader',
+        'upload_date': None,
+        'view_count': 0,
+        'channel_follower_count': 0,
+        'description': ''
+    }
+
+    # METHOD 1: Try YouTubeTranscriptApi (Fastest)
     try:
         print(f"🚀 Attempting Method 1: YouTubeTranscriptApi for {video_id}...")
         
@@ -349,8 +342,7 @@ def _get_youtube_transcript_with_cookies(video_id):
         except Exception as e:
             print(f"⚠️ Direct YouTubeTranscriptApi failed: {e}")
             
-            # METHOD 1.5: Try yt-dlp Direct Connection (Often works when API is blocked)
-            # We try this BEFORE proxies to avoid the heavy proxy refresh cost
+            # METHOD 1.5: Try yt-dlp Direct Connection
             print("🚀 Attempting Method 1.5: yt-dlp Direct Connection...")
             try:
                  with tempfile.TemporaryDirectory() as temp_dir:
@@ -361,7 +353,7 @@ def _get_youtube_transcript_with_cookies(video_id):
                         'subtitleslangs': ['en'],
                         'subtitlesformat': 'vtt',
                         'outtmpl': os.path.join(temp_dir, '%(id)s'),
-                        'quiet': False, # Enable logs
+                        'quiet': False,
                         'no_warnings': False,
                         'socket_timeout': 10,
                         'format': 'worst',
@@ -374,7 +366,14 @@ def _get_youtube_transcript_with_cookies(video_id):
                             
                     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                         info = ydl.extract_info(video_url, download=True)
-                        video_title = info.get('title', 'Unknown Title')
+                        
+                        # Extract metadata
+                        metadata['title'] = info.get('title', 'Unknown Title')
+                        metadata['uploader'] = info.get('uploader', 'Unknown Uploader')
+                        metadata['upload_date'] = info.get('upload_date')
+                        metadata['view_count'] = info.get('view_count', 0)
+                        metadata['channel_follower_count'] = info.get('channel_follower_count', 0)
+                        metadata['description'] = info.get('description', '')
                         
                         vtt_file = None
                         files_in_dir = os.listdir(temp_dir)
@@ -385,21 +384,21 @@ def _get_youtube_transcript_with_cookies(video_id):
                         if vtt_file:
                             with open(vtt_file, 'r', encoding='utf-8') as f:
                                 print("✅ Method 1.5 Success! yt-dlp direct worked.")
-                                return _parse_vtt(f.read()), video_title, 0
+                                return _parse_vtt(f.read()), metadata, 0
             except Exception as ydl_e:
                 print(f"⚠️ Method 1.5 failed: {ydl_e}")
                 print("🔄 Falling back to proxies...")
 
             # Try with proxies
             transcript_list = None
-            for attempt in range(3): # Try 3 proxies (reduced from 5)
+            for attempt in range(3):
                 proxy = proxy_manager.get_proxy()
                 if not proxy:
                     break
                 print(f"   Retrying YouTubeTranscriptApi with proxy {proxy['http']}...")
                 try:
                     transcript_list = YouTubeTranscriptApi.get_transcript(video_id, cookies=cookies_file, proxies=proxy)
-                    proxy_manager.report_success(proxy['http']) # Mark as working
+                    proxy_manager.report_success(proxy['http'])
                     print("   ✅ Proxy success!")
                     break
                 except Exception as pe:
@@ -409,11 +408,10 @@ def _get_youtube_transcript_with_cookies(video_id):
             if not transcript_list:
                 raise Exception("All YouTubeTranscriptApi attempts failed")
 
-        # Parse transcript with timestamps
+        # Parse transcript
         formatted_lines = []
         for item in transcript_list:
             start = item['start']
-            # Format seconds to MM:SS
             minutes = int(start // 60)
             seconds = int(start % 60)
             timestamp = f"[{minutes:02d}:{seconds:02d}]"
@@ -422,44 +420,39 @@ def _get_youtube_transcript_with_cookies(video_id):
         full_text = " ".join(formatted_lines)
         print(f"✅ Method 1 Success! Extracted {len(full_text)} chars")
         
-        # We need the title too. Since this API doesn't give it, we'll do a quick fetch
-        # or just return a placeholder if we want to be super fast. 
-        # Let's try a quick lightweight fetch for title using yt-dlp but WITHOUT downloading subs
+        # Fetch metadata separately since API didn't give it
         try:
             with yt_dlp.YoutubeDL({'quiet': True, 'skip_download': True}) as ydl:
                 info = ydl.extract_info(video_url, download=False)
-                video_title = info.get('title', 'Unknown Title')
+                metadata['title'] = info.get('title', 'Unknown Title')
+                metadata['uploader'] = info.get('uploader', 'Unknown Uploader')
+                metadata['upload_date'] = info.get('upload_date')
+                metadata['view_count'] = info.get('view_count', 0)
+                metadata['channel_follower_count'] = info.get('channel_follower_count', 0)
+                metadata['description'] = info.get('description', '')
         except:
-            video_title = "YouTube Video (Title Unavailable)"
+            pass
             
-        return full_text, video_title, len(cookies_content) if cookies_content else 0
+        return full_text, metadata, len(cookies_content) if cookies_content else 0
         
     except Exception as e:
         print(f"⚠️ Method 1 failed: {e}")
         
-    # METHOD 2: yt-dlp with Proxy Rotation (Fallback)
+    # METHOD 2: yt-dlp with Proxy Rotation
     try:
         for attempt in range(max_retries):
-            # Check global timeout
             if time.time() - start_time > 30:
-                print("⚠️ Global timeout reached (30s), stopping retries")
                 break
                 
-            # Get a proxy (first attempt can be direct if no working proxy known)
-            # Since we already tried direct, we MUST use a proxy here
             proxies = proxy_manager.get_proxy()
-            
             if not proxies:
-                 print("⚠️ No proxies available, skipping proxy attempt")
                  continue
 
             proxy_url = proxies['http']
             print(f"🚀 Attempt {attempt+1}/{max_retries}: Fetching transcript via proxy {proxy_url}")
             
-            # Create a temporary directory for this attempt
             with tempfile.TemporaryDirectory() as temp_dir:
                 try:
-                    # Configure yt-dlp options
                     ydl_opts = {
                         'skip_download': True,
                         'writesubtitles': True,
@@ -467,35 +460,33 @@ def _get_youtube_transcript_with_cookies(video_id):
                         'subtitleslangs': ['en'],
                         'subtitlesformat': 'vtt',
                         'outtmpl': os.path.join(temp_dir, '%(id)s'),
-                        'quiet': False,      # ENABLE LOGS to see what's happening
+                        'quiet': False,
                         'no_warnings': False,
-                        # Optimization settings to fail fast on bad proxies
-                        'socket_timeout': 5, # Reduced from 10s to 5s
-                        'retries': 1,        # Retry only once internally
-                        'fragment_retries': 1,
-                        'force_ipv4': True,  # Avoid IPv6 issues
-                        # Fix for "Requested format is not available"
-                        'format': 'worst',   # We don't need video, so any format works. 'worst' is safest.
+                        'socket_timeout': 5,
+                        'retries': 1,
+                        'force_ipv4': True,
+                        'format': 'worst',
                         'extractor_args': {'youtube': {'player_client': ['web', 'android']}},
                         'ignore_no_formats_error': True,
                         'allow_unplayable_formats': True,
+                        'proxy': proxy_url
                     }
-                    
-                    # Add proxy
-                    ydl_opts['proxy'] = proxy_url
-                        
-                    # Add cookies if available
                     if cookies_file:
                         ydl_opts['cookiefile'] = cookies_file
                     
                     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                        # Download subtitles and metadata
                         info = ydl.extract_info(video_url, download=True)
-                        video_title = info.get('title', 'Unknown Title')
                         
-                        # Look for the downloaded VTT file
+                        # Extract metadata
+                        metadata['title'] = info.get('title', 'Unknown Title')
+                        metadata['uploader'] = info.get('uploader', 'Unknown Uploader')
+                        metadata['upload_date'] = info.get('upload_date')
+                        metadata['view_count'] = info.get('view_count', 0)
+                        metadata['channel_follower_count'] = info.get('channel_follower_count', 0)
+                        metadata['description'] = info.get('description', '')
+                        
                         vtt_file = None
-                        files_in_dir = os.listdir(temp_dir) # Debug: See what was downloaded
+                        files_in_dir = os.listdir(temp_dir)
                         for filename in files_in_dir:
                             if filename.endswith('.vtt'):
                                 vtt_file = os.path.join(temp_dir, filename)
@@ -503,36 +494,25 @@ def _get_youtube_transcript_with_cookies(video_id):
                         
                         if vtt_file:
                             print(f"✅ Success! Downloaded VTT file via proxy")
-                            
-                            # Read and parse the VTT file
                             with open(vtt_file, 'r', encoding='utf-8') as f:
                                 vtt_content = f.read()
-                                
                             full_text = _parse_vtt(vtt_content)
-                            
                             if not full_text:
                                 raise Exception("Parsed transcript is empty")
-                                
-                            print(f"   Extracted {len(full_text)} chars")
                             
-                            # Remember this working proxy for next time
                             proxy_manager.report_success(proxy_url)
-                                
-                            return full_text, video_title, len(cookies_content) if cookies_content else 0
+                            return full_text, metadata, len(cookies_content) if cookies_content else 0
                         else:
-                            print(f"⚠️ No VTT file found. Files in temp dir: {files_in_dir}")
-                            raise Exception(f"No subtitle file downloaded. Dir contents: {files_in_dir}")
+                            raise Exception("No subtitle file downloaded")
                     
                 except Exception as e:
                     print(f"❌ Attempt {attempt+1} failed: {str(e)}")
                     last_error = e
                     proxy_manager.mark_failed(proxies)
         
-        # We already tried direct connection in Method 1.5, so if we fail here, we are done.
         raise Exception(f"Failed after {max_retries} attempts. {last_error}")
         
     finally:
-        # Clean up cookies file
         if cookies_file and os.path.exists(cookies_file):
             try:
                 os.unlink(cookies_file)
@@ -542,7 +522,7 @@ def _get_youtube_transcript_with_cookies(video_id):
 @app.route('/api/extract-transcript', methods=['POST'])
 def extract_transcript():
     """Extract transcript from YouTube video"""
-    DEPLOYMENT_ID = "v2025.11.21.30"
+    DEPLOYMENT_ID = "v2025.11.21.31"
     try:
         data = request.json
         youtube_url = data.get('url', '')
@@ -555,14 +535,15 @@ def extract_transcript():
         if not video_id:
             return jsonify({'error': 'Invalid YouTube URL'}), 400
         
-        # Get transcript and title
+        # Get transcript and metadata
         try:
-            full_transcript, video_title, cookie_count = _get_youtube_transcript_with_cookies(video_id)
+            full_transcript, metadata, cookie_count = _get_youtube_transcript_with_cookies(video_id)
             
             return jsonify({
                 'success': True,
                 'video_id': video_id,
-                'title': video_title,
+                'title': metadata['title'],
+                'metadata': metadata, # Return full metadata object
                 'transcript': full_transcript,
                 'length': len(full_transcript),
                 'deployment_id': DEPLOYMENT_ID
