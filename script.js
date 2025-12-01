@@ -38,6 +38,8 @@ const submitBtn = document.getElementById('submitBtn');
 const btnText = document.getElementById('btnText');
 const btnLoader = document.getElementById('btnLoader');
 const toggleInputBtn = document.getElementById('toggleInputBtn');
+const editInputBtn = document.getElementById('editInputBtn');
+const inputCard = document.querySelector('.input-card');
 
 // Results Section Elements
 const resultsContainer = document.getElementById('resultsContainer');
@@ -47,7 +49,7 @@ const videoTitle = document.getElementById('videoTitle');
 const summaryText = document.getElementById('summaryText');
 const copyBtn = document.getElementById('copyBtn');
 const podcastBtn = document.getElementById('podcastBtn');
-const toggleResultsBtn = document.getElementById('toggleResultsBtn');
+// const toggleResultsBtn = document.getElementById('toggleResultsBtn'); // Removed
 const resultsContent = document.getElementById('resultsContent');
 const tabsContainer = document.getElementById('tabsContainer');
 const tabContent = document.getElementById('tabContent');
@@ -60,7 +62,7 @@ const scrollToLogBtn = document.getElementById('scrollToLogBtn');
 
 // Tabs
 const tabs = document.querySelectorAll('.tab-btn');
-const tabContents = document.querySelectorAll('.chat-container, #contentSteps, #contentQuiz');
+const tabContents = document.querySelectorAll('.tab-pane');
 
 let voices = [];
 let isReading = false;
@@ -102,11 +104,30 @@ function populateVoiceList() {
 
     // Fallback if we don't have enough
     if (selectedVoices.length < 3) {
-        const englishVoices = voices.filter(v => v.lang.includes('en') && !selectedVoices.some(sv => sv.voice === v));
-        const fallbackNames = ['Mary', 'Angela', 'John'];
-        englishVoices.slice(0, 3 - selectedVoices.length).forEach((v, i) => {
-            const name = fallbackNames[selectedVoices.length] || `Voice ${selectedVoices.length + 1}`;
-            selectedVoices.push({ name: `${name}`, voice: v });
+        // Filter for English voices
+        const englishVoices = voices.filter(v => v.lang.startsWith('en'));
+
+        // Prioritize "Google" voices on Android as they are often better
+        const androidBestVoices = englishVoices.filter(v => v.name.includes('Google') || v.name.includes('English United States'));
+        const otherVoices = englishVoices.filter(v => !v.name.includes('Google') && !v.name.includes('English United States'));
+
+        const candidates = [...androidBestVoices, ...otherVoices];
+
+        candidates.forEach(v => {
+            if (selectedVoices.length >= 3) return;
+            if (!selectedVoices.some(sv => sv.voice.name === v.name)) {
+                // Try to guess gender/name based on voice name or just assign a generic one
+                let name = `Voice ${selectedVoices.length + 1}`;
+                if (v.name.includes('Female') || v.name.includes('Zira') || v.name.includes('Susan')) name = 'Mary';
+                else if (v.name.includes('Male') || v.name.includes('David') || v.name.includes('George')) name = 'John';
+
+                // If we already have a Mary/John, append number
+                if (selectedVoices.some(sv => sv.name === name)) {
+                    name = `${name} ${selectedVoices.length + 1}`;
+                }
+
+                selectedVoices.push({ name: `${name} (${v.name})`, voice: v });
+            }
         });
     }
 
@@ -136,8 +157,35 @@ function handleVoiceChange() {
 }
 // Move initialization to DOMContentLoaded
 // populateVoiceList(); // This line was commented out, keeping it that way as per original context.
-if (window.speechSynthesis && speechSynthesis.onvoiceschanged !== undefined) {
-    speechSynthesis.onvoiceschanged = populateVoiceList;
+if (window.speechSynthesis) {
+    // Chrome loads voices asynchronously
+    window.speechSynthesis.onvoiceschanged = populateVoiceList;
+}
+
+// Fetch feature flags
+async function fetchFeatures() {
+    try {
+        const response = await fetch(`${API_BASE}/api/features`);
+        const features = await response.json();
+
+        // Toggle Ads
+        const adFooter = document.getElementById('google-ad-footer');
+        const adDeck = document.getElementById('google-ad-deck');
+
+        if (features.ads) {
+            if (adFooter) adFooter.classList.remove('hidden');
+            if (adDeck) adDeck.classList.remove('hidden');
+        } else {
+            if (adFooter) adFooter.classList.add('hidden');
+            if (adDeck) adDeck.classList.add('hidden');
+        }
+
+        // Toggle other features if needed (e.g. hide tabs if disabled)
+        // ...
+
+    } catch (error) {
+        console.error('Failed to fetch features:', error);
+    }
 }
 
 let currentUtterance = null; // Global variable to prevent GC
@@ -198,10 +246,12 @@ function speakNextChunk() {
     };
 
     const voiceSelect = document.getElementById('voiceSelect');
-    const selectedVoiceName = voiceSelect.value;
+    const selectedVoiceName = voiceSelect.value; // This is the voice name (or URI)
 
     if (selectedVoiceName) {
-        const voice = voices.find(v => v.name === selectedVoiceName);
+        // Re-fetch voices to ensure we have the latest objects (Android quirk)
+        const currentVoices = window.speechSynthesis.getVoices();
+        const voice = currentVoices.find(v => v.name === selectedVoiceName);
         if (voice) {
             currentUtterance.voice = voice;
         }
@@ -316,7 +366,7 @@ let currentTranscript = '';
 let enabledFeatures = {};
 let player; // YouTube Player instance
 let deferredPrompt; // For PWA install prompt
-// const MAX_HISTORY_ITEMS = 5; // Moved to top of loadHistory logic
+const MAX_HISTORY_ITEMS = 5;
 
 // Load YouTube IFrame API
 const tag = document.createElement('script');
@@ -369,7 +419,6 @@ window.addEventListener('beforeinstallprompt', (e) => {
                 deferredPrompt.prompt();
                 // Wait for the user to respond to the prompt
                 const { outcome } = await deferredPrompt.userChoice;
-                // console.log(`User response to the install prompt: ${outcome}`); // Debug log removed
                 deferredPrompt = null;
                 // Hide custom prompt after interaction
                 installPrompt.classList.add('hidden');
@@ -384,7 +433,6 @@ window.addEventListener('appinstalled', () => {
     const installPrompt = document.getElementById('installPrompt');
     if (installPrompt) installPrompt.classList.add('hidden');
     deferredPrompt = null;
-    // console.log('PWA was installed'); // Debug log removed
 });
 
 // Check if already running in standalone mode (installed)
@@ -414,8 +462,17 @@ function setupEventListeners() {
     if (toggleInputBtn) {
         toggleInputBtn.addEventListener('click', () => toggleInputSection());
     }
-    if (toggleResultsBtn) {
-        toggleResultsBtn.addEventListener('click', () => toggleResultsSection());
+    // if (toggleResultsBtn) {
+    //     toggleResultsBtn.addEventListener('click', () => toggleResultsSection());
+    // }
+
+    // Edit Button (Expand Header)
+    if (editInputBtn) {
+        editInputBtn.addEventListener('click', () => {
+            inputCard.classList.remove('collapsed');
+            editInputBtn.classList.add('hidden');
+            // Optional: Focus input?
+        });
     }
 
     // Clear History
@@ -472,15 +529,12 @@ function setupEventListeners() {
         if (e.key === 'Enter') handleChatSubmit(e);
     });
 
-    // Podcast Button
+    // Podcast Button (Toggle Controls)
     const podcastBtn = document.getElementById('podcastBtn');
     if (podcastBtn) {
-        // Remove any existing listeners by cloning (optional, but safer to just add one unique listener if we control init)
-        // Since we are in init(), we should just add it.
         podcastBtn.replaceWith(podcastBtn.cloneNode(true));
         const newPodcastBtn = document.getElementById('podcastBtn');
-
-        newPodcastBtn.addEventListener('click', handlePodcastRequest);
+        newPodcastBtn.addEventListener('click', togglePodcastControls);
     }
 
     // Podcast Controls
@@ -549,6 +603,18 @@ function setupEventListeners() {
             }
         });
     }
+
+    // Steps Generation
+    const generateStepsBtn = document.getElementById('generateStepsBtn');
+    if (generateStepsBtn) {
+        generateStepsBtn.addEventListener('click', handleStepsRequest);
+    }
+
+    // Quiz Generation
+    const startQuizBtn = document.getElementById('startQuizBtn');
+    if (startQuizBtn) {
+        startQuizBtn.addEventListener('click', handleQuizRequest);
+    }
 }
 
 // Switch Feature Tabs
@@ -559,18 +625,22 @@ function switchTab(selectedTab) {
         tab.classList.add('inactive');
     });
 
-    // Hide all content
-    document.getElementById('contentChat').classList.add('hidden');
-    document.getElementById('contentSteps').classList.add('hidden');
-    document.getElementById('contentQuiz').classList.add('hidden');
+    // Hide all content panes
+    tabContents.forEach(content => {
+        content.classList.add('hidden');
+    });
 
     // Activate selected
     selectedTab.classList.add('active');
     selectedTab.classList.remove('inactive');
 
     // Show content
-    const targetId = 'content' + selectedTab.dataset.tab.charAt(0).toUpperCase() + selectedTab.dataset.tab.slice(1);
-    document.getElementById(targetId).classList.remove('hidden');
+    const tabName = selectedTab.dataset.tab;
+    const targetId = 'content' + tabName.charAt(0).toUpperCase() + tabName.slice(1);
+    const targetContent = document.getElementById(targetId);
+    if (targetContent) {
+        targetContent.classList.remove('hidden');
+    }
 }
 
 // Show available features (Tabs)
@@ -645,10 +715,13 @@ function addChatMessage(text, sender, isLoading = false) {
 async function handleStepsRequest() {
     const btn = document.getElementById('generateStepsBtn');
     const content = document.getElementById('stepsContent');
+    const startView = document.getElementById('stepsStartView');
 
     btn.disabled = true;
-    btn.textContent = 'Generating Steps...';
-    content.innerHTML = '<div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text"></div>';
+    const originalText = btn.innerHTML;
+    btn.innerHTML = 'Generating Steps...';
+
+    // content.innerHTML = '<div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text"></div>';
 
     try {
         const response = await fetch(`${API_BASE}/api/steps`, {
@@ -659,22 +732,38 @@ async function handleStepsRequest() {
         const data = await response.json();
 
         if (data.success) {
+            startView.classList.add('hidden');
+            content.classList.remove('hidden');
+
             if (data.steps.includes('NO_STEPS_FOUND')) {
-                content.innerHTML = '<p>No specific tutorial steps found in this video.</p>';
+                content.innerHTML = '<div class="text-center py-8 text-slate-400"><p>No specific tutorial steps found in this video.</p><button class="secondary-btn mt-4" onclick="resetSteps()">Try Again</button></div>';
             } else {
                 content.innerHTML = formatMarkdown(data.steps);
+                // Add a reset button at the bottom? Or just leave it.
             }
-            btn.classList.add('hidden'); // Hide button after success
         } else {
-            content.innerHTML = '<p class="error">Failed to generate steps.</p>';
+            showToast('Failed to generate steps', 'error');
             btn.disabled = false;
-            btn.textContent = 'Try Again';
+            btn.innerHTML = originalText;
         }
     } catch (error) {
-        content.innerHTML = '<p class="error">Network error.</p>';
+        showToast('Network error', 'error');
         btn.disabled = false;
-        btn.textContent = 'Try Again';
+        btn.innerHTML = originalText;
     }
+}
+
+function resetSteps() {
+    document.getElementById('stepsContent').classList.add('hidden');
+    document.getElementById('stepsStartView').classList.remove('hidden');
+    const btn = document.getElementById('generateStepsBtn');
+    btn.disabled = false;
+    btn.innerHTML = `
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+        </svg>
+        Generate Steps
+    `;
 }
 
 // --- Quiz Feature ---
@@ -769,8 +858,25 @@ window.checkAnswer = function (btn, selectedIndex, correctIndex, questionIndex) 
 
     if (allAnswered) {
         document.getElementById('quizContent').classList.add('hidden');
-        document.getElementById('quizScore').classList.remove('hidden');
+        const scoreView = document.getElementById('quizScore');
+        scoreView.classList.remove('hidden');
+
         document.getElementById('scoreValue').textContent = currentQuizScore;
+
+        // Add feedback message
+        let feedback = '';
+        if (currentQuizScore === 5) feedback = 'Perfect Score! 🌟';
+        else if (currentQuizScore >= 3) feedback = 'Great Job! 👍';
+        else feedback = 'Keep Learning! 📚';
+
+        // Check if feedback element exists, if not create it
+        let feedbackEl = scoreView.querySelector('.quiz-feedback');
+        if (!feedbackEl) {
+            feedbackEl = document.createElement('p');
+            feedbackEl.className = 'quiz-feedback';
+            scoreView.insertBefore(feedbackEl, scoreView.querySelector('button'));
+        }
+        feedbackEl.textContent = feedback;
     }
 };
 
@@ -790,9 +896,15 @@ function resetApp() {
         window.speechSynthesis.cancel(); // Stop speaking
         if (typeof stopPodcast === 'function') stopPodcast(); // Stop podcast if playing
 
-        // Reset features
-        const contentChat = document.getElementById('contentChat');
-        if (contentChat) contentChat.classList.remove('hidden'); // Default tab
+        // Reset Header
+        if (inputCard) {
+            inputCard.classList.remove('collapsed');
+            if (editInputBtn) editInputBtn.classList.add('hidden');
+        }
+
+        // Reset Tabs
+        const summaryTab = document.querySelector('.tab-btn[data-tab="summary"]');
+        if (summaryTab) switchTab(summaryTab);
 
         const contentSteps = document.getElementById('contentSteps');
         if (contentSteps) contentSteps.classList.add('hidden');
@@ -804,8 +916,25 @@ function resetApp() {
         const chatHistory = document.getElementById('chatHistory');
         if (chatHistory) chatHistory.innerHTML = '<div class="chat-message ai"><div class="message-content"><p>Hi! Ask me anything about this video.</p></div></div>';
 
-        // const stepsContent = document.getElementById('stepsContent');
-        // if (stepsContent) stepsContent.innerHTML = '';
+        const stepsContent = document.getElementById('stepsContent');
+        if (stepsContent) {
+            stepsContent.innerHTML = '';
+            stepsContent.classList.add('hidden');
+        }
+        const stepsStartView = document.getElementById('stepsStartView');
+        if (stepsStartView) {
+            stepsStartView.classList.remove('hidden');
+            const btn = document.getElementById('generateStepsBtn');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = `
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+                    </svg>
+                    Generate Steps
+                `;
+            }
+        }
 
         // if (typeof resetQuiz === 'function') resetQuiz();
 
@@ -826,7 +955,7 @@ function resetApp() {
 
         // Hide results content
         if (resultsContent) resultsContent.classList.add('hidden');
-        if (toggleResultsBtn) toggleResultsBtn.classList.add('collapsed');
+        // if (toggleResultsBtn) toggleResultsBtn.classList.add('collapsed');
 
         // Hide action buttons
         const actionButtons = document.querySelector('.action-buttons');
@@ -866,24 +995,24 @@ function toggleInputSection(forceCollapse = null) {
     }
 }
 
-// Toggle Results Section
-function toggleResultsSection(forceCollapse = null) {
-    const content = document.getElementById('resultsContent');
-    const btn = document.getElementById('toggleResultsBtn');
-
-    if (!content) return;
-
-    const isHidden = content.classList.contains('hidden');
-    const shouldCollapse = forceCollapse !== null ? forceCollapse : !isHidden;
-
-    if (shouldCollapse) {
-        content.classList.add('hidden');
-        if (btn) btn.classList.add('collapsed');
-    } else {
-        content.classList.remove('hidden');
-        if (btn) btn.classList.remove('collapsed');
-    }
-}
+// Toggle Results Section - Deprecated/Removed
+// function toggleResultsSection(forceCollapse = null) {
+//     const content = document.getElementById('resultsContent');
+//     const btn = document.getElementById('toggleResultsBtn');
+//
+//     if (!content) return;
+//
+//     const isHidden = content.classList.contains('hidden');
+//     const shouldCollapse = forceCollapse !== null ? forceCollapse : !isHidden;
+//
+//     if (shouldCollapse) {
+//         content.classList.add('hidden');
+//         if (btn) btn.classList.add('collapsed');
+//     } else {
+//         content.classList.remove('hidden');
+//         if (btn) btn.classList.remove('collapsed');
+//     }
+// }
 
 // Hide all result cards
 function hideAllCards() {
@@ -1111,7 +1240,7 @@ async function handleSubmit(e) {
         toggleInputSection(true);
 
         // Expand results
-        toggleResultsSection(false);
+        // toggleResultsSection(false);
 
     } catch (error) {
         console.error('Summarize error:', error);
@@ -1188,6 +1317,7 @@ function saveToHistory(videoId, title, summary, transcript, length, tone, metada
         length: length,
         tone: tone,
         metadata: metadata,
+        thumbnail: `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`, // Add thumbnail URL
         timestamp: Date.now()
     };
 
@@ -1209,20 +1339,6 @@ function saveToHistory(videoId, title, summary, transcript, length, tone, metada
 }
 
 // Load History
-const MAX_HISTORY_ITEMS = 50;
-let currentPage = 1;
-let itemsPerPage = window.innerWidth < 768 ? 5 : 10;
-
-// Listen for resize to update items per page
-window.addEventListener('resize', () => {
-    const newItemsPerPage = window.innerWidth < 768 ? 5 : 10;
-    if (newItemsPerPage !== itemsPerPage) {
-        itemsPerPage = newItemsPerPage;
-        currentPage = 1; // Reset to first page on layout change to avoid confusion
-        loadHistory();
-    }
-});
-
 // Load History
 function loadHistory() {
     const history = JSON.parse(localStorage.getItem('yt_summary_history') || '[]');
@@ -1231,116 +1347,41 @@ function loadHistory() {
     logList.innerHTML = '';
 
     if (history.length === 0) {
-        logList.innerHTML = '<div class="text-slate-500 text-sm text-center py-4">No recent history</div>';
+        logList.innerHTML = '<div class="text-slate-500 text-sm italic p-4">No history yet.</div>';
         return;
     }
 
-    // Pagination Logic
-    const totalPages = Math.ceil(history.length / itemsPerPage);
+    history.forEach(item => {
+        const logItem = document.createElement('div');
+        logItem.className = 'log-item';
+        logItem.onclick = () => loadHistoryItem(item);
 
-    // Ensure current page is valid
-    if (currentPage > totalPages) currentPage = totalPages;
-    if (currentPage < 1) currentPage = 1;
-
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const currentItems = history.slice(startIndex, endIndex);
-
-    currentItems.forEach(item => {
+        // Truncate title
+        const title = item.title.length > 50 ? item.title.substring(0, 50) + '...' : item.title;
         const date = new Date(item.timestamp).toLocaleDateString();
-        const lengthLabel = item.length ? item.length.charAt(0).toUpperCase() + item.length.slice(1) : '';
-        const toneLabel = item.tone ? item.tone.charAt(0).toUpperCase() + item.tone.slice(1) : '';
 
-        const toneIcon = item.tone ? (TONE_ICONS[item.tone] || TONE_ICONS['conversational']) : '';
-        const lengthIcon = item.length ? (LENGTH_ICONS[item.length] || LENGTH_ICONS['medium']) : '';
-
-        const el = document.createElement('div');
-        el.className = 'log-item';
-        el.innerHTML = `
+        logItem.innerHTML = `
             <div class="log-thumbnail-wrapper">
-                <img src="https://img.youtube.com/vi/${item.id}/mqdefault.jpg" alt="Thumbnail" class="log-thumbnail">
+                <img src="${item.thumbnail || `https://img.youtube.com/vi/${item.id}/mqdefault.jpg`}" alt="${title}" class="log-thumbnail">
+                <div class="log-play-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M8 5v14l11-7z"/>
+                    </svg>
+                </div>
             </div>
             <div class="log-info">
-                <h4 class="log-item-title">${item.title || 'Video Summary'}</h4>
+                <h4 class="log-item-title" title="${item.title}">${title}</h4>
                 <div class="log-meta">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10" />
-                        <polyline points="12 6 12 12 16 14" />
-                    </svg>
-                    ${date}
-                </div>
-                <div class="log-params">
-                    ${lengthLabel ? `<span class="meta-badge ${item.length}">${lengthIcon} ${lengthLabel}</span>` : ''}
-                    ${toneLabel ? `<span class="meta-badge ${item.tone}">${toneIcon} ${toneLabel}</span>` : ''}
+                    <span class="meta-badge ${item.length}">${item.length}</span>
+                    <span class="meta-badge ${item.tone}">${item.tone}</span>
+                    <span class="text-xs text-slate-500 ml-auto">${date}</span>
                 </div>
             </div>
-            <button class="log-open-btn">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M5 12h14" />
-                    <path d="m12 5 7 7-7 7" />
-                </svg>
-            </button>
         `;
-        // Click on the whole item to load, except if clicking specific buttons if we add them later
-        el.addEventListener('click', () => loadHistoryItem(item));
-        logList.appendChild(el);
+        logList.appendChild(logItem);
     });
-
-    // Render Pagination Controls
-    if (totalPages > 1) {
-        renderPaginationControls(totalPages);
-    }
 }
 
-function renderPaginationControls(totalPages) {
-    const controlsContainer = document.createElement('div');
-    controlsContainer.className = 'pagination-controls';
-
-    const prevBtn = document.createElement('button');
-    prevBtn.className = 'pagination-btn';
-    prevBtn.innerHTML = `
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="m15 18-6-6 6-6"/>
-        </svg>
-        Previous
-    `;
-    prevBtn.disabled = currentPage === 1;
-    prevBtn.onclick = () => {
-        if (currentPage > 1) {
-            currentPage--;
-            loadHistory();
-            // Scroll to top of log list
-            document.getElementById('logSection').scrollIntoView({ behavior: 'smooth' });
-        }
-    };
-
-    const nextBtn = document.createElement('button');
-    nextBtn.className = 'pagination-btn';
-    nextBtn.innerHTML = `
-        Next
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="m9 18 6-6-6-6"/>
-        </svg>
-    `;
-    nextBtn.disabled = currentPage === totalPages;
-    nextBtn.onclick = () => {
-        if (currentPage < totalPages) {
-            currentPage++;
-            loadHistory();
-            document.getElementById('logSection').scrollIntoView({ behavior: 'smooth' });
-        }
-    };
-
-    const pageInfo = document.createElement('span');
-    pageInfo.className = 'pagination-info';
-    pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
-
-    controlsContainer.appendChild(prevBtn);
-    controlsContainer.appendChild(pageInfo);
-    controlsContainer.appendChild(nextBtn);
-
-    logList.appendChild(controlsContainer);
-}
 
 function loadHistoryItem(item) {
     hideAllCards();
@@ -1386,7 +1427,7 @@ function loadHistoryItem(item) {
     toggleInputSection(true);
 
     // Expand results
-    toggleResultsSection(false);
+    // toggleResultsSection(false);
 
     // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1541,6 +1582,21 @@ function showSummary(summary) {
             ${lengthVal ? `<span class="meta-badge ${lengthVal}">${lengthIcon} ${lengthLabel}</span>` : ''}
             ${toneVal ? `<span class="meta-badge ${toneVal}">${toneIcon} ${toneLabel}</span>` : ''}
         `;
+        // Show results
+        resultsContainer.classList.remove('hidden');
+
+        // Collapse Header
+        if (inputCard) {
+            inputCard.classList.add('collapsed');
+            if (editInputBtn) editInputBtn.classList.remove('hidden');
+        }
+
+        // Switch to Summary Tab
+        const summaryTab = document.querySelector('.tab-btn[data-tab="summary"]');
+        if (summaryTab) switchTab(summaryTab);
+
+        // Scroll to results
+        resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     // Ensure results are visible
@@ -1550,6 +1606,22 @@ function showSummary(summary) {
     // Show action buttons
     const actionButtons = document.querySelector('.action-buttons');
     if (actionButtons) actionButtons.classList.remove('hidden');
+
+    // Ensure Podcast Controls are hidden initially
+    const podcastControls = document.getElementById('podcastControls');
+    if (podcastControls) podcastControls.classList.add('hidden');
+}
+
+// Toggle Podcast Controls
+function togglePodcastControls() {
+    const controls = document.getElementById('podcastControls');
+    if (controls.classList.contains('hidden')) {
+        controls.classList.remove('hidden');
+        handlePodcastRequest(); // Generate if needed
+    } else {
+        controls.classList.add('hidden');
+        stopPodcast();
+    }
 }
 
 
@@ -1654,14 +1726,29 @@ function formatMarkdown(text) {
     // We'll wrap the whole block of <li>s
     text = text.replace(/(<li>.*<\/li>(\n|$))+/g, '<ul>$&</ul>');
 
+    // 6b. Lists (Ordered)
+    // Replace lines starting with 1. 2. etc with <li class="ordered">
+    text = text.replace(/^\d+\.\s+(.*$)/gm, '<li class="ordered">$1</li>');
+
+    // Wrap adjacent <li class="ordered"> in <ol>
+    text = text.replace(/(<li class="ordered">.*<\/li>(\n|$))+/g, '<ol>$&</ol>');
+
+    // Clean up class="ordered" (optional, but keeps HTML clean)
+    text = text.replace(/class="ordered"/g, '');
+
     // 7. Timestamps
     text = text.replace(/\[(\d{1,2}):(\d{2})\]/g, '<a href="#" class="timestamp-link" onclick="seekTo($1 * 60 + $2 * 1); return false;">[$1:$2]</a>');
 
     // 8. Paragraphs (double newlines)
     text = text.replace(/\n\n/g, '<br><br>');
 
-    // Cleanup <ul><br> issues if any
+    // 9. Cleanup excessive whitespace after headers
+    // If a header is followed by <br><br>, remove the breaks because CSS margins handle the spacing
+    text = text.replace(/(<\/h[2-4]>)\s*(<br>\s*){1,2}/g, '$1');
+
+    // Cleanup <ul><br> and <ol><br> issues if any
     text = text.replace(/<\/ul><br><br>/g, '</ul>');
+    text = text.replace(/<\/ol><br><br>/g, '</ol>');
 
     return text;
 }

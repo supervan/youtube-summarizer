@@ -763,13 +763,19 @@ def get_features():
     try:
         with open('features.json', 'r') as f:
             features = json.load(f)
+        
+        # Add ads flag from environment variable
+        features['ads'] = os.getenv('ENABLE_ADS', 'False').lower() == 'true'
+        
         return jsonify(features)
     except Exception as e:
         # Default fallback if file missing or error
         return jsonify({
             "chat": True,
             "steps": True,
-            "quiz": True
+            "quiz": True,
+            "podcast": True,
+            "ads": False
         })
 
 @app.route('/api/chat', methods=['POST'])

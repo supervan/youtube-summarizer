@@ -17,6 +17,7 @@ https://yt.supervan.uk/
 - 💬 **Interactive Chat** - Ask questions and chat with the video content
 - 🧠 **Mind Map Visualization** - View a visual breakdown of the video's key concepts
 - 📝 **Quiz Mode** - Test your understanding with auto-generated quizzes
+- 👣 **Step-by-Step Guides** - Extract actionable steps and tutorials from videos
 - 📱 **PWA Support** - Install as a native app on mobile and desktop with a **custom install button**
 - 💰 **Monetization Ready** - Built-in support for Google AdSense with a configurable feature flag
 - 📏 **Customizable Length** - Choose from short, medium, or long summaries
