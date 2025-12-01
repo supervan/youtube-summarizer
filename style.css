@@ -1317,6 +1317,40 @@ body {
     border-radius: 0.25rem;
 }
 
+.skeleton.ad-deck {
+    margin: 1rem;
+    margin-bottom: 0;
+}
+
+/* Mobile Refinements */
+@media (max-width: 768px) {
+
+    /* Hide voice selection on mobile */
+    #voiceSelect {
+        display: none !important;
+    }
+
+    /* Fix Scroll Trap: Allow content to expand fully so body scrolls */
+    .tab-content-scrollable {
+        overflow-y: visible !important;
+        height: auto !important;
+        flex: none !important;
+    }
+
+    /* Ensure the output deck doesn't constrain height either */
+    .output-deck {
+        height: auto !important;
+        overflow: visible !important;
+        flex: none !important;
+    }
+
+    /* Ensure results container allows scrolling */
+    .results-container {
+        height: auto !important;
+        overflow: visible !important;
+    }
+}
+
 .skeleton-text {
     height: 1rem;
     margin-bottom: 0.5rem;

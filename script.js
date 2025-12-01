@@ -93,10 +93,10 @@ function populateVoiceList() {
     const microsoftMark = voices.find(v => v.name.includes('Mark')); // Male
 
     // Build list
-    if (googleUS) selectedVoices.push({ name: 'Mary', voice: googleUS });
-    else if (microsoftZira) selectedVoices.push({ name: 'Mary', voice: microsoftZira });
+    if (googleUS) selectedVoices.push({ name: 'Zoe', voice: googleUS });
+    else if (microsoftZira) selectedVoices.push({ name: 'Zoe', voice: microsoftZira });
 
-    if (googleUKFemale) selectedVoices.push({ name: 'Angela', voice: googleUKFemale });
+    if (googleUKFemale) selectedVoices.push({ name: 'Anna', voice: googleUKFemale });
 
     if (googleUKMale) selectedVoices.push({ name: 'John', voice: googleUKMale });
     else if (microsoftDavid) selectedVoices.push({ name: 'John', voice: microsoftDavid });
@@ -118,10 +118,13 @@ function populateVoiceList() {
             if (!selectedVoices.some(sv => sv.voice.name === v.name)) {
                 // Try to guess gender/name based on voice name or just assign a generic one
                 let name = `Voice ${selectedVoices.length + 1}`;
-                if (v.name.includes('Female') || v.name.includes('Zira') || v.name.includes('Susan')) name = 'Mary';
+                if (v.name.includes('Female') || v.name.includes('Zira') || v.name.includes('Susan')) {
+                    // Alternate between Zoe and Anna if one is taken
+                    name = selectedVoices.some(sv => sv.name === 'Zoe') ? 'Anna' : 'Zoe';
+                }
                 else if (v.name.includes('Male') || v.name.includes('David') || v.name.includes('George')) name = 'John';
 
-                // If we already have a Mary/John, append number
+                // If we already have a John/Zoe/Anna, append number
                 if (selectedVoices.some(sv => sv.name === name)) {
                     name = `${name} ${selectedVoices.length + 1}`;
                 }
@@ -1429,8 +1432,7 @@ function loadHistoryItem(item) {
     // Expand results
     // toggleResultsSection(false);
 
-    // Scroll to top
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Scroll handled by showSummary
 }
 
 function clearHistory() {
@@ -1601,8 +1603,26 @@ function showSummary(summary) {
 
     // Ensure results are visible
     resultsContainer.classList.remove('hidden');
-    resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
+    // Collapse Header
+    if (inputCard) {
+        inputCard.classList.add('collapsed');
+        if (editInputBtn) editInputBtn.classList.remove('hidden');
+    }
+
+    // Switch to Summary Tab
+    const summaryTab = document.querySelector('.tab-btn[data-tab="summary"]');
+    if (summaryTab) switchTab(summaryTab);
+
+    // Scroll to Summary Header (Title/Buttons)
+    const summaryHeader = document.querySelector('.summary-header');
+    if (summaryHeader) {
+        setTimeout(() => {
+            summaryHeader.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+    } else {
+        resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
     // Show action buttons
     const actionButtons = document.querySelector('.action-buttons');
     if (actionButtons) actionButtons.classList.remove('hidden');
