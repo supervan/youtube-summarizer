@@ -526,6 +526,18 @@ function setupEventListeners() {
         }
     });
 
+    // Copy Button
+    document.getElementById('copyBtn').addEventListener('click', copySummary);
+
+    // Share Button
+    const shareBtn = document.getElementById('shareBtn');
+    if (shareBtn) {
+        if (navigator.share) {
+            shareBtn.classList.remove('hidden');
+            shareBtn.addEventListener('click', shareSummary);
+        }
+    }
+
     // Chat
     document.getElementById('chatSubmitBtn').addEventListener('click', handleChatSubmit);
     document.getElementById('chatInput').addEventListener('keypress', (e) => {
@@ -1714,6 +1726,37 @@ function copySummary() {
         console.error('Copy failed:', err);
         showError('Failed to copy summary');
     });
+}
+
+// Share Summary (Web Share API)
+async function shareSummary() {
+    const summaryElement = document.getElementById('summaryText');
+    const rawSummaryText = summaryElement.innerText;
+    const videoTitle = document.getElementById('videoTitle').textContent;
+    const videoId = extractVideoId(youtubeUrlInput.value);
+    const shortUrl = videoId ? `https://youtu.be/${videoId}` : youtubeUrlInput.value;
+
+    // Clean text (remove timestamps for cleaner share)
+    const cleanSummaryText = rawSummaryText.replace(/\[\d{1,2}:\d{2}(:\d{2})?\]\s*/g, '');
+
+    const shareData = {
+        title: `Summary: ${videoTitle}`,
+        text: `${videoTitle}\n\n${cleanSummaryText.substring(0, 2000)}...`, // Limit text length for safety
+        url: shortUrl
+    };
+
+    try {
+        if (navigator.share) {
+            await navigator.share(shareData);
+        } else {
+            showError('Sharing not supported on this device');
+        }
+    } catch (err) {
+        if (err.name !== 'AbortError') {
+            console.error('Share failed:', err);
+            showError('Failed to share');
+        }
+    }
 }
 
 // Format markdown to HTML (improved implementation)

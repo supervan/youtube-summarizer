@@ -778,6 +778,31 @@ def get_features():
             "ads": False
         })
 
+@app.route('/share', methods=['POST', 'GET'])
+def share_target():
+    """Handle PWA share target requests."""
+    if request.method == 'POST':
+        # Extract data from form
+        text = request.form.get('text', '')
+        url = request.form.get('url', '')
+        title = request.form.get('title', '')
+        
+        # Combine to find a URL
+        content = f"{url} {text} {title}"
+        
+        # Simple regex to find URL
+        import re
+        found_url = re.search(r'https?://[^\s]+', content)
+        
+        target_url = found_url.group(0) if found_url else (url or text)
+        
+        # Redirect to home with URL
+        return redirect(url_for('index', url=target_url))
+    
+    # Fallback for GET
+    url = request.args.get('url') or request.args.get('text')
+    return redirect(url_for('index', url=url))
+
 @app.route('/api/chat', methods=['POST'])
 def chat_with_video():
     """Chat with the video transcript"""
