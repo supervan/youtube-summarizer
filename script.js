@@ -355,6 +355,9 @@ window.addEventListener('beforeinstallprompt', (e) => {
     deferredPrompt = e;
 
     // Show the custom install button
+    // Logic: The install button is hidden by default in HTML.
+    // We only remove the 'hidden' class here, when the browser tells us the app is installable.
+    // This ensures it doesn't show up if the app is already installed or not installable.
     const installPrompt = document.getElementById('installPrompt');
     if (installPrompt) installPrompt.classList.remove('hidden');
 
@@ -366,7 +369,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
                 deferredPrompt.prompt();
                 // Wait for the user to respond to the prompt
                 const { outcome } = await deferredPrompt.userChoice;
-                console.log(`User response to the install prompt: ${outcome}`);
+                // console.log(`User response to the install prompt: ${outcome}`); // Debug log removed
                 deferredPrompt = null;
                 // Hide custom prompt after interaction
                 installPrompt.classList.add('hidden');
@@ -377,10 +380,11 @@ window.addEventListener('beforeinstallprompt', (e) => {
 
 // Hide install prompt if app is successfully installed
 window.addEventListener('appinstalled', () => {
+    // Logic: Hide the install button immediately after successful installation
     const installPrompt = document.getElementById('installPrompt');
     if (installPrompt) installPrompt.classList.add('hidden');
     deferredPrompt = null;
-    console.log('PWA was installed');
+    // console.log('PWA was installed'); // Debug log removed
 });
 
 // Check if already running in standalone mode (installed)
@@ -1552,16 +1556,55 @@ function showSummary(summary) {
 
 // Copy Summary
 function copySummary() {
-    const summaryText = document.getElementById('summaryText').innerText;
+    const summaryElement = document.getElementById('summaryText');
+    const rawSummaryText = summaryElement.innerText;
+    const rawSummaryHtml = summaryElement.innerHTML;
     const videoTitle = document.getElementById('videoTitle').textContent;
 
     const videoId = extractVideoId(youtubeUrlInput.value);
     const shortUrl = videoId ? `https://youtu.be/${videoId}` : youtubeUrlInput.value;
 
     const promoText = "\n\nSummarized by TL;DW - https://yt.supervan.uk\n(Installable as an App on Mobile & Desktop)";
-    const clipboardText = `${videoTitle}\n${shortUrl}\n\n${summaryText}${promoText}`;
+    const promoHtml = "<br><br><p>Summarized by <a href='https://yt.supervan.uk'>TL;DW</a><br><em>(Installable as an App on Mobile & Desktop)</em></p>";
 
-    navigator.clipboard.writeText(clipboardText).then(() => {
+    // --- Plain Text Version ---
+    // Remove timestamps [MM:SS]
+    const cleanSummaryText = rawSummaryText.replace(/\[\d{1,2}:\d{2}(:\d{2})?\]\s*/g, '');
+    const clipboardText = `${videoTitle}\n${shortUrl}\n\n${cleanSummaryText}${promoText}`;
+
+    // --- HTML Version ---
+    // Convert timestamps [MM:SS] to links
+    let cleanSummaryHtml = rawSummaryHtml;
+
+    if (videoId) {
+        cleanSummaryHtml = cleanSummaryHtml.replace(/\[(\d{1,2}):(\d{2})(?::(\d{2}))?\]/g, (match, p1, p2, p3) => {
+            let seconds = 0;
+            if (p3) {
+                // HH:MM:SS
+                seconds = parseInt(p1) * 3600 + parseInt(p2) * 60 + parseInt(p3);
+            } else {
+                // MM:SS
+                seconds = parseInt(p1) * 60 + parseInt(p2);
+            }
+            return `<a href="https://youtu.be/${videoId}?t=${seconds}" target="_blank">${match}</a>`;
+        });
+    }
+
+    const clipboardHtml = `
+        <h2>${videoTitle}</h2>
+        <p><a href="${shortUrl}">${shortUrl}</a></p>
+        <hr>
+        ${cleanSummaryHtml}
+        ${promoHtml}
+    `;
+
+    // Create ClipboardItem with both formats
+    const item = new ClipboardItem({
+        'text/plain': new Blob([clipboardText], { type: 'text/plain' }),
+        'text/html': new Blob([clipboardHtml], { type: 'text/html' })
+    });
+
+    navigator.clipboard.write([item]).then(() => {
         const copyBtn = document.getElementById('copyBtn');
         const originalContent = copyBtn.innerHTML;
 
@@ -1576,6 +1619,7 @@ function copySummary() {
             copyBtn.innerHTML = originalContent;
         }, 2000);
     }).catch(err => {
+        console.error('Copy failed:', err);
         showError('Failed to copy summary');
     });
 }

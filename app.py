@@ -47,8 +47,12 @@ def extract_video_id(url):
 def index():
     """Serve the main HTML file with feature flags"""
     # Feature Flag: Check if ads should be enabled from environment variables
-    # Defaults to False if not set
+    # Defaults to False if not set.
+    # This controls the injection of the AdSense placeholder in the footer of index.html.
     enable_ads = os.getenv('ENABLE_ADS', 'False').lower() == 'true'
+    
+    # Note: PWA support is handled entirely on the frontend via manifest.json, sw.js, and script.js.
+    # The backend simply serves these static files.
     return render_template('index.html', enable_ads=enable_ads)
 
 @app.route('/ads.txt')
