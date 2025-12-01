@@ -16,7 +16,7 @@ from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled, No
 # Load environment variables from .env file
 load_dotenv()
 
-app = Flask(__name__, static_folder='.')
+app = Flask(__name__, static_folder='.', template_folder='.')
 CORS(app)
 
 @app.after_request
@@ -45,8 +45,19 @@ def extract_video_id(url):
 
 @app.route('/')
 def index():
-    """Serve the main HTML file"""
-    return send_from_directory('.', 'index.html')
+    """Serve the main HTML file with feature flags"""
+    # Feature Flag: Check if ads should be enabled from environment variables
+    # Defaults to False if not set
+    enable_ads = os.getenv('ENABLE_ADS', 'False').lower() == 'true'
+    return render_template('index.html', enable_ads=enable_ads)
+
+@app.route('/ads.txt')
+def ads_txt():
+    """
+    Serve ads.txt for Google AdSense verification.
+    This file is required by AdSense to verify domain ownership and authorized sellers.
+    """
+    return send_from_directory('static', 'ads.txt')
 
 @app.route('/<path:path>')
 def serve_static(path):

@@ -17,7 +17,8 @@ https://yt.supervan.uk/
 - 💬 **Interactive Chat** - Ask questions and chat with the video content
 - 🧠 **Mind Map Visualization** - View a visual breakdown of the video's key concepts
 - 📝 **Quiz Mode** - Test your understanding with auto-generated quizzes
-- 📱 **PWA Support** - Install as a native app on mobile and desktop
+- 📱 **PWA Support** - Install as a native app on mobile and desktop with a **custom install button**
+- 💰 **Monetization Ready** - Built-in support for Google AdSense with a configurable feature flag
 - 📏 **Customizable Length** - Choose from short, medium, or long summaries
 - 🎯 **Adjustable Tone** - Select conversational, professional, or technical (direct & dense) tone
 - 🎨 **Beautiful UI** - Modern dark mode design with glassmorphism effects and **YouTube-like layout**
@@ -33,8 +34,16 @@ https://yt.supervan.uk/
 - **HTTPS Ready**: Can be easily configured for HTTPS in production
 
 > **Note**: The `.env` file is excluded from version control via `.gitignore` to prevent accidental exposure of your API key
-
-## 🚀 Quick Start
+ 
+ ## 💰 Monetization (Google AdSense)
+ 
+ This application comes pre-wired for Google AdSense.
+ 
+ 1.  **Enable Ads**: Set `ENABLE_ADS=True` in your environment variables.
+ 2.  **Configure `ads.txt`**: Update `static/ads.txt` with your Publisher ID.
+ 3.  **Add Script**: Uncomment and update the AdSense script in `index.html`.
+ 
+ ## 🚀 Quick Start
 
 ### Prerequisites
 
@@ -60,6 +69,7 @@ https://yt.supervan.uk/
     Edit the `.env` file and add your Gemini API key:
     ```
     GEMINI_API_KEY=your_actual_api_key_here
+    ENABLE_ADS=False # Set to True to enable Google AdSense placeholders
     ```
 
 4.  **Run the application**

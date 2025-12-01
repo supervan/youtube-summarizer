@@ -12,6 +12,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" href="favicon.png">
     <meta name="theme-color" content="#020617">
+    <!-- Google AdSense Placeholder -->
+    {% if enable_ads %}
+    <!-- <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script> -->
+    {% endif %}
 </head>
 
 <body>
@@ -136,6 +140,15 @@
                 </svg>
             </button>
         </div>
+
+        <!-- Ad Space Placeholder -->
+        {% if enable_ads %}
+        <div id="google-ad-footer"
+            style="width: 100%; min-height: 60px; background-color: #f0f0f0; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; border-radius: 0.5rem; color: #666; font-weight: 500; font-size: 0.875rem;">
+            <!-- google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0 -->
+            Ad Space Placeholder
+        </div>
+        {% endif %}
 
         <!-- Results Section -->
         <div id="resultsContainer" class="results-container hidden">
@@ -390,9 +403,24 @@
                 <!-- Log items will be injected here -->
             </div>
         </div>
+
+        <!-- Install Prompt -->
+        <div id="installPrompt" class="install-prompt hidden">
+            <button id="installBtn" class="install-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Add as an App
+            </button>
+        </div>
     </div>
 
-    <script src="script.js?v=547"></script>
+
+
+    <script src="script.js"></script>
     <script>
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js?t=' + Date.now());

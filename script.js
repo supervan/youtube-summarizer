@@ -346,20 +346,48 @@ document.addEventListener('DOMContentLoaded', () => {
     populateVoiceList(); // Initialize voices
 });
 
-// Capture PWA install prompt
+// --- PWA Install Logic ---
+// Capture PWA install prompt event
 window.addEventListener('beforeinstallprompt', (e) => {
     // Prevent Chrome 67 and earlier from automatically showing the prompt
     e.preventDefault();
     // Stash the event so it can be triggered later.
     deferredPrompt = e;
-    // Update UI to notify the user they can add to home screen
+
+    // Show the custom install button
     const installPrompt = document.getElementById('installPrompt');
     if (installPrompt) installPrompt.classList.remove('hidden');
 
-    // Hide manual instructions if we have the native prompt
-    const androidInstructions = document.getElementById('androidInstructions');
-    if (androidInstructions) androidInstructions.classList.add('hidden');
+    const installBtn = document.getElementById('installBtn');
+    if (installBtn) {
+        installBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                // Show the native install prompt
+                deferredPrompt.prompt();
+                // Wait for the user to respond to the prompt
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`User response to the install prompt: ${outcome}`);
+                deferredPrompt = null;
+                // Hide custom prompt after interaction
+                installPrompt.classList.add('hidden');
+            }
+        });
+    }
 });
+
+// Hide install prompt if app is successfully installed
+window.addEventListener('appinstalled', () => {
+    const installPrompt = document.getElementById('installPrompt');
+    if (installPrompt) installPrompt.classList.add('hidden');
+    deferredPrompt = null;
+    console.log('PWA was installed');
+});
+
+// Check if already running in standalone mode (installed)
+if (window.matchMedia('(display-mode: standalone)').matches) {
+    const installPrompt = document.getElementById('installPrompt');
+    if (installPrompt) installPrompt.classList.add('hidden');
+}
 
 // Fetch feature flags
 async function fetchFeatures() {
