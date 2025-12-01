@@ -1340,6 +1340,8 @@ body {
     /* Ensure the output deck doesn't constrain height either */
     .output-deck {
         height: auto !important;
+        max-height: none !important;
+        /* Fix: Remove max-height constraint */
         overflow: visible !important;
         flex: none !important;
     }
@@ -1348,6 +1350,16 @@ body {
     .results-container {
         height: auto !important;
         overflow: visible !important;
+        margin-bottom: 2rem !important;
+        /* Add space before log section */
+    }
+
+    /* Ensure Log Section is pushed down and visible */
+    .log-section {
+        position: relative !important;
+        z-index: 10 !important;
+        margin-top: 2rem !important;
+        clear: both !important;
     }
 }
 
