@@ -17,3 +17,6 @@ env/
 dist/
 build/
 test_models.py
+
+# Documentation
+documentation.txt
