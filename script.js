@@ -2123,12 +2123,15 @@ function checkInstallPrompt() {
     // This ensures it appears on tablets/desktops or when the browser hasn't fired the event yet.
     const shouldShow = !isInstalled;
 
+    // DEBUG: Alert to confirm execution
+    alert('DEBUG: Script v1001 Loaded');
+
     // DEBUG: Always show debug info
     const debugDiv = document.getElementById('debugInfo');
     if (debugDiv) {
         debugDiv.style.display = 'block';
         debugDiv.innerHTML = `
-            <strong>Debug Info (v1000):</strong><br>
+            <strong>Debug Info (v1001):</strong><br>
             UA: ${navigator.userAgent}<br>
             isMobile: ${isMobile}<br>
             isInstalled: ${isInstalled}<br>
