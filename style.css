@@ -696,13 +696,6 @@ body {
         width: 100%;
     }
 
-    .buttons-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 0.75rem;
-        width: 100%;
-        align-items: stretch;
-    }
 
     .read-aloud-group {
         grid-column: span 2;

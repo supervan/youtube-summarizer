@@ -399,55 +399,6 @@ document.addEventListener('DOMContentLoaded', () => {
     populateVoiceList(); // Initialize voices
 });
 
-// --- PWA Install Logic ---
-// PWA Installation Logic
-let deferredPrompt;
-const installButton = document.getElementById('installButton');
-const installContainer = document.getElementById('installContainer');
-
-// Check if mobile
-const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-// Check if installed
-const isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    if (installContainer && !isInstalled) {
-        installContainer.classList.remove('hidden');
-    }
-});
-
-// Force show on mobile if not installed (even if no event yet)
-if (isMobile && !isInstalled && installContainer) {
-    installContainer.classList.remove('hidden');
-}
-
-if (installButton) {
-    installButton.addEventListener('click', async () => {
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            console.log(`User response to the install prompt: ${outcome}`);
-            deferredPrompt = null;
-            if (installContainer) installContainer.classList.add('hidden');
-        } else {
-            // Manual Instructions Fallback
-            const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-            const msg = isIOS
-                ? 'Tap Share -> "Add to Home Screen"'
-                : 'Tap Menu (⋮) -> "Install App"';
-            alert(msg); // Using alert for simplicity/visibility as requested
-        }
-    });
-}
-
-window.addEventListener('appinstalled', () => {
-    if (installContainer) installContainer.classList.add('hidden');
-    deferredPrompt = null;
-    console.log('PWA was installed');
-});
-
 // Check if already running in standalone mode (installed)
 if (window.matchMedia('(display-mode: standalone)').matches) {
     const installPrompt = document.getElementById('installPrompt');
@@ -2142,13 +2093,45 @@ document.addEventListener('DOMContentLoaded', () => {
     handleSharedContent();
     fetchFeatures();
 
-    // PWA Logic - Force check on load
+    // PWA Logic
+    let deferredPrompt;
+    const installButton = document.getElementById('installButton');
     const installContainer = document.getElementById('installContainer');
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     const isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
+    // Capture event
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        if (installContainer && !isInstalled) {
+            installContainer.classList.remove('hidden');
+        }
+    });
+
+    // Force show on mobile if not installed
     if (isMobile && !isInstalled && installContainer) {
         installContainer.classList.remove('hidden');
         console.log('Force showing install button on mobile');
+    }
+
+    // Handle click
+    if (installButton) {
+        installButton.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`User response to the install prompt: ${outcome}`);
+                deferredPrompt = null;
+                if (installContainer) installContainer.classList.add('hidden');
+            } else {
+                // Manual Instructions Fallback
+                const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+                const msg = isIOS
+                    ? 'Tap Share -> "Add to Home Screen"'
+                    : 'Tap Menu (⋮) -> "Install App"';
+                alert(msg);
+            }
+        });
     }
 });
