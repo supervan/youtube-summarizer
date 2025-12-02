@@ -1489,11 +1489,13 @@ body {
 }
 
 /* --- Toast Notification --- */
+/* --- Toast Notification --- */
 .toast {
     position: fixed;
-    bottom: 2rem;
+    top: 2rem;
+    /* Moved to top to avoid share sheet overlap */
     left: 50%;
-    transform: translateX(-50%) translateY(100%);
+    transform: translateX(-50%) translateY(-100%);
     background: var(--slate-800);
     color: var(--slate-200);
     padding: 0.75rem 1.5rem;
@@ -1503,13 +1505,16 @@ body {
     font-size: 0.875rem;
     opacity: 0;
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    z-index: 100;
+    z-index: 2000;
+    /* Increased z-index */
 }
 
 .toast.show {
     transform: translateX(-50%) translateY(0);
     opacity: 1;
 }
+
+
 
 .toast-info {
     border-left: 4px solid var(--blue-500);
@@ -2054,7 +2059,6 @@ body {
 }
 
 /* --- Install Prompt Button --- */
-/* --- Install Prompt Button --- */
 .install-prompt {
     display: flex;
     justify-content: center;
@@ -2066,10 +2070,11 @@ body {
 @media (max-width: 768px) {
     .install-prompt {
         position: fixed;
-        bottom: 1.5rem;
+        bottom: 4rem;
+        /* Moved up */
         left: 50%;
         transform: translateX(-50%);
-        z-index: 1000;
+        z-index: 2000;
         margin: 0;
         width: auto;
         background: var(--slate-900);

@@ -1730,10 +1730,10 @@ async function shareSummary() {
         if (navigator.share) {
             // Notify user about plain text limitation
             showToast('Sharing plain text. For rich text, use Copy & Paste.', 'info');
-            // Small delay to let toast appear
+            // Delay to let toast appear and be read
             setTimeout(async () => {
                 await navigator.share(shareData);
-            }, 500);
+            }, 2000);
         } else {
             showError('Sharing not supported on this device');
         }
@@ -2118,36 +2118,39 @@ function checkInstallPrompt() {
     const installBtn = document.getElementById('installBtn');
 
     // Show prompt only on mobile AND when not installed
-    if (isMobile && !isInstalled && installPrompt) {
+
+    // Show prompt if:
+    // 1. We have a deferred prompt (browser says installable)
+    // 2. OR it's mobile and not installed (for manual iOS/Android instructions)
+    const shouldShow = deferredPrompt || (isMobile && !isInstalled);
+
+    if (shouldShow && installPrompt) {
         installPrompt.classList.remove('hidden');
 
-        // If we don't have the native prompt event yet (e.g. iOS or Android before event),
-        // we can still show the button but make it show instructions when clicked.
-        if (!deferredPrompt) {
-            // Remove existing listeners to avoid duplicates if called multiple times
-            const newBtn = installBtn.cloneNode(true);
-            installBtn.parentNode.replaceChild(newBtn, installBtn);
+        // Always replace the button to ensure a clean listener
+        const newBtn = installBtn.cloneNode(true);
+        installBtn.parentNode.replaceChild(newBtn, installBtn);
 
-            newBtn.addEventListener('click', async () => {
-                if (deferredPrompt) {
-                    deferredPrompt.prompt();
-                    const { outcome } = await deferredPrompt.userChoice;
-                    deferredPrompt = null;
-                    if (outcome === 'accepted') {
-                        installPrompt.classList.add('hidden');
-                    }
-                } else {
-                    // Show manual instructions
-                    if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-                        // iOS Instructions
-                        showToast('Tap the Share button, then "Add to Home Screen"');
-                    } else {
-                        // Android/Other Instructions
-                        showToast('Tap the browser menu (⋮), then "Install app" or "Add to Home Screen"');
-                    }
+        newBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                // Show the native install prompt
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                deferredPrompt = null;
+                if (outcome === 'accepted') {
+                    installPrompt.classList.add('hidden');
                 }
-            });
-        }
+            } else {
+                // Show manual instructions
+                if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+                    // iOS Instructions
+                    showToast('Tap the Share button, then "Add to Home Screen"');
+                } else {
+                    // Android/Other Instructions
+                    showToast('Tap the browser menu (⋮), then "Install app" or "Add to Home Screen"');
+                }
+            }
+        });
     }
 }
 
