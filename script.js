@@ -2095,7 +2095,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // PWA Logic
     let deferredPrompt;
-    const installButton = document.getElementById('installButton');
+    const installButton = document.getElementById('installBtn');
     const installContainer = document.getElementById('installContainer');
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     const isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
