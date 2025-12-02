@@ -2128,7 +2128,7 @@ function checkInstallPrompt() {
     if (debugDiv) {
         debugDiv.style.display = 'block';
         debugDiv.innerHTML = `
-            <strong>Debug Info:</strong><br>
+            <strong>Debug Info (v999):</strong><br>
             UA: ${navigator.userAgent}<br>
             isMobile: ${isMobile}<br>
             isInstalled: ${isInstalled}<br>
