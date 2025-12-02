@@ -407,27 +407,8 @@ window.addEventListener('beforeinstallprompt', (e) => {
     // Stash the event so it can be triggered later.
     deferredPrompt = e;
 
-    // Show the custom install button
-    // Logic: The install button is hidden by default in HTML.
-    // We only remove the 'hidden' class here, when the browser tells us the app is installable.
-    // This ensures it doesn't show up if the app is already installed or not installable.
-    const installPrompt = document.getElementById('installPrompt');
-    if (installPrompt) installPrompt.classList.remove('hidden');
-
-    const installBtn = document.getElementById('installBtn');
-    if (installBtn) {
-        installBtn.addEventListener('click', async () => {
-            if (deferredPrompt) {
-                // Show the native install prompt
-                deferredPrompt.prompt();
-                // Wait for the user to respond to the prompt
-                const { outcome } = await deferredPrompt.userChoice;
-                deferredPrompt = null;
-                // Hide custom prompt after interaction
-                installPrompt.classList.add('hidden');
-            }
-        });
-    }
+    // Update UI via centralized function
+    checkInstallPrompt();
 });
 
 // Hide install prompt if app is successfully installed
@@ -2119,10 +2100,8 @@ function handleSharedContent() {
 }
 
 // Check if install prompt should be shown (Fallback for when beforeinstallprompt doesn't fire but we want to show manual instructions)
+// Check if install prompt should be shown
 function checkInstallPrompt() {
-    // Only run this if deferredPrompt hasn't already fired
-    if (deferredPrompt) return;
-
     // Check if already installed (running in standalone mode)
     const isInstalled = window.matchMedia('(display-mode: standalone)').matches ||
         window.navigator.standalone === true;
@@ -2130,16 +2109,39 @@ function checkInstallPrompt() {
     // Check if mobile device
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-    // Show prompt only on mobile AND when not installed
-    if (isMobile && !isInstalled) {
-        // We don't automatically show it here anymore to avoid conflict with native prompt logic.
-        // But we can show it if we want to offer manual instructions.
-        // For now, let's rely on beforeinstallprompt for Android, and this for iOS (which doesn't support beforeinstallprompt)
+    const installPrompt = document.getElementById('installPrompt');
+    const installBtn = document.getElementById('installBtn');
 
-        if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-            installPrompt.classList.remove('hidden');
-            androidInstructions.classList.add('hidden');
-            iosInstructions.classList.remove('hidden');
+    // Show prompt only on mobile AND when not installed
+    if (isMobile && !isInstalled && installPrompt) {
+        installPrompt.classList.remove('hidden');
+
+        // If we don't have the native prompt event yet (e.g. iOS or Android before event),
+        // we can still show the button but make it show instructions when clicked.
+        if (!deferredPrompt) {
+            // Remove existing listeners to avoid duplicates if called multiple times
+            const newBtn = installBtn.cloneNode(true);
+            installBtn.parentNode.replaceChild(newBtn, installBtn);
+
+            newBtn.addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    deferredPrompt = null;
+                    if (outcome === 'accepted') {
+                        installPrompt.classList.add('hidden');
+                    }
+                } else {
+                    // Show manual instructions
+                    if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+                        // iOS Instructions
+                        showToast('Tap the Share button, then "Add to Home Screen"');
+                    } else {
+                        // Android/Other Instructions
+                        showToast('Tap the browser menu (⋮), then "Install app" or "Add to Home Screen"');
+                    }
+                }
+            });
         }
     }
 }
