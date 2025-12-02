@@ -2088,31 +2088,37 @@ function handleSharedContent() {
 
 
 
+// PWA Logic - Global Scope
+let deferredPrompt;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    // Prevent the mini-infobar from appearing on mobile
+    e.preventDefault();
+    // Stash the event so it can be triggered later.
+    deferredPrompt = e;
+    console.log('beforeinstallprompt fired');
+
+    // Update UI notify the user they can install the PWA
+    const installContainer = document.getElementById('installContainer');
+    const isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+    if (installContainer && !isInstalled) {
+        installContainer.classList.remove('hidden');
+    }
+});
+
 // Initial check on load
 document.addEventListener('DOMContentLoaded', () => {
     handleSharedContent();
     fetchFeatures();
 
-    // PWA Logic
-    let deferredPrompt;
     const installButton = document.getElementById('installBtn');
     const installContainer = document.getElementById('installContainer');
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     const isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
-    // Capture event
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        if (installContainer && !isInstalled) {
-            installContainer.classList.remove('hidden');
-        }
-    });
-
-    // Force show on mobile if not installed
-    if (isMobile && !isInstalled && installContainer) {
+    // If event fired before DOMContentLoaded, show button now
+    if (deferredPrompt && installContainer && !isInstalled) {
         installContainer.classList.remove('hidden');
-        console.log('Force showing install button on mobile');
     }
 
     // Handle click
@@ -2125,7 +2131,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 deferredPrompt = null;
                 if (installContainer) installContainer.classList.add('hidden');
             } else {
-                // Manual Instructions Fallback
+                // Manual Instructions Fallback (only if button is somehow visible without prompt)
                 const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
                 const msg = isIOS
                     ? 'Tap Share -> "Add to Home Screen"'
