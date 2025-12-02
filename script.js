@@ -2121,7 +2121,10 @@ function checkInstallPrompt() {
 
     // Show prompt if not installed, regardless of device type or deferredPrompt status.
     // This ensures it appears on tablets/desktops or when the browser hasn't fired the event yet.
-    const shouldShow = !isInstalled;
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    // Only show if NOT installed AND (we have a prompt event OR it's iOS)
+    const shouldShow = !isInstalled && (!!deferredPrompt || isIOS);
 
 
     try {
@@ -2186,16 +2189,6 @@ function showToast(message, type = 'info') {
 
 // --- Initialization ---
 
-// Listen for the beforeinstallprompt event
-window.addEventListener('beforeinstallprompt', (e) => {
-    // Prevent the mini-infobar from appearing on mobile
-    e.preventDefault();
-    // Stash the event so it can be triggered later.
-    deferredPrompt = e;
-    // Update UI notify the user they can install the PWA
-    checkInstallPrompt();
-    console.log('beforeinstallprompt fired');
-});
 
 // Listen for app installed event
 window.addEventListener('appinstalled', () => {
