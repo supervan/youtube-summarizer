@@ -11,7 +11,6 @@
 // Global Error Handler
 window.onerror = function (msg, url, line, col, error) {
     console.error("Script Error:", msg, "Line:", line, error);
-    // alert("Script Error: " + msg + "\nLine: " + line); // Uncomment for aggressive debugging
 };
 
 // Icons
@@ -2096,7 +2095,6 @@ window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     // Stash the event so it can be triggered later.
     deferredPrompt = e;
-    console.log('beforeinstallprompt fired');
 
     // Update UI notify the user they can install the PWA
     const installContainer = document.getElementById('installContainer');
@@ -2127,7 +2125,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (deferredPrompt) {
                 deferredPrompt.prompt();
                 const { outcome } = await deferredPrompt.userChoice;
-                console.log(`User response to the install prompt: ${outcome}`);
                 deferredPrompt = null;
                 if (installContainer) installContainer.classList.add('hidden');
             } else {

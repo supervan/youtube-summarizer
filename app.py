@@ -1011,4 +1011,4 @@ if __name__ == '__main__':
     
     # Run the Flask app
     # Use 0.0.0.0 to allow external connections (required for deployment)
-    app.run(host='0.0.0.0', port=port, debug=True)
+    app.run(host='0.0.0.0', port=port, debug=False)

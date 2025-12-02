@@ -19,7 +19,7 @@ https://yt.supervan.uk/
 - 📝 **Quiz Mode** - Test your understanding with auto-generated quizzes
 - 👣 **Step-by-Step Guides** - Extract actionable steps and tutorials from videos
 - 📱 **Mobile Optimized** - Responsive design with auto-scroll and touch-friendly controls
-- 📲 **PWA Support** - Install as a native app on mobile and desktop with a **custom install button**
+- 📲 **PWA Support** - Install as a native app on mobile and desktop with a **smart install button** that appears only when supported
 - 💰 **Monetization Ready** - Built-in support for Google AdSense with a configurable feature flag
 - 📏 **Customizable Length** - Choose from short, medium, or long summaries
 - 🎯 **Adjustable Tone** - Select conversational, professional, or technical (direct & dense) tone

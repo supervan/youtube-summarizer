@@ -1,0 +1,9 @@
+nohup: ignoring input
+🚀 YouTube Summarizer Server Starting...
+📍 Server running at: http://localhost:5000
+🔑 API Key loaded from .env file
+✨ Ready to summarize YouTube videos!
+ * Serving Flask app 'app'
+ * Debug mode: on
+Address already in use
+Port 5000 is in use by another program. Either identify and stop that program, or start the server with a different port.
