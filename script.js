@@ -2140,6 +2140,10 @@ function checkInstallPrompt() {
 
     if (shouldShow && installPrompt) {
         installPrompt.classList.remove('hidden');
+        // FORCE display to ensure visibility
+        installPrompt.style.display = 'flex';
+        // DEBUG: Add red border to verify position
+        installPrompt.style.border = '2px solid red';
 
         // Always replace the button to ensure a clean listener
         const newBtn = installBtn.cloneNode(true);
