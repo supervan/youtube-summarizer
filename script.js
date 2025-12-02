@@ -368,7 +368,7 @@ const API_BASE = window.location.origin;
 let currentTranscript = '';
 let enabledFeatures = {};
 let player; // YouTube Player instance
-let deferredPrompt; // For PWA install prompt
+// deferredPrompt is now global window.deferredPrompt
 const MAX_HISTORY_ITEMS = 5;
 
 // Load YouTube IFrame API
@@ -400,23 +400,14 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // --- PWA Install Logic ---
-// Capture PWA install prompt event
-window.addEventListener('beforeinstallprompt', (e) => {
-    // Prevent Chrome 67 and earlier from automatically showing the prompt
-    e.preventDefault();
-    // Stash the event so it can be triggered later.
-    deferredPrompt = e;
-
-    // Update UI via centralized function
-    checkInstallPrompt();
-});
+// Event listener is now in index.html to catch it early
 
 // Hide install prompt if app is successfully installed
 window.addEventListener('appinstalled', () => {
     // Logic: Hide the install button immediately after successful installation
     const installPrompt = document.getElementById('installPrompt');
     if (installPrompt) installPrompt.classList.add('hidden');
-    deferredPrompt = null;
+    window.deferredPrompt = null;
 });
 
 // Check if already running in standalone mode (installed)
@@ -2124,7 +2115,7 @@ function checkInstallPrompt() {
     const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
     // Only show if NOT installed AND (we have a prompt event OR it's iOS)
-    const shouldShow = !isInstalled && (!!deferredPrompt || isIOS);
+    const shouldShow = !isInstalled && (!!window.deferredPrompt || isIOS);
 
 
     try {
@@ -2138,11 +2129,11 @@ function checkInstallPrompt() {
             installBtn.parentNode.replaceChild(newBtn, installBtn);
 
             newBtn.addEventListener('click', async () => {
-                if (deferredPrompt) {
+                if (window.deferredPrompt) {
                     // Show the native install prompt
-                    deferredPrompt.prompt();
-                    const { outcome } = await deferredPrompt.userChoice;
-                    deferredPrompt = null;
+                    window.deferredPrompt.prompt();
+                    const { outcome } = await window.deferredPrompt.userChoice;
+                    window.deferredPrompt = null;
                     if (outcome === 'accepted') {
                         installPrompt.classList.add('hidden');
                     }
@@ -2197,7 +2188,7 @@ window.addEventListener('appinstalled', () => {
     if (installPrompt) {
         installPrompt.classList.add('hidden');
     }
-    deferredPrompt = null;
+    window.deferredPrompt = null;
     console.log('PWA was installed');
 });
 

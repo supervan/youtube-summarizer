@@ -156,7 +156,23 @@
         </div>
         {% endif %}
 
-        <!-- Results Section -->
+        <!-- Capture PWA Install Prompt Early -->
+        <script>
+            window.deferredPrompt = null;
+            window.addEventListener('beforeinstallprompt', (e) => {
+                // Prevent Chrome 67 and earlier from automatically showing the prompt
+                e.preventDefault();
+                // Stash the event so it can be triggered later.
+                window.deferredPrompt = e;
+                console.log('beforeinstallprompt fired (early capture)');
+
+                // If the main script is already loaded and waiting, trigger the check
+                if (typeof checkInstallPrompt === 'function') {
+                    checkInstallPrompt();
+                }
+            });
+        </script>
+        <!-- Debug Info (Temporary) -->
         <div id="resultsContainer" class="results-container hidden">
 
             <!-- Fixed Video Area -->
