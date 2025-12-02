@@ -155,23 +155,6 @@
             Ad Space Placeholder
         </div>
         {% endif %}
-
-        <!-- Capture PWA Install Prompt Early -->
-        <script>
-            window.deferredPrompt = null;
-            window.addEventListener('beforeinstallprompt', (e) => {
-                // Prevent Chrome 67 and earlier from automatically showing the prompt
-                e.preventDefault();
-                // Stash the event so it can be triggered later.
-                window.deferredPrompt = e;
-                console.log('beforeinstallprompt fired (early capture)');
-
-                // If the main script is already loaded and waiting, trigger the check
-                if (typeof checkInstallPrompt === 'function') {
-                    checkInstallPrompt();
-                }
-            });
-        </script>
         <!-- Debug Info (Temporary) -->
         <div id="resultsContainer" class="results-container hidden">
 
@@ -417,8 +400,8 @@
             </div>
         </div>
 
-        <!-- Install Prompt -->
-        <div id="installPrompt" class="install-prompt hidden">
+        <!-- PWA Install Button (Hidden by default) -->
+        <div id="installContainer" class="install-container hidden">
             <button id="installBtn" class="install-btn">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round">
@@ -426,7 +409,7 @@
                     <polyline points="7 10 12 15 17 10"></polyline>
                     <line x1="12" y1="15" x2="12" y2="3"></line>
                 </svg>
-                Add as an App
+                Install App
             </button>
         </div>
     </div>

@@ -400,14 +400,35 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // --- PWA Install Logic ---
-// Event listener is now in index.html to catch it early
+let deferredPrompt;
+const installContainer = document.getElementById('installContainer');
+const installBtn = document.getElementById('installBtn');
 
-// Hide install prompt if app is successfully installed
+window.addEventListener('beforeinstallprompt', (e) => {
+    // Prevent Chrome 67 and earlier from automatically showing the prompt
+    e.preventDefault();
+    // Stash the event so it can be triggered later.
+    deferredPrompt = e;
+    // Update UI to notify the user they can add to home screen
+    if (installContainer) installContainer.classList.remove('hidden');
+});
+
+if (installBtn) {
+    installBtn.addEventListener('click', async () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`User response to the install prompt: ${outcome}`);
+            deferredPrompt = null;
+            if (installContainer) installContainer.classList.add('hidden');
+        }
+    });
+}
+
 window.addEventListener('appinstalled', () => {
-    // Logic: Hide the install button immediately after successful installation
-    const installPrompt = document.getElementById('installPrompt');
-    if (installPrompt) installPrompt.classList.add('hidden');
-    window.deferredPrompt = null;
+    if (installContainer) installContainer.classList.add('hidden');
+    deferredPrompt = null;
+    console.log('PWA was installed');
 });
 
 // Check if already running in standalone mode (installed)
@@ -2095,106 +2116,12 @@ function handleSharedContent() {
     }
 }
 
-// Check if install prompt should be shown (Fallback for when beforeinstallprompt doesn't fire but we want to show manual instructions)
-// Check if install prompt should be shown
-function checkInstallPrompt() {
-    // Check if already installed (running in standalone mode)
-    const isInstalled = window.matchMedia('(display-mode: standalone)').matches ||
-        window.navigator.standalone === true;
-
-    // Check if mobile device
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-    const installPrompt = document.getElementById('installPrompt');
-    const installBtn = document.getElementById('installBtn');
-
-    // Show prompt only on mobile AND when not installed
-
-    // Show prompt if not installed, regardless of device type or deferredPrompt status.
-    // This ensures it appears on tablets/desktops or when the browser hasn't fired the event yet.
-    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-    // Only show if NOT installed AND (we have a prompt event OR it's iOS)
-    const shouldShow = !isInstalled && (!!window.deferredPrompt || isIOS);
-
-
-    try {
-        if (shouldShow && installPrompt) {
-            installPrompt.classList.remove('hidden');
-            // FORCE display to ensure visibility
-            installPrompt.style.display = 'flex';
-
-            // Always replace the button to ensure a clean listener
-            const newBtn = installBtn.cloneNode(true);
-            installBtn.parentNode.replaceChild(newBtn, installBtn);
-
-            newBtn.addEventListener('click', async () => {
-                if (window.deferredPrompt) {
-                    // Show the native install prompt
-                    window.deferredPrompt.prompt();
-                    const { outcome } = await window.deferredPrompt.userChoice;
-                    window.deferredPrompt = null;
-                    if (outcome === 'accepted') {
-                        installPrompt.classList.add('hidden');
-                    }
-                } else {
-                    // Show manual instructions
-                    if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-                        // iOS Instructions
-                        showToast('Tap the Share button, then "Add to Home Screen"');
-                    } else {
-                        // Android/Other Instructions
-                        showToast('Tap the browser menu (⋮), then "Install app" or "Add to Home Screen"');
-                    }
-                }
-            });
-        }
-    } catch (e) {
-        alert('Error in install logic: ' + e.message);
-    }
-}
-
-// Toast Notification
-function showToast(message, type = 'info') {
-    // Create toast element
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    toast.textContent = message;
-
-    // Add to document
-    document.body.appendChild(toast);
-
-    // Trigger animation
-    requestAnimationFrame(() => {
-        toast.classList.add('show');
-    });
-
-    // Remove after 3 seconds
-    setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => {
-            toast.remove();
-        }, 300);
-    }, 3000);
-}
-
 // --- Initialization ---
 
 
-// Listen for app installed event
-window.addEventListener('appinstalled', () => {
-    // Hide the app-provided install promotion
-    const installPrompt = document.getElementById('installPrompt');
-    if (installPrompt) {
-        installPrompt.classList.add('hidden');
-    }
-    window.deferredPrompt = null;
-    console.log('PWA was installed');
-});
 
 // Initial check on load
 document.addEventListener('DOMContentLoaded', () => {
-    checkInstallPrompt();
     handleSharedContent();
     fetchFeatures();
 });
