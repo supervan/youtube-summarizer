@@ -659,13 +659,16 @@ body {
 
 .secondary-actions {
     display: flex;
-    gap: 0.75rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
     width: 100%;
 }
 
 .secondary-actions .action-btn {
-    flex: 1;
+    flex: 1 1 auto;
     justify-content: center;
+    min-width: 80px;
+    white-space: nowrap;
 }
 
 .read-aloud-group {
