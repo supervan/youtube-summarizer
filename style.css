@@ -2054,12 +2054,30 @@ body {
 }
 
 /* --- Install Prompt Button --- */
+/* --- Install Prompt Button --- */
 .install-prompt {
     display: flex;
     justify-content: center;
     margin-top: 2rem;
     margin-bottom: 2rem;
     animation: fadeIn 0.5s ease-out;
+}
+
+@media (max-width: 768px) {
+    .install-prompt {
+        position: fixed;
+        bottom: 1.5rem;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1000;
+        margin: 0;
+        width: auto;
+        background: var(--slate-900);
+        padding: 0.25rem;
+        border-radius: 9999px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        border: 1px solid var(--slate-800);
+    }
 }
 
 .install-prompt.hidden {

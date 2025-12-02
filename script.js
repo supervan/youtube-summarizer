@@ -1728,7 +1728,12 @@ async function shareSummary() {
 
     try {
         if (navigator.share) {
-            await navigator.share(shareData);
+            // Notify user about plain text limitation
+            showToast('Sharing plain text. For rich text, use Copy & Paste.', 'info');
+            // Small delay to let toast appear
+            setTimeout(async () => {
+                await navigator.share(shareData);
+            }, 500);
         } else {
             showError('Sharing not supported on this device');
         }
