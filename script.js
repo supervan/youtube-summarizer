@@ -2141,4 +2141,14 @@ function handleSharedContent() {
 document.addEventListener('DOMContentLoaded', () => {
     handleSharedContent();
     fetchFeatures();
+
+    // PWA Logic - Force check on load
+    const installContainer = document.getElementById('installContainer');
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+    if (isMobile && !isInstalled && installContainer) {
+        installContainer.classList.remove('hidden');
+        console.log('Force showing install button on mobile');
+    }
 });
