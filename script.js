@@ -2128,47 +2128,54 @@ function checkInstallPrompt() {
     if (debugDiv) {
         debugDiv.style.display = 'block';
         debugDiv.innerHTML = `
-            <strong>Debug Info (v999):</strong><br>
+            <strong>Debug Info (v1000):</strong><br>
             UA: ${navigator.userAgent}<br>
             isMobile: ${isMobile}<br>
             isInstalled: ${isInstalled}<br>
             deferredPrompt: ${!!deferredPrompt}<br>
             shouldShow: ${shouldShow}<br>
-            installPrompt found: ${!!installPrompt}
+            installPrompt found: ${!!installPrompt}<br>
+            Screen: ${window.innerWidth}x${window.innerHeight}<br>
+            Outer: ${window.outerWidth}x${window.outerHeight}
         `;
     }
 
-    if (shouldShow && installPrompt) {
-        installPrompt.classList.remove('hidden');
-        // FORCE display to ensure visibility
-        installPrompt.style.display = 'flex';
-        // DEBUG: Add red border to verify position
-        installPrompt.style.border = '2px solid red';
+    try {
+        if (shouldShow && installPrompt) {
+            installPrompt.classList.remove('hidden');
+            // FORCE display to ensure visibility
+            installPrompt.style.display = 'flex';
+            // DEBUG: Add red border to verify position
+            installPrompt.style.border = '4px solid red';
+            installPrompt.style.zIndex = '9999'; // Nuclear z-index
 
-        // Always replace the button to ensure a clean listener
-        const newBtn = installBtn.cloneNode(true);
-        installBtn.parentNode.replaceChild(newBtn, installBtn);
+            // Always replace the button to ensure a clean listener
+            const newBtn = installBtn.cloneNode(true);
+            installBtn.parentNode.replaceChild(newBtn, installBtn);
 
-        newBtn.addEventListener('click', async () => {
-            if (deferredPrompt) {
-                // Show the native install prompt
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                deferredPrompt = null;
-                if (outcome === 'accepted') {
-                    installPrompt.classList.add('hidden');
-                }
-            } else {
-                // Show manual instructions
-                if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-                    // iOS Instructions
-                    showToast('Tap the Share button, then "Add to Home Screen"');
+            newBtn.addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    // Show the native install prompt
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    deferredPrompt = null;
+                    if (outcome === 'accepted') {
+                        installPrompt.classList.add('hidden');
+                    }
                 } else {
-                    // Android/Other Instructions
-                    showToast('Tap the browser menu (⋮), then "Install app" or "Add to Home Screen"');
+                    // Show manual instructions
+                    if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+                        // iOS Instructions
+                        showToast('Tap the Share button, then "Add to Home Screen"');
+                    } else {
+                        // Android/Other Instructions
+                        showToast('Tap the browser menu (⋮), then "Install app" or "Add to Home Screen"');
+                    }
                 }
-            }
-        });
+            });
+        }
+    } catch (e) {
+        alert('Error in install logic: ' + e.message);
     }
 }
 

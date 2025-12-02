@@ -2065,25 +2065,23 @@ body {
     margin-top: 2rem;
     margin-bottom: 2rem;
     animation: fadeIn 0.5s ease-out;
+
+    /* FORCE FIXED POSITION FOR DEBUGGING */
+    position: fixed;
+    bottom: 4rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    margin: 0;
+    width: auto;
+    background: var(--slate-900);
+    padding: 0.25rem;
+    border-radius: 9999px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--slate-800);
 }
 
-@media (max-width: 768px) {
-    .install-prompt {
-        position: fixed;
-        bottom: 4rem;
-        /* Moved up */
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 2000;
-        margin: 0;
-        width: auto;
-        background: var(--slate-900);
-        padding: 0.25rem;
-        border-radius: 9999px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-        border: 1px solid var(--slate-800);
-    }
-}
+/* Removed media query to force fixed position everywhere */
 
 .install-prompt.hidden {
     display: none;
