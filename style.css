@@ -719,9 +719,28 @@ body {
         text-align: center;
     }
 
-    .buttons-row>.action-btn {
+    .summary-text {
+        font-size: 0.95rem;
+        padding: 1rem;
+    }
+
+    .buttons-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
         width: 100%;
-        justify-content: center;
+    }
+
+    .secondary-actions {
+        flex-wrap: wrap;
+    }
+
+    .secondary-actions .action-btn {
+        min-width: auto;
+        /* Allow shrinking */
+        padding: 0.5rem;
+        /* Slightly smaller padding */
+        font-size: 0.75rem;
     }
 }
 

@@ -400,27 +400,44 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // --- PWA Install Logic ---
+// PWA Installation Logic
 let deferredPrompt;
+const installButton = document.getElementById('installButton');
 const installContainer = document.getElementById('installContainer');
-const installBtn = document.getElementById('installBtn');
+
+// Check if mobile
+const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+// Check if installed
+const isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
 window.addEventListener('beforeinstallprompt', (e) => {
-    // Prevent Chrome 67 and earlier from automatically showing the prompt
     e.preventDefault();
-    // Stash the event so it can be triggered later.
     deferredPrompt = e;
-    // Update UI to notify the user they can add to home screen
-    if (installContainer) installContainer.classList.remove('hidden');
+    if (installContainer && !isInstalled) {
+        installContainer.classList.remove('hidden');
+    }
 });
 
-if (installBtn) {
-    installBtn.addEventListener('click', async () => {
+// Force show on mobile if not installed (even if no event yet)
+if (isMobile && !isInstalled && installContainer) {
+    installContainer.classList.remove('hidden');
+}
+
+if (installButton) {
+    installButton.addEventListener('click', async () => {
         if (deferredPrompt) {
             deferredPrompt.prompt();
             const { outcome } = await deferredPrompt.userChoice;
             console.log(`User response to the install prompt: ${outcome}`);
             deferredPrompt = null;
             if (installContainer) installContainer.classList.add('hidden');
+        } else {
+            // Manual Instructions Fallback
+            const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+            const msg = isIOS
+                ? 'Tap Share -> "Add to Home Screen"'
+                : 'Tap Menu (⋮) -> "Install App"';
+            alert(msg); // Using alert for simplicity/visibility as requested
         }
     });
 }
