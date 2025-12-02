@@ -2123,34 +2123,12 @@ function checkInstallPrompt() {
     // This ensures it appears on tablets/desktops or when the browser hasn't fired the event yet.
     const shouldShow = !isInstalled;
 
-    // DEBUG: Alert to confirm execution
-    alert('DEBUG: Script v1001 Loaded');
-
-    // DEBUG: Always show debug info
-    const debugDiv = document.getElementById('debugInfo');
-    if (debugDiv) {
-        debugDiv.style.display = 'block';
-        debugDiv.innerHTML = `
-            <strong>Debug Info (v1001):</strong><br>
-            UA: ${navigator.userAgent}<br>
-            isMobile: ${isMobile}<br>
-            isInstalled: ${isInstalled}<br>
-            deferredPrompt: ${!!deferredPrompt}<br>
-            shouldShow: ${shouldShow}<br>
-            installPrompt found: ${!!installPrompt}<br>
-            Screen: ${window.innerWidth}x${window.innerHeight}<br>
-            Outer: ${window.outerWidth}x${window.outerHeight}
-        `;
-    }
 
     try {
         if (shouldShow && installPrompt) {
             installPrompt.classList.remove('hidden');
             // FORCE display to ensure visibility
             installPrompt.style.display = 'flex';
-            // DEBUG: Add red border to verify position
-            installPrompt.style.border = '4px solid red';
-            installPrompt.style.zIndex = '9999'; // Nuclear z-index
 
             // Always replace the button to ensure a clean listener
             const newBtn = installBtn.cloneNode(true);
