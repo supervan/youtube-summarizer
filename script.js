@@ -2119,10 +2119,24 @@ function checkInstallPrompt() {
 
     // Show prompt only on mobile AND when not installed
 
-    // Show prompt if:
-    // 1. We have a deferred prompt (browser says installable)
-    // 2. OR it's mobile and not installed (for manual iOS/Android instructions)
-    const shouldShow = deferredPrompt || (isMobile && !isInstalled);
+    // Show prompt if not installed, regardless of device type or deferredPrompt status.
+    // This ensures it appears on tablets/desktops or when the browser hasn't fired the event yet.
+    const shouldShow = !isInstalled;
+
+    // DEBUG: Always show debug info
+    const debugDiv = document.getElementById('debugInfo');
+    if (debugDiv) {
+        debugDiv.style.display = 'block';
+        debugDiv.innerHTML = `
+            <strong>Debug Info:</strong><br>
+            UA: ${navigator.userAgent}<br>
+            isMobile: ${isMobile}<br>
+            isInstalled: ${isInstalled}<br>
+            deferredPrompt: ${!!deferredPrompt}<br>
+            shouldShow: ${shouldShow}<br>
+            installPrompt found: ${!!installPrompt}
+        `;
+    }
 
     if (shouldShow && installPrompt) {
         installPrompt.classList.remove('hidden');
