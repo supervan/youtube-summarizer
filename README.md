@@ -26,6 +26,9 @@ https://yt.supervan.uk/
 - 🎨 **Beautiful UI** - Modern dark mode design with glassmorphism effects and **YouTube-like layout**
 - 📋 **Copy to Clipboard** - Easy one-click summary copying with video title and **short URL** included
 - 🛡️ **Robust Error Handling** - Friendly "Video Unavailable" screen for timeouts and server errors
+- 🚫 **Live Video Detection** - Automatically detects and blocks live streams (which are not supported) with a friendly message
+- ⏳ **Loading Animation** - Visual feedback while the AI is generating the summary
+- 🔄 **Watch Another Video** - Easy reset button to summarize multiple videos in a row
 - ⏱️ **Request Timeout** - 60-second timeout to prevent infinite loading states
 
 ## 🔒 Security & Privacy

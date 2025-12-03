@@ -549,6 +549,35 @@ function setupEventListeners() {
             updateResetBtnVisibility();
 
             const url = youtubeUrlInput.value.trim();
+
+            // Check for live video URL immediately
+            if (url.includes('/live/')) {
+                submitBtn.disabled = true;
+                btnText.textContent = 'Live Not Supported';
+                showLiveVideoError();
+                return;
+            } else {
+                // Reset button state if it was disabled by this check
+                if (btnText.textContent === 'Live Not Supported') {
+                    // Reset button text
+                    submitBtn.disabled = false;
+                    btnText.textContent = "Let's Go";
+
+                    // Focus input
+                    setTimeout(() => {
+                        youtubeUrlInput.focus();
+                    }, 100);
+                    // Hide error if it's the live error
+                    const errorState = document.getElementById('videoErrorState');
+                    if (errorState && errorState.classList.contains('live-error')) {
+                        errorState.remove();
+                        resultsContainer.classList.add('hidden');
+                        // Expand input if it was collapsed (though it shouldn't be collapsed on error)
+                        toggleInputSection(false);
+                    }
+                }
+            }
+
             if (url) {
                 // Auto-load from history if match found
                 const videoId = extractVideoId(url);
@@ -559,6 +588,20 @@ function setupEventListeners() {
                         // Auto-loading from cache
                         loadHistoryItem(cachedItem);
                     }
+                    // Valid URL
+                    if (btnText.textContent === "Let's Go") {
+                        submitBtn.disabled = false;
+                    }
+                } else {
+                    // Invalid URL (not a YouTube URL)
+                    if (btnText.textContent === "Let's Go") {
+                        submitBtn.disabled = true;
+                    }
+                }
+            } else {
+                // Empty URL
+                if (btnText.textContent === "Let's Go") {
+                    submitBtn.disabled = true;
                 }
             }
         });
@@ -940,6 +983,11 @@ function resetApp() {
         const resetBtn = document.getElementById('resetBtn');
         if (resetBtn) resetBtn.classList.add('hidden');
 
+        // Focus input
+        setTimeout(() => {
+            youtubeUrlInput.focus();
+        }, 100);
+
     } catch (error) {
         console.error('Error resetting app:', error);
     }
@@ -1080,7 +1128,7 @@ function showSkeletonLoading(videoId) {
 // Extract video ID from URL
 function extractVideoId(url) {
     const patterns = [
-        /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+        /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/live\/)([^&\n?#]+)/,
         /youtube\.com\/watch\?.*v=([^&\n?#]+)/
     ];
 
@@ -1155,6 +1203,12 @@ async function handleSubmit(e) {
     setLoading(true);
     showSkeletonLoading(videoId); // Show thumbnail immediately
 
+    // Show summary loading animation
+    const summaryLoading = document.getElementById('summaryLoading');
+    if (summaryLoading) summaryLoading.classList.remove('hidden');
+    const summaryText = document.getElementById('summaryText');
+    if (summaryText) summaryText.innerHTML = ''; // Clear previous summary
+
     try {
         // Step 1: Extract transcript (with 60s timeout)
         const controller = new AbortController();
@@ -1202,7 +1256,11 @@ async function handleSubmit(e) {
             throw new Error(summaryData.error || 'Failed to generate summary');
         }
 
-        // Show summary
+        // Hide loading animation
+        const summaryLoading = document.getElementById('summaryLoading');
+        if (summaryLoading) summaryLoading.classList.add('hidden');
+
+        // Show Summary
         showSummary(summaryData.summary);
 
         // Save to history
@@ -1218,11 +1276,19 @@ async function handleSubmit(e) {
         // toggleResultsSection(false);
 
     } catch (error) {
-        console.error('Summarize error:', error);
+        console.error('Error:', error);
+
+        // Hide loading animation
+        const summaryLoading = document.getElementById('summaryLoading');
+        if (summaryLoading) summaryLoading.classList.add('hidden');
 
         // Handle Timeout specifically
         if (error.name === 'AbortError') {
             showVideoLoadError('Request Timed Out. The video might be too long or the server is busy. Please try again.');
+        }
+        // Handle Live Video Error
+        else if (error.message.includes('LIVE_VIDEO_NOT_SUPPORTED')) {
+            showLiveVideoError();
         }
         // Check for specific errors that should show the "Video Unavailable" UI
         // SyntaxError usually means the response wasn't JSON (e.g. 500/524 HTML error page)
@@ -1279,6 +1345,57 @@ function showVideoLoadError(message) {
 
     // Ensure input is visible
     toggleInputSection(false);
+
+    // Ensure it's visible
+    setTimeout(() => {
+        errorContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+}
+
+// Show Live Video Error
+function showLiveVideoError() {
+    // Hide skeleton/loading
+    resultsContainer.classList.remove('hidden');
+    videoPlayerWrapper.classList.add('hidden');
+    const summaryContent = document.querySelector('.summary-content-wrapper');
+    if (summaryContent) summaryContent.classList.add('hidden');
+
+    const existingError = document.getElementById('videoErrorState');
+    if (existingError) existingError.remove();
+
+    const errorContainer = document.createElement('div');
+    errorContainer.id = 'videoErrorState';
+    errorContainer.className = 'video-error-state live-error';
+
+    errorContainer.innerHTML = `
+        <div class="live-error-content">
+            <div class="live-error-image-wrapper">
+                 <img src="live_video_not_supported.png" alt="Live Video Not Supported" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+                 <div class="fallback-icon" style="display:none">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M10 9l5 3-5 3z"></path>
+                        <line x1="8" y1="12" x2="8" y2="12"></line>
+                        <line x1="16" y1="12" x2="16" y2="12"></line>
+                    </svg>
+                 </div>
+            </div>
+            <h3 class="error-title">YouTube Live Not Supported</h3>
+            <p class="error-message">
+                We can't summarize live streams (or past live streams) just yet.<br>
+                Please try a regular uploaded video instead!
+            </p>
+            <button onclick="resetApp()" class="try-again-btn">Try Another Video</button>
+        </div>
+    `;
+
+    resultsContainer.appendChild(errorContainer);
+    toggleInputSection(false);
+
+    // Ensure it's visible
+    setTimeout(() => {
+        errorContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
 }
 
 // Save to History

@@ -798,6 +798,46 @@ body {
 .summary-text h4 {
     color: white;
     font-weight: 700;
+
+    height: 100%;
+    object-fit: contain;
+    border-radius: 1rem;
+}
+
+.live-error-content .error-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #f8fafc;
+    /* Slate 50 */
+    margin: 0;
+}
+
+.live-error-content .error-message {
+    font-size: 1rem;
+    color: #94a3b8;
+    /* Slate 400 */
+    line-height: 1.6;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.fallback-icon {
+    color: #ef4444;
+    /* Red 500 */
+    background: rgba(239, 68, 68, 0.1);
+    padding: 2rem;
+    border-radius: 50%;
+}
+
+.summary-text p {
+    margin-bottom: 1rem;
+    color: rgba(226, 232, 240, 0.95);
+}
+
+.summary-text h3,
+.summary-text h4 {
+    color: white;
+    font-weight: 700;
     margin-top: 1.5rem;
     margin-bottom: 0.5rem;
     font-size: 1.15rem;
@@ -2136,4 +2176,105 @@ body {
 
 .install-btn:hover svg {
     transform: translateY(2px);
+}
+
+/* Live Video Error Styling */
+.video-error-state.live-error {
+    text-align: center;
+    padding: 3rem 1.5rem;
+    background: rgba(30, 41, 59, 0.5);
+    /* Slate 800/50 */
+    border: 1px solid rgba(51, 65, 85, 0.5);
+    /* Slate 700/50 */
+    border-radius: 1rem;
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+}
+
+.live-error-image-wrapper {
+    width: 200px;
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.5rem;
+}
+
+.live-error-image-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 1rem;
+}
+
+.live-error-content .error-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #f8fafc;
+    /* Slate 50 */
+    margin: 0;
+}
+
+.live-error-content .error-message {
+    font-size: 1rem;
+    color: #94a3b8;
+    /* Slate 400 */
+    line-height: 1.6;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.fallback-icon {
+    color: #ef4444;
+    /* Red 500 */
+    background: rgba(239, 68, 68, 0.1);
+    padding: 2rem;
+    border-radius: 50%;
+}
+
+/* Summary Loading Animation */
+.summary-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    gap: 1rem;
+    color: var(--slate-400);
+    animation: fadeIn 0.3s ease-out;
+}
+
+.summary-loading.hidden {
+    display: none;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--slate-700);
+    border-top-color: var(--purple-500);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }

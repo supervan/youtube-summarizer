@@ -33,7 +33,7 @@ def add_header(response):
 def extract_video_id(url):
     """Extract YouTube video ID from various URL formats"""
     patterns = [
-        r'(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)',
+        r'(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/live\/)([^&\n?#]+)',
         r'youtube\.com\/watch\?.*v=([^&\n?#]+)'
     ]
     
@@ -347,6 +347,22 @@ def _get_youtube_transcript_with_cookies(video_id):
         'description': ''
     }
 
+    # Check if video is live or was live using yt-dlp first (without proxy if possible, or with)
+    # This avoids wasting time on Method 1 if we know we want to block live videos
+    try:
+         print(f"🔍 Checking if video {video_id} is live/VOD...")
+         with yt_dlp.YoutubeDL({'quiet': True, 'skip_download': True}) as ydl:
+            info = ydl.extract_info(video_url, download=False)
+            if info.get('is_live') or info.get('was_live'):
+                print(f"⚠️ Video {video_id} is/was live. Blocking as per configuration.")
+                raise Exception("LIVE_VIDEO_NOT_SUPPORTED")
+    except Exception as e:
+        if "LIVE_VIDEO_NOT_SUPPORTED" in str(e):
+            raise e
+        # Ignore other errors here (e.g. network), let the main loop handle it or fail later
+        print(f"⚠️ Live check failed (ignoring): {e}")
+        pass
+
     # METHOD 1: Try YouTubeTranscriptApi (Fastest)
     try:
         print(f"🚀 Attempting Method 1: YouTubeTranscriptApi for {video_id}...")
@@ -565,6 +581,8 @@ def extract_transcript():
             })
             
         except Exception as e:
+            if "LIVE_VIDEO_NOT_SUPPORTED" in str(e):
+                return jsonify({'error': 'LIVE_VIDEO_NOT_SUPPORTED'}), 400
             return jsonify({'error': f'Error fetching transcript: {str(e)} [Deployment ID: {DEPLOYMENT_ID}]'}), 500
             
     except Exception as e:

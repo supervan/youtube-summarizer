@@ -233,22 +233,8 @@
                                             </svg>
                                             Copy
                                         </button>
-                                        <button id="shareBtn" class="action-btn secondary-btn hidden"
-                                            title="Share Summary">
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-                                                stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                                stroke-linejoin="round">
-                                                <circle cx="18" cy="5" r="3"></circle>
-                                                <circle cx="6" cy="12" r="3"></circle>
-                                                <circle cx="18" cy="19" r="3"></circle>
-                                                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
-                                                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
-                                            </svg>
-                                            Share
-                                        </button>
-                                        <button id="podcastBtn" class="action-btn secondary-btn"
-                                            title="Generate Podcast">
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                        <button id="podcastBtn" class="action-btn" title="Generate Podcast">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
                                                 stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                                 stroke-linejoin="round">
                                                 <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
@@ -258,10 +244,29 @@
                                             </svg>
                                             Podcast
                                         </button>
+                                        <button id="watchAnotherBtn" class="action-btn" title="Watch Another Video"
+                                            onclick="resetApp()">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                                stroke-linejoin="round">
+                                                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11">
+                                                </path>
+                                                <path d="M21 2l-2 2m-2-2l2 2"></path>
+                                            </svg>
+                                            Watch Another
+                                        </button>
                                     </div>
                                 </div>
                             </div>
-                            <div id="summaryText" class="summary-text"></div>
+                            <!-- Loading Animation -->
+                            <div id="summaryLoading" class="summary-loading hidden">
+                                <div class="loading-spinner"></div>
+                                <p>Generating Summary...</p>
+                            </div>
+
+                            <div id="summaryText" class="summary-text">
+                                <!-- Summary injected here -->
+                            </div>
                             <div id="summaryFooter" class="summary-footer"></div>
                         </div>
                     </div>
