@@ -1388,23 +1388,24 @@ function showLiveVideoError() {
 
 // Save to History
 // Save to History
-function saveToHistory(videoId, title, summary, transcript, length, tone, metadata) {
+// Save to History
+function saveToHistory(data) {
     const historyItem = {
-        id: videoId,
-        title: title,
-        summary: summary,
-        transcript: transcript,
-        length: length,
-        tone: tone,
-        metadata: metadata,
-        thumbnail: `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`, // Add thumbnail URL
+        id: data.id,
+        title: data.title,
+        summary: data.summary,
+        transcript: data.transcript,
+        length: data.length,
+        tone: data.tone,
+        metadata: data.metadata,
+        thumbnail: `https://img.youtube.com/vi/${data.id}/mqdefault.jpg`,
         timestamp: Date.now()
     };
 
     let history = JSON.parse(localStorage.getItem('yt_summary_history') || '[]');
 
     // Remove duplicate if exists (same video AND same params)
-    history = history.filter(item => !(item.id === videoId && item.length === length && item.tone === tone));
+    history = history.filter(item => !(item.id === data.id && item.length === data.length && item.tone === data.tone));
 
     // Add new item to top
     history.unshift(historyItem);
@@ -1421,7 +1422,10 @@ function saveToHistory(videoId, title, summary, transcript, length, tone, metada
 // Load History
 // Load History
 function loadHistory() {
-    const history = JSON.parse(localStorage.getItem('yt_summary_history') || '[]');
+    let history = JSON.parse(localStorage.getItem('yt_summary_history') || '[]');
+
+    // Filter out corrupted items (where id is not a string)
+    history = history.filter(item => item && typeof item.id === 'string');
 
     // Clear list
     logList.innerHTML = '';
