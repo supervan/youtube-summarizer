@@ -81,6 +81,11 @@ body {
     /* Removed padding below image */
 }
 
+.header-actions {
+    display: flex;
+    align-items: center;
+}
+
 .logo-section {
     display: flex;
     align-items: center;
