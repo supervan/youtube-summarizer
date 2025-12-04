@@ -74,13 +74,7 @@ export default function Home() {
         ))}
       </div>
 
-      {/* AdSense Section */}
-      <div className="mt-16 border-t border-slate-800 pt-8">
-        <p className="text-xs text-slate-500 uppercase tracking-wider mb-4 text-center">Advertisement</p>
-        <div className="bg-slate-900 w-full h-32 flex items-center justify-center text-slate-600 rounded-lg border border-dashed border-slate-800 max-w-4xl mx-auto">
-          Google AdSense Placeholder
-        </div>
-      </div>
+
     </div>
   );
 }
