@@ -1070,6 +1070,7 @@ body {
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     gap: 1.5rem;
     padding-bottom: 1.5rem;
+    width: 100%;
 }
 
 .log-item {
@@ -1142,7 +1143,8 @@ body {
 /* Desktop Layout Changes - Resetting previous overrides */
 @media (min-width: 768px) {
     .log-list {
-        /* Already grid by default now */
+        /* Force 4 columns on desktop */
+        grid-template-columns: repeat(4, 1fr);
         overflow-x: visible;
         padding-bottom: 0;
     }
