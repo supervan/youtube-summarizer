@@ -32,7 +32,7 @@ export function meta({ }: Route.MetaArgs) {
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const gaId = import.meta.env.VITE_GOOGLE_ANALYTICS_ID;
-  const adsenseId = import.meta.env.VITE_GOOGLE_ADSENSE_ID;
+  const adsenseId = "ca-pub-3475917359369599";
 
   return (
     <html lang="en">
