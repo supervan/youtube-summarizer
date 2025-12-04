@@ -1580,7 +1580,10 @@ function showVideoInfo(videoId, data) {
         }, 1000);
     }
 
-    videoTitle.textContent = data.title || `Video ID: ${videoId}`;
+    const videoTitle = document.getElementById('videoTitle');
+    if (videoTitle) {
+        videoTitle.textContent = data.title || `Video ID: ${videoId}`;
+    }
 
     // Render Metadata if available
     const metadata = data.metadata || {};
@@ -1638,9 +1641,12 @@ function showVideoInfo(videoId, data) {
 }
 
 // Show summary
-function showSummary(summary) {
+function showSummary(text) {
+    const summaryText = document.getElementById('summaryText');
+    if (!summaryText) return;
+
     // Update summary text
-    summaryText.innerHTML = formatMarkdown(summary);
+    summaryText.innerHTML = formatMarkdown(text);
 
     // Update metadata footer
     const summaryFooter = document.getElementById('summaryFooter');
