@@ -1074,8 +1074,7 @@ body {
 }
 
 .log-item {
-    /* flex: 0 0 280px; - Removed for grid */
-    /* scroll-snap-align: start; - Removed for grid */
+    /* Grid layout handles sizing */
     background: var(--slate-900);
     border: 1px solid var(--slate-800);
     border-radius: 1rem;
@@ -1150,8 +1149,6 @@ body {
     }
 
     .log-item {
-        /* flex: unset; */
-        /* scroll-snap-align: unset; */
         padding: 1rem;
     }
 

@@ -30,6 +30,8 @@ https://yt.supervan.uk/
 - ⏳ **Loading Animation** - Visual feedback while the AI is generating the summary
 - 🔄 **Watch Another Video** - Easy reset button to summarize multiple videos in a row
 - ⏱️ **Request Timeout** - 60-second timeout to prevent infinite loading states
+- 💓 **Keep-Alive** - Automated ping mechanism to prevent free tier instances from sleeping
+- 📱 **Responsive History Grid** - Beautifully organized history with 4-column grid layout and pagination
 
 ## 🔒 Security & Privacy
 

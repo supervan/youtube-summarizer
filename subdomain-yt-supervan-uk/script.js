@@ -368,7 +368,8 @@ let currentTranscript = '';
 let enabledFeatures = {};
 let player; // YouTube Player instance
 // deferredPrompt is now global window.deferredPrompt
-//const MAX_HISTORY_ITEMS = 5; // Legacy constant, maybe unused now?
+// deferredPrompt is now global window.deferredPrompt
+// MAX_HISTORY_ITEMS removed to allow full history pagination
 let currentPage = 1;
 const itemsPerPage = 16;
 
@@ -1425,9 +1426,6 @@ function saveToHistory(data) {
 
     // Limit size
     // Limit size - Removed to allow pagination
-    // if (history.length > MAX_HISTORY_ITEMS) {
-    //     history = history.slice(0, MAX_HISTORY_ITEMS);
-    // }
 
     localStorage.setItem('yt_summary_history', JSON.stringify(history));
     loadHistory();
