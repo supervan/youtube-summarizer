@@ -62,10 +62,7 @@ export default function Post({ loaderData }: Route.ComponentProps) {
                 </ReactMarkdown>
             </div>
 
-            <div className="mt-12 pt-8 border-t border-slate-800">
-                <p className="text-xs text-slate-500 uppercase tracking-wider mb-4 text-center">Advertisement</p>
 
-            </div>
         </div>
     );
 }
