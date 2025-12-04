@@ -2,6 +2,7 @@ services:
   - type: web
     name: youtube-summarizer
     env: python
+    rootDir: subdomain-yt-supervan-uk
     buildCommand: pip install --no-cache-dir --force-reinstall --upgrade -r requirements.txt
     startCommand: python3 app.py
     envVars:
