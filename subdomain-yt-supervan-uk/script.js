@@ -370,7 +370,7 @@ let player; // YouTube Player instance
 // deferredPrompt is now global window.deferredPrompt
 const MAX_HISTORY_ITEMS = 5; // Legacy constant, maybe unused now?
 let currentPage = 1;
-const itemsPerPage = 6;
+const itemsPerPage = 16;
 
 // Load YouTube IFrame API
 const tag = document.createElement('script');
