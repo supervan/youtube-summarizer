@@ -426,9 +426,7 @@ function setupEventListeners() {
     if (toggleInputBtn) {
         toggleInputBtn.addEventListener('click', () => toggleInputSection());
     }
-    // if (toggleResultsBtn) {
-    //     toggleResultsBtn.addEventListener('click', () => toggleResultsSection());
-    // }
+
 
     // Edit Button (Expand Header)
     if (editInputBtn) {
