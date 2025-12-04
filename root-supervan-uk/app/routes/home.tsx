@@ -14,9 +14,9 @@ export default function Home() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {/* Hero Section */}
       <div className="text-center mb-16">
-        <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 tracking-tight">
-          Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-500">Supervan.uk</span>
-        </h1>
+        <div className="flex justify-center mb-8">
+          <img src="/logo-full.png" alt="Supervan.uk" className="h-24 md:h-32 object-contain" />
+        </div>
         <p className="text-xl text-slate-400 max-w-2xl mx-auto mb-8">
           Exploring the frontiers of Artificial Intelligence, Engineering, and the Future of Tech.
         </p>
@@ -25,7 +25,7 @@ export default function Home() {
             href="https://yt.supervan.uk"
             className="inline-flex items-center gap-3 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-full transition-all hover:scale-105 shadow-lg shadow-purple-900/20"
           >
-            <img src="/logo.png" alt="App Logo" className="h-8 w-8 rounded-lg shadow-sm" />
+            <img src="/icon.jpg" alt="App Logo" className="h-8 w-8 rounded-lg shadow-sm" />
             Launch YouTube Summarizer
           </a>
           <Link
