@@ -16,7 +16,7 @@ export default function About() {
                     Welcome to <strong>Supervan.uk</strong>, your premier destination for exploring the cutting edge of technology, artificial intelligence, and digital innovation.
                 </p>
                 <p className="text-slate-400 mb-6">
-                    Founded in 2024, our mission is to demystify complex technological advancements and make them accessible to everyone. We believe that AI and automation are not just buzzwords, but transformative forces that are reshaping our world.
+                    Founded in 2025, our mission is to demystify complex technological advancements and make them accessible to everyone. We believe that AI and automation are not just buzzwords, but transformative forces that are reshaping our world.
                 </p>
                 <h2 className="text-2xl font-semibold text-white mt-8 mb-4">Our Vision</h2>
                 <p className="text-slate-400 mb-6">
