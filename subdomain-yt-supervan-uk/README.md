@@ -46,7 +46,10 @@ https://yt.supervan.uk/
  
  1.  **Enable Ads**: Set `ENABLE_ADS=True` in your environment variables.
  2.  **Configure `ads.txt`**: Update `static/ads.txt` with your Publisher ID.
- 3.  **Add Script**: Uncomment and update the AdSense script in `index.html`.
+ 3.  **Active Script**: The AdSense script is currently active in `index.html` with the live Publisher ID.
+
+ ## 🔗 Navigation
+ - **Home Link**: A "Back to Home" button in the header links to the main site (`supervan.uk`).
  
  ## 🚀 Quick Start
 

@@ -50,4 +50,9 @@ This project is configured to be deployed on Render.com as a Web Service.
 **Environment Variables:**
 Set these in the Render Dashboard:
 - `VITE_GOOGLE_ANALYTICS_ID`: Your Google Analytics Measurement ID (e.g., `G-XXXXXXXXXX`)
-- `VITE_GOOGLE_ADSENSE_ID`: Your Google AdSense Publisher ID (e.g., `ca-pub-XXXXXXXXXXXXXXXX`)
+- `VITE_GOOGLE_ADSENSE_ID`: Your Google AdSense Publisher ID (e.g., `ca-pub-XXXXXXXXXXXXXXXX`). *Note: Currently hardcoded in `root.tsx` for immediate activation.*
+
+## Recent Updates
+- **AdSense**: Configured with active Publisher ID.
+- **Branding**: Updated with new "Supervan" wide logo and shield favicon.
+- **Navigation**: Linked to the Summaries App (`yt.supervan.uk`).
