@@ -478,8 +478,8 @@ function setupEventListeners() {
 
         playerDiv.classList.remove('hidden');
         thumb.classList.add('hidden');
-        overlay.classList.add('hidden');
-        badge.classList.add('hidden');
+        if (overlay) overlay.classList.add('hidden');
+        if (badge) badge.classList.add('hidden');
 
         if (player && player.playVideo) {
             player.playVideo();
@@ -1097,8 +1097,8 @@ function showSkeletonLoading(videoId) {
         const badge = videoPlayerWrapper.querySelector('.live-badge');
 
         playerDiv.classList.add('hidden');
-        overlay.classList.remove('hidden');
-        badge.classList.remove('hidden');
+        if (overlay) overlay.classList.remove('hidden');
+        if (badge) badge.classList.remove('hidden');
 
         // Clear previous title/player content
         videoPlayerWrapper.querySelector('.skeleton')?.remove();
