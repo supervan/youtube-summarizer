@@ -1150,66 +1150,74 @@ function extractVideoId(url) {
 async function handleSubmit(e) {
     e.preventDefault();
 
-    // Stop any active playback
-    if (isReading) {
-        window.speechSynthesis.cancel();
-        isReading = false;
-        isPaused = false;
-        currentCharIndex = 0;
-        updateReadAloudButton('start');
-    }
-
-    // Stop podcast if playing
-    stopPodcast();
-
-    // Clear previous metadata
-    const summaryFooter = document.getElementById('summaryFooter');
-    if (summaryFooter) summaryFooter.innerHTML = '';
-
-    const youtubeUrl = youtubeUrlInput.value.trim();
-
-    if (!youtubeUrl) {
-        showError('Please enter a YouTube URL');
-        return;
-    }
-
-    // Validate URL
-    const videoId = extractVideoId(youtubeUrl);
-    if (!videoId) {
-        showError('Invalid YouTube URL. Please enter a valid YouTube video link.');
-        return;
-    }
-
-    // Check History Cache
-    const history = JSON.parse(localStorage.getItem('yt_summary_history') || '[]');
-    const cachedItem = history.find(item =>
-        item.id === videoId &&
-        item.length === summaryLengthSelect.value &&
-        item.tone === summaryToneSelect.value
-    );
-
-    if (cachedItem) {
-        // Loading from cache
-        loadHistoryItem(cachedItem);
-        return;
-    }
-
-    hideAllCards();
-
-    // Clear chat history for new video
-    const chatHistory = document.getElementById('chatHistory');
-    if (chatHistory) chatHistory.innerHTML = '<div class="chat-message ai"><div class="message-content"><p>Hi! Ask me anything about this video.</p></div></div>';
-
-    setLoading(true);
-    showSkeletonLoading(videoId); // Show thumbnail immediately
-
-    // Show summary loading animation
-    const summaryLoading = document.getElementById('summaryLoading');
-    if (summaryLoading) summaryLoading.classList.remove('hidden');
-    const summaryText = document.getElementById('summaryText');
-    if (summaryText) summaryText.innerHTML = ''; // Clear previous summary
-
     try {
+        // Stop any active playback
+        if (isReading) {
+            window.speechSynthesis.cancel();
+            isReading = false;
+            isPaused = false;
+            currentCharIndex = 0;
+            updateReadAloudButton('start');
+        }
+
+        // Stop podcast if playing
+        stopPodcast();
+
+        // Clear previous metadata
+        const summaryFooter = document.getElementById('summaryFooter');
+        if (summaryFooter) summaryFooter.innerHTML = '';
+
+        const youtubeUrl = youtubeUrlInput.value.trim();
+
+        if (!youtubeUrl) {
+            showError('Please enter a YouTube URL');
+            return;
+        }
+
+        // Validate URL
+        const videoId = extractVideoId(youtubeUrl);
+        if (!videoId) {
+            showError('Invalid YouTube URL. Please enter a valid YouTube video link.');
+            return;
+        }
+
+        // Check History Cache
+        let history = [];
+        try {
+            history = JSON.parse(localStorage.getItem('yt_summary_history') || '[]');
+        } catch (err) {
+            console.error('History parse error:', err);
+            history = [];
+        }
+
+        const cachedItem = history.find(item =>
+            item.id === videoId &&
+            item.length === summaryLengthSelect.value &&
+            item.tone === summaryToneSelect.value
+        );
+
+        if (cachedItem) {
+            // Loading from cache
+            console.log('Loading from cache:', cachedItem);
+            loadHistoryItem(cachedItem);
+            return;
+        }
+
+        hideAllCards();
+
+        // Clear chat history for new video
+        const chatHistory = document.getElementById('chatHistory');
+        if (chatHistory) chatHistory.innerHTML = '<div class="chat-message ai"><div class="message-content"><p>Hi! Ask me anything about this video.</p></div></div>';
+
+        setLoading(true);
+        showSkeletonLoading(videoId); // Show thumbnail immediately
+
+        // Show summary loading animation
+        const summaryLoading = document.getElementById('summaryLoading');
+        if (summaryLoading) summaryLoading.classList.remove('hidden');
+        const summaryText = document.getElementById('summaryText');
+        if (summaryText) summaryText.innerHTML = ''; // Clear previous summary
+
         // Step 1: Extract transcript (with 60s timeout)
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 seconds
@@ -1256,54 +1264,34 @@ async function handleSubmit(e) {
             throw new Error(summaryData.error || 'Failed to generate summary');
         }
 
-        // Hide loading animation
-        const summaryLoading = document.getElementById('summaryLoading');
-        if (summaryLoading) summaryLoading.classList.add('hidden');
-
-        // Show Summary
+        // Step 3: Show results
         showSummary(summaryData.summary);
+        showFeatures(); // Show tabs
 
         // Save to history
-        saveToHistory(videoId, transcriptData.title, summaryData.summary, transcriptData.transcript, summaryLengthSelect.value, summaryToneSelect.value, transcriptData.metadata);
-
-        // Show enabled features
-        showFeatures();
-
-        // Collapse input only after success
-        toggleInputSection(true);
-
-        // Expand results
-        // toggleResultsSection(false);
+        saveToHistory({
+            id: videoId,
+            title: transcriptData.title,
+            length: summaryLengthSelect.value,
+            tone: summaryToneSelect.value,
+            summary: summaryData.summary,
+            transcript: transcriptData.transcript,
+            metadata: transcriptData.metadata
+        });
 
     } catch (error) {
-        console.error('Error:', error);
-
-        // Hide loading animation
-        const summaryLoading = document.getElementById('summaryLoading');
-        if (summaryLoading) summaryLoading.classList.add('hidden');
-
-        // Handle Timeout specifically
+        console.error('Summarization error:', error);
         if (error.name === 'AbortError') {
-            showVideoLoadError('Request Timed Out. The video might be too long or the server is busy. Please try again.');
-        }
-        // Handle Live Video Error
-        else if (error.message.includes('LIVE_VIDEO_NOT_SUPPORTED')) {
-            showLiveVideoError();
-        }
-        // Check for specific errors that should show the "Video Unavailable" UI
-        // SyntaxError usually means the response wasn't JSON (e.g. 500/524 HTML error page)
-        else if (error instanceof SyntaxError || error.message.includes('Unexpected token') || error.message.includes('JSON')) {
-            showVideoLoadError('Server Timeout or Invalid Response. The video might be too long or unavailable.');
-        } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-            showVideoLoadError('Network Error. Please check your connection.');
+            showError('Request timed out. The video might be too long or the server is busy.');
         } else {
-            // For other errors, we can also use the nice UI if we want, or fallback to toast
-            showVideoLoadError(error.message || 'Something went wrong while processing the video.');
+            showError(error.message || 'An unexpected error occurred.');
         }
     } finally {
         setLoading(false);
     }
 }
+
+
 
 // Show Video Load Error (In-place UI)
 function showVideoLoadError(message) {
