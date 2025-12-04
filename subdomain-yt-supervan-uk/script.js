@@ -1437,7 +1437,8 @@ function loadHistory() {
         logItem.onclick = () => loadHistoryItem(item);
 
         // Truncate title
-        const title = item.title.length > 50 ? item.title.substring(0, 50) + '...' : item.title;
+        const displayTitle = item.title || 'Untitled Video';
+        const title = displayTitle.length > 50 ? displayTitle.substring(0, 50) + '...' : displayTitle;
         const date = new Date(item.timestamp).toLocaleDateString();
 
         logItem.innerHTML = `
