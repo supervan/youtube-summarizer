@@ -25,7 +25,7 @@ export default function Home() {
             href="https://yt.supervan.uk"
             className="inline-flex items-center gap-3 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-full transition-all hover:scale-105 shadow-lg shadow-purple-900/20"
           >
-            <img src="/icon.jpg" alt="App Logo" className="h-8 w-8 rounded-lg shadow-sm" />
+            <img src="/logo.png" alt="App Logo" className="h-8 w-8 rounded-lg shadow-sm" />
             Launch YouTube Summarizer
           </a>
           <Link
