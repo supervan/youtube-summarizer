@@ -64,10 +64,7 @@ export default function Post({ loaderData }: Route.ComponentProps) {
 
             <div className="mt-12 pt-8 border-t border-slate-800">
                 <p className="text-xs text-slate-500 uppercase tracking-wider mb-4 text-center">Advertisement</p>
-                {/* AdSense Placeholder */}
-                <div className="bg-slate-900 w-full h-32 flex items-center justify-center text-slate-600 rounded-lg border border-dashed border-slate-800">
-                    Google AdSense Placeholder
-                </div>
+
             </div>
         </div>
     );
