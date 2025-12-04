@@ -368,7 +368,9 @@ let currentTranscript = '';
 let enabledFeatures = {};
 let player; // YouTube Player instance
 // deferredPrompt is now global window.deferredPrompt
-const MAX_HISTORY_ITEMS = 5;
+const MAX_HISTORY_ITEMS = 5; // Legacy constant, maybe unused now?
+let currentPage = 1;
+const itemsPerPage = 6;
 
 // Load YouTube IFrame API
 const tag = document.createElement('script');
@@ -1432,21 +1434,40 @@ function saveToHistory(data) {
 
 // Load History
 // Load History
-function loadHistory() {
+function loadHistory(page = 1) {
+    currentPage = page;
     let history = JSON.parse(localStorage.getItem('yt_summary_history') || '[]');
 
     // Filter out corrupted items (where id is not a string)
     history = history.filter(item => item && typeof item.id === 'string');
 
+    // Sort by timestamp descending (newest first) - assuming timestamp exists
+    // If timestamp is missing, it might rely on array order (push adds to end, so reverse)
+    // Let's reverse it to show newest first if they were pushed chronologically
+    history.reverse();
+
+    const totalItems = history.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+    // Validate page
+    if (currentPage < 1) currentPage = 1;
+    if (currentPage > totalPages && totalPages > 0) currentPage = totalPages;
+
+    // Slice for current page
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const currentItems = history.slice(startIndex, endIndex);
+
     // Clear list
     logList.innerHTML = '';
 
-    if (history.length === 0) {
+    if (totalItems === 0) {
         logList.innerHTML = '<div class="text-slate-500 text-sm italic p-4">No history yet.</div>';
+        renderPagination(0);
         return;
     }
 
-    history.forEach(item => {
+    currentItems.forEach(item => {
         const logItem = document.createElement('div');
         logItem.className = 'log-item';
         logItem.onclick = () => loadHistoryItem(item);
@@ -1454,7 +1475,7 @@ function loadHistory() {
         // Truncate title
         const displayTitle = item.title || 'Untitled Video';
         const title = displayTitle.length > 50 ? displayTitle.substring(0, 50) + '...' : displayTitle;
-        const date = new Date(item.timestamp).toLocaleDateString();
+        const date = item.timestamp ? new Date(item.timestamp).toLocaleDateString() : '';
 
         logItem.innerHTML = `
             <div class="log-thumbnail-wrapper">
@@ -1476,6 +1497,59 @@ function loadHistory() {
         `;
         logList.appendChild(logItem);
     });
+
+    renderPagination(totalPages);
+}
+
+function renderPagination(totalPages) {
+    const paginationControls = document.getElementById('paginationControls');
+    if (!paginationControls) return;
+
+    paginationControls.innerHTML = '';
+
+    if (totalPages <= 1) return;
+
+    // Prev Button
+    const prevBtn = document.createElement('button');
+    prevBtn.className = 'page-btn';
+    prevBtn.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+    `;
+    prevBtn.disabled = currentPage === 1;
+    prevBtn.onclick = () => loadHistory(currentPage - 1);
+    paginationControls.appendChild(prevBtn);
+
+    // Page Numbers
+    // Simple version: show all pages if small number, or just current?
+    // Let's show up to 5 page numbers
+    let startPage = Math.max(1, currentPage - 2);
+    let endPage = Math.min(totalPages, startPage + 4);
+
+    if (endPage - startPage < 4) {
+        startPage = Math.max(1, endPage - 4);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+        const pageBtn = document.createElement('button');
+        pageBtn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+        pageBtn.textContent = i;
+        pageBtn.onclick = () => loadHistory(i);
+        paginationControls.appendChild(pageBtn);
+    }
+
+    // Next Button
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'page-btn';
+    nextBtn.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+    `;
+    nextBtn.disabled = currentPage === totalPages;
+    nextBtn.onclick = () => loadHistory(currentPage + 1);
+    paginationControls.appendChild(nextBtn);
 }
 
 

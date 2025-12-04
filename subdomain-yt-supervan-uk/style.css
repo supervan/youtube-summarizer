@@ -1066,19 +1066,15 @@ body {
 }
 
 .log-list {
-    display: flex;
-    gap: 1rem;
-    overflow-x: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
     padding-bottom: 1.5rem;
-    scroll-snap-type: x mandatory;
-    scrollbar-width: thin;
-    scrollbar-color: var(--slate-700) var(--slate-900);
 }
 
 .log-item {
-    flex: 0 0 280px;
-    /* Fixed width for cards */
-    scroll-snap-align: start;
+    /* flex: 0 0 280px; - Removed for grid */
+    /* scroll-snap-align: start; - Removed for grid */
     background: var(--slate-900);
     border: 1px solid var(--slate-800);
     border-radius: 1rem;
@@ -1146,18 +1142,14 @@ body {
 /* Desktop Layout Changes - Resetting previous overrides */
 @media (min-width: 768px) {
     .log-list {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 1.5rem;
+        /* Already grid by default now */
         overflow-x: visible;
         padding-bottom: 0;
-        scroll-snap-type: none;
     }
 
     .log-item {
-        flex: unset;
-        /* Remove fixed width flex */
-        scroll-snap-align: unset;
+        /* flex: unset; */
+        /* scroll-snap-align: unset; */
         padding: 1rem;
     }
 
@@ -2282,4 +2274,46 @@ body {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+/* Pagination Controls */
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 1.5rem;
+}
+
+.page-btn {
+    background: var(--slate-800);
+    border: 1px solid var(--slate-700);
+    color: var(--slate-300);
+    min-width: 2rem;
+    height: 2rem;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.page-btn:hover:not(:disabled) {
+    background: var(--slate-700);
+    color: var(--slate-200);
+    border-color: var(--purple-500);
+}
+
+.page-btn.active {
+    background: var(--purple-600);
+    color: white;
+    border-color: var(--purple-500);
+}
+
+.page-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }

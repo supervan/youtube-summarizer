@@ -1,0 +1,16 @@
+name: Keep Alive
+
+on:
+  schedule:
+    # Run every 14 minutes
+    - cron: '*/14 * * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Sites
+        run: |
+          curl -I -A "Mozilla/5.0 (GitHub Actions Keep-Alive)" https://yt.supervan.uk
+          curl -I -A "Mozilla/5.0 (GitHub Actions Keep-Alive)" https://supervan.uk
