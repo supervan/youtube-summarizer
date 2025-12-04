@@ -1079,6 +1079,17 @@ function setLoading(isLoading) {
     submitBtn.disabled = isLoading;
     btnText.classList.toggle('hidden', isLoading);
     btnLoader.classList.toggle('hidden', !isLoading);
+
+    // Also handle the main summary loading indicator
+    const summaryLoading = document.getElementById('summaryLoading');
+    if (summaryLoading) {
+        if (isLoading) {
+            // We don't necessarily want to show it here, as it's shown explicitly in handleSubmit
+            // But we definitely want to HIDE it when isLoading is false
+        } else {
+            summaryLoading.classList.add('hidden');
+        }
+    }
 }
 
 // Show Skeleton Loading
