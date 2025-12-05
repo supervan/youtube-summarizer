@@ -32,7 +32,7 @@ export function meta({ }: Route.MetaArgs) {
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const gaId = import.meta.env.VITE_GOOGLE_ANALYTICS_ID;
-  const adsenseId = "ca-pub-3475917359369599";
+
 
   return (
     <html lang="en">
@@ -59,9 +59,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </>
         )}
         {/* Google AdSense */}
-        {adsenseId && (
-          <script async src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseId}`} crossOrigin="anonymous"></script>
-        )}
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3475917359369599" crossOrigin="anonymous"></script>
       </head>
       <body>
         {children}

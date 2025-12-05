@@ -4,7 +4,7 @@ This repository contains the source code for the Supervan.uk ecosystem.
 
 ## Structure
 
-- **`root-supervan-uk/`**: The main website (React Router).
+- **`root-supervan-uk/`**: The main website (React Router v7).
   - Hosted at: `https://supervan.uk`
   - Tech Stack: React, React Router, TailwindCSS, Bun.
 

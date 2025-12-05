@@ -21,3 +21,5 @@ test_models.py
 # Documentation
 documentation.txt
 deployment_docs.md
+prompt.md
+speedtest.js

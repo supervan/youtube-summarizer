@@ -34,6 +34,16 @@ export default function Home() {
           >
             Learn More
           </Link>
+          {import.meta.env.DEV && (
+            <a
+              href="http://localhost:5174"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-cyan-900/50 hover:bg-cyan-800/50 text-cyan-300 font-bold py-3 px-6 rounded-full transition-all border border-cyan-700/50"
+            >
+              ⚡ Local Speed Test
+            </a>
+          )}
         </div>
       </div>
 
