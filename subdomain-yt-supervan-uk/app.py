@@ -323,13 +323,16 @@ def generate_gemini_content(prompt):
     genai.configure(api_key=api_key)
     
     models_to_try = [
-        'gemini-2.5-flash',      # Newest models often have fresh quota
+        'gemini-2.5-flash',      # Latest Flash
         'gemini-2.5-flash-lite',
-        'gemini-2.0-flash',
+        'gemini-2.0-flash',      # Stable Flash 2.0
         'gemini-2.0-flash-lite',
-        'gemini-2.0-flash-exp',  # Experimental often has separate quota
-        'gemini-exp-1206',       # Another experimental model
-        'gemini-2.0-pro-exp-02-05' # Pro experimental
+        'gemini-2.0-flash-exp',  # Experimental Flash
+        'gemini-flash-latest',   # Generic latest alias
+        'gemini-2.5-pro',        # Pro model (likely lower quota but worth a shot)
+        'gemini-2.0-pro-exp-02-05',
+        'gemini-exp-1206',
+        'gemini-2.5-flash-preview-tts' # Fallback
     ]
     
     last_error = None
@@ -343,11 +346,22 @@ def generate_gemini_content(prompt):
             return response
             
         except Exception as e:
-            print(f"⚠️ Gemini: Failed with model {model_name}: {e}")
+            error_str = str(e)
+            if "404" in error_str or "not found" in error_str.lower():
+                print(f"⚠️ Gemini: Model {model_name} not found (skipping).")
+            elif "429" in error_str or "quota" in error_str.lower():
+                print(f"⚠️ Gemini: Quota exceeded for {model_name} (skipping).")
+            else:
+                print(f"⚠️ Gemini: Failed with model {model_name}: {e}")
+            
             last_error = e
             continue
             
-    raise last_error
+    if last_error:
+        print(f"❌ All Gemini models failed. Last error: {last_error}")
+        raise last_error
+    else:
+        raise Exception("No Gemini models available to try.")
 
 def _get_youtube_transcript_with_cookies(video_id):
     """
