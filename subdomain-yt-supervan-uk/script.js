@@ -387,8 +387,8 @@ const expandMindMapBtn = document.getElementById('expandMindMapBtn');
 const inputSection = document.querySelector('.input-card');
 
 // API Configuration
-const CACHE_NAME = 'yt-summarizer-v2034.6';
-console.log('YouTube Summarizer v2034.6 Loaded');
+const CACHE_NAME = 'yt-summarizer-v2034.7';
+console.log('YouTube Summarizer v2034.7 Loaded');
 const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
 
 // Initialize app
@@ -1149,12 +1149,50 @@ window.mindMapExport = function (format) {
     }
 
     // Get SVG Data
-    // We need clones to not mess up the active pan-zoom instance state if possible, 
-    // but typically getting outerHTML is fine.
-    // However, svg-pan-zoom adds a group wrapper.
+    console.log("Starting export...");
 
-    // Simplest way: use the current SVG node
-    const svgData = new XMLSerializer().serializeToString(svg);
+    // 1. Clone the SVG node to ensure we don't mess with the live instance
+    const clonedSvg = svg.cloneNode(true);
+
+    // 2. Reset Pan/Zoom Transforms (Export the whole map, untouched)
+    // svg-pan-zoom usually creates a viewport group, usually the first <g>
+    const viewportGroup = clonedSvg.querySelector('.svg-pan-zoom_viewport');
+    if (viewportGroup) {
+        viewportGroup.removeAttribute('style'); // Clear inline styles
+        viewportGroup.setAttribute('transform', 'matrix(1,0,0,1,0,0)'); // Reset transform
+    }
+
+    // 3. Determine natural size from viewBox
+    // Mermaid usually sets a viewBox. We should use that for the canvas size.
+    let width = 800;
+    let height = 600;
+
+    // Check viewBox directly on the SVG (it is usually reliable for the full content)
+    // Format: "min-x min-y width height"
+    const viewBox = svg.getAttribute('viewBox');
+    if (viewBox) {
+        const parts = viewBox.split(' ').map(parseFloat);
+        if (parts.length === 4) {
+            width = parts[2];
+            height = parts[3];
+        }
+    } else {
+        // Fallback to client dimensions if bbox missing
+        width = svg.clientWidth || 800;
+        height = svg.clientHeight || 600;
+    }
+
+    // Ensure explicit dimensions on the clone
+    clonedSvg.setAttribute('width', width);
+    clonedSvg.setAttribute('height', height);
+
+    // Clear any style that forces w/h
+    clonedSvg.style.width = null;
+    clonedSvg.style.height = null;
+
+    // Serialize
+    const serializer = new XMLSerializer();
+    const svgData = serializer.serializeToString(clonedSvg);
     const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
     const url = URL.createObjectURL(blob);
 
@@ -1163,23 +1201,39 @@ window.mindMapExport = function (format) {
     } else if (format === 'png') {
         const canvas = document.createElement('canvas');
         const img = new Image();
+
         img.onload = function () {
-            // High res export
-            const scale = 2; // Retina quality
-            canvas.width = (svg.clientWidth || 800) * scale;
-            canvas.height = (svg.clientHeight || 600) * scale;
-            const ctx = canvas.getContext('2d');
+            try {
+                // High res export (2x)
+                const scale = 2;
+                canvas.width = width * scale;
+                canvas.height = height * scale;
+                const ctx = canvas.getContext('2d');
 
-            // Background
-            ctx.fillStyle = '#0f172a'; // Match bg
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+                // Background
+                ctx.fillStyle = '#0f172a'; // Match bg
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            ctx.scale(scale, scale);
-            ctx.drawImage(img, 0, 0, svg.clientWidth || 800, svg.clientHeight || 600);
+                // Draw
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-            const pngUrl = canvas.toDataURL('image/png');
-            downloadFile(pngUrl, `mindmap_${Date.now()}.png`);
+                const pngUrl = canvas.toDataURL('image/png');
+                downloadFile(pngUrl, `mindmap_${Date.now()}.png`);
+                showToast('Export successful!', 'success');
+            } catch (err) {
+                console.error("Export Error:", err);
+                showToast('Failed to generate PNG', 'error');
+            } finally {
+                URL.revokeObjectURL(url);
+            }
         };
+
+        img.onerror = function (e) {
+            console.error("Image Load Error:", e);
+            showToast('Error loading SVG for export', 'error');
+            URL.revokeObjectURL(url);
+        };
+
         img.src = url;
     }
 };

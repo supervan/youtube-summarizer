@@ -10,44 +10,3 @@ INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a
  * Running on http://127.0.0.1:5000
  * Running on http://192.168.0.75:5000
 INFO:werkzeug:[33mPress CTRL+C to quit[0m
-INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:44:30] "GET / HTTP/1.1" 200 -
-INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:44:30] "GET /style.css?v=2034.2 HTTP/1.1" 200 -
-INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:44:30] "GET /logo.png HTTP/1.1" 200 -
-INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:44:31] "GET /script.js?v=2034.3 HTTP/1.1" 200 -
-INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:44:31] "[33mGET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1[0m" 404 -
-INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:44:31] "GET /sw.js?t=1765313071289 HTTP/1.1" 200 -
-INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:44:31] "GET / HTTP/1.1" 200 -
-INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:44:31] "GET /index.html HTTP/1.1" 200 -
-INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:44:31] "GET /style.css HTTP/1.1" 200 -
-INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:44:31] "GET /script.js HTTP/1.1" 200 -
-INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:44:31] "GET /api/features HTTP/1.1" 200 -
-INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:44:31] "GET /api/features HTTP/1.1" 200 -
-INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:44:31] "GET /icon-192.png HTTP/1.1" 200 -
-INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:44:31] "GET /icon-512.png HTTP/1.1" 200 -
-WARNING: [youtube] No supported JavaScript runtime could be found. YouTube extraction without a JS runtime has been deprecated, and some formats may be missing. See  https://github.com/yt-dlp/yt-dlp/wiki/EJS  for details on installing one. To silence this warning, you can use  --extractor-args "youtube:player_client=default"
-WARNING: [youtube] suJ4-IKxItA: Some web_safari client https formats have been skipped as they are missing a url. YouTube is forcing SABR streaming for this client. See  https://github.com/yt-dlp/yt-dlp/issues/12482  for more details
-WARNING: [youtube] suJ4-IKxItA: Some web client https formats have been skipped as they are missing a url. YouTube is forcing SABR streaming for this client. See  https://github.com/yt-dlp/yt-dlp/issues/12482  for more details
-WARNING: ffmpeg not found. The downloaded format may not be the best available. Installing ffmpeg is strongly recommended: https://github.com/yt-dlp/yt-dlp#dependencies
-WARNING: You have asked for UNPLAYABLE formats to be listed/downloaded. This is a developer option intended for debugging. 
-         If you experience any issues while using this option, DO NOT open a bug report
-[youtube] Extracting URL: https://www.youtube.com/watch?v=suJ4-IKxItA
-🔍 Checking if video suJ4-IKxItA is live/VOD...
-🚀 Attempting Method 1: YouTubeTranscriptApi for suJ4-IKxItA...
-⚠️ Direct YouTubeTranscriptApi failed: no element found: line 1, column 0
-🚀 Attempting Method 1.5: yt-dlp Direct Connection...
-[youtube] suJ4-IKxItA: Downloading webpage
-WARNING: [youtube] No supported JavaScript runtime could be found. YouTube extraction without a JS runtime has been deprecated, and some formats may be missing. See  https://github.com/yt-dlp/yt-dlp/wiki/EJS  for details on installing one. To silence this warning, you can use  --extractor-args "youtube:player_client=default"
-[youtube] suJ4-IKxItA: Downloading android sdkless player API JSON
-[youtube] suJ4-IKxItA: Downloading web safari player API JSON
-WARNING: [youtube] suJ4-IKxItA: Some web_safari client https formats have been skipped as they are missing a url. YouTube is forcing SABR streaming for this client. See  https://github.com/yt-dlp/yt-dlp/issues/12482  for more details
-[youtube] suJ4-IKxItA: Downloading m3u8 information
-WARNING: [youtube] suJ4-IKxItA: Some web client https formats have been skipped as they are missing a url. YouTube is forcing SABR streaming for this client. See  https://github.com/yt-dlp/yt-dlp/issues/12482  for more details
-[info] suJ4-IKxItA: Downloading subtitles: en
-[info] suJ4-IKxItA: Downloading 1 format(s): 91-0
-[info] Writing video subtitles to: /tmp/tmpb38hhh00/suJ4-IKxItA.en.vtt
-WARNING: The extractor specified to use impersonation for this download, but no impersonate target is available. If you encounter errors, then see  https://github.com/yt-dlp/yt-dlp#impersonation  for information on installing the required dependencies
-[download] Destination: /tmp/tmpb38hhh00/suJ4-IKxItA.en.vtt
-[download]    1.00KiB at  Unknown B/s (00:00:00)[download]    3.00KiB at    1.03MiB/s (00:00:00)[download]    7.00KiB at    1.14MiB/s (00:00:00)[download]   15.00KiB at    1.90MiB/s (00:00:00)[download]   31.00KiB at    1.20MiB/s (00:00:00)[download]   63.00KiB at    1.39MiB/s (00:00:00)[download]   99.58KiB at    1.72MiB/s (00:00:00)[download] 100% of   99.58KiB in 00:00:00 at 595.14KiB/s
-INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:45:02] "POST /api/extract-transcript HTTP/1.1" 200 -
-INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:45:13] "POST /api/summarize HTTP/1.1" 200 -
-INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:45:41] "POST /api/mindmap HTTP/1.1" 200 -
