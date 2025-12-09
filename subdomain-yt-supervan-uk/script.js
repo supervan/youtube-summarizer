@@ -711,6 +711,21 @@ function switchTab(selectedTab) {
     const targetContent = document.getElementById(targetId);
     if (targetContent) {
         targetContent.classList.remove('hidden');
+
+        // SAFETY CHECK: If this is the Steps tab, check if we already have steps loaded.
+        // If so, force hide the start view (button).
+        if (targetId === 'contentSteps') {
+            const stepsContent = document.getElementById('stepsContent');
+            const startView = document.getElementById('stepsStartView');
+            // If stepsContent has meaningful content (more than just whitespace/HTML tags)
+            // Or simple check: if it's not hidden and has inner text
+            if (stepsContent && stepsContent.innerText.trim().length > 10) {
+                if (startView) startView.classList.add('hidden');
+                if (startView) startView.style.display = 'none';
+                stepsContent.classList.remove('hidden');
+            }
+        }
+
         // Scroll to it?
         setTimeout(() => {
             targetContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
