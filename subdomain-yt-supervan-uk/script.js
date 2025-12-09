@@ -1057,12 +1057,20 @@ function resetQuiz() {
 }
 
 function regenerateQuiz() {
-    resetQuiz();
-    // Use timeout to ensure UI updates before click (though sync usually fine)
-    setTimeout(() => {
-        const btn = document.getElementById('startQuizBtn');
-        if (btn) btn.click();
-    }, 50);
+    // Directly switch to loading state to avoid "flash" of start view
+    document.getElementById('quizContent').classList.add('hidden');
+    document.getElementById('quizScore').classList.add('hidden');
+    document.getElementById('quizStartView').classList.add('hidden');
+
+    // Show spinner
+    document.getElementById('quizLoading').classList.remove('hidden');
+
+    // Trigger the actual generation logic
+    // We can click the button, but we've already hidden the UI it relies on being visible.
+    // However, handleQuizRequest handles the "Start View" hiding itself.
+    // So if we just click the button, handleQuizRequest will run.
+    const btn = document.getElementById('startQuizBtn');
+    if (btn) btn.click();
 }
 
 // Reset Application
