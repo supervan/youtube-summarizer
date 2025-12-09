@@ -2624,7 +2624,7 @@ body {
     /* Ensure toolbar and wrapper are positioned relative to this */
     overflow: hidden;
     /* Hide overflow for pan/zoom */
-    min-height: 400px;
+    min-height: 600px;
     background: #0f172a;
     /* Slate 900 background for map */
     border-radius: 0.75rem;

@@ -387,8 +387,8 @@ const expandMindMapBtn = document.getElementById('expandMindMapBtn');
 const inputSection = document.querySelector('.input-card');
 
 // API Configuration
-const CACHE_NAME = 'yt-summarizer-v2034.5';
-console.log('YouTube Summarizer v2034.5 Loaded');
+const CACHE_NAME = 'yt-summarizer-v2034.6';
+console.log('YouTube Summarizer v2034.6 Loaded');
 const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
 
 // Initialize app
@@ -1205,7 +1205,13 @@ function ensureMermaidLoaded() {
         const script = document.createElement('script');
         script.src = MERMAID_CDN;
         script.onload = () => {
-            mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose' });
+            // Initialize Mermaid
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: 'dark',
+                securityLevel: 'loose',
+                htmlLabels: false // Required for PNG export (canvas taint issues)
+            });
             resolve(mermaid);
         };
         script.onerror = () => reject(new Error('Failed to load Mermaid.js'));
