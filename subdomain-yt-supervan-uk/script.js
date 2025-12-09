@@ -1719,7 +1719,17 @@ function renderPagination(totalPages) {
 }
 
 
+
 function loadHistoryItem(item) {
+    // CRITICAL FIX: Fetch the latest version of this item from localStorage
+    // The 'item' passed here is stale (captured when the list was rendered).
+    // If we generated Steps/Quiz since then, this stale object won't have them.
+    const allHistory = JSON.parse(localStorage.getItem('yt_summary_history') || '[]');
+    const freshItem = allHistory.find(i => i.id === item.id) || item;
+
+    // Use freshItem for everything below
+    item = freshItem;
+
     hideAllCards();
     stopPodcast(); // Stop podcast if playing
 
