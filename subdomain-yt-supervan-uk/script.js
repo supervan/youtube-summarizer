@@ -387,8 +387,8 @@ const expandMindMapBtn = document.getElementById('expandMindMapBtn');
 const inputSection = document.querySelector('.input-card');
 
 // API Configuration
-const CACHE_NAME = 'yt-summarizer-v2034.8';
-console.log('YouTube Summarizer v2034.8 Loaded');
+const CACHE_NAME = 'yt-summarizer-v2034.9';
+console.log('YouTube Summarizer v2034.9 Loaded');
 const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
 
 // Initialize app
@@ -561,7 +561,7 @@ function setupEventListeners() {
     // Mind Map Event Listener
     const mmBtn = document.getElementById('generateMindMapBtn');
     if (mmBtn) {
-        console.log("Attaching Mind Map Event Listener");
+
         mmBtn.addEventListener('click', handleMindMapRequest);
     } else {
         console.error("Mind Map Button NOT Found in DOM");
@@ -659,7 +659,7 @@ function setupEventListeners() {
 
 // Switch Feature Tabs
 function switchTab(selectedTab) {
-    console.log("switchTab called for:", selectedTab.dataset.tab);
+
     if (selectedTab.classList.contains('active')) {
         // Toggle off if already active? 
         // Or do nothing? Standard tabs usually stay active.
@@ -699,12 +699,12 @@ function switchTab(selectedTab) {
             const mmStartView = document.getElementById('mindMapStartView');
             const mermaidGraph = document.getElementById('mermaidGraph');
 
-            console.log('Switching to Mind Map. Content present?', mermaidGraph && mermaidGraph.innerHTML.trim().length > 10);
+
 
             // RELAXED CHECK: If graph has content, show it.
             // LAZY RENDER CHECK: If needs render, triggering it now (because tab is visible)
             if (mermaidGraph && mermaidGraph.dataset.needsRender === 'true') {
-                console.log("Triggering Lazy Render for Mind Map...");
+
                 const syntax = mermaidGraph.dataset.pendingSyntax || '';
 
                 // Clear flags
@@ -726,7 +726,7 @@ function switchTab(selectedTab) {
                 }
                 if (mmContent) mmContent.classList.remove('hidden');
             } else {
-                console.log('Mind Map empty, showing start view');
+                // console.log('Mind Map empty, showing start view');
             }
         }
 
@@ -1149,7 +1149,7 @@ window.mindMapExport = function (format) {
     }
 
     // Get SVG Data
-    console.log("Starting export...");
+
 
     // 1. Clone the SVG node to ensure we don't mess with the live instance
     const clonedSvg = svg.cloneNode(true);
@@ -1255,7 +1255,7 @@ function ensureMermaidLoaded() {
             return;
         }
 
-        console.log('Lazy loading Mermaid.js...');
+
         const script = document.createElement('script');
         script.src = MERMAID_CDN;
         script.onload = () => {
@@ -1337,7 +1337,7 @@ async function renderMindMap(container, syntax) {
                     minZoom: 0.1, // Allow zooming out further
                     maxZoom: 10
                 });
-                console.log("PanZoom initialized:", panZoomInstance);
+
 
                 // Attach observer if not already
                 const mmContainer = document.getElementById('mindMapContent');
@@ -1369,7 +1369,7 @@ async function renderMindMap(container, syntax) {
 
 window.handleMindMapRequest = handleMindMapRequest;
 async function handleMindMapRequest() {
-    console.log("Mind Map Button Clicked!");
+
     const btn = document.getElementById('generateMindMapBtn');
     const content = document.getElementById('mindMapContent');
     const startView = document.getElementById('mindMapStartView');
@@ -1411,7 +1411,6 @@ async function handleMindMapRequest() {
         const data = await response.json();
 
         if (data.success) {
-            console.log("Received MindMap Syntax:\\n", data.mindmap);
             // Success State
             loading.classList.add('hidden');
             content.classList.remove('hidden');
@@ -2048,10 +2047,10 @@ function updateHistoryItem(id, updates) {
 
 // Load History
 function loadHistory(page = 1) {
-    console.log("Loading history, page:", page);
+
     currentPage = page;
     let history = JSON.parse(localStorage.getItem('yt_summary_history') || '[]');
-    console.log("History from storage:", history);
+
 
     // Filter out corrupted items (where id is not a string)
     history = history.filter(item => item && typeof item.id === 'string');

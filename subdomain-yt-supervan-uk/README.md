@@ -16,7 +16,8 @@ https://yt.supervan.uk/
 - 💾 **Steps Persistence** - Generated steps are saved to history and reload instantly
 - 📊 **Rich Metadata** - Displays Uploader, Subscriber Count, Views, and Upload Date
 - 💬 **Interactive Chat** - Ask questions and chat with the video content
-- 🧠 **Mind Map Visualization** - View a visual breakdown of the video's key concepts
+- 🧠 **Mind Map Visualization** - Visual breakdown of key concepts with **Zoom, Pan, and Fullscreen** capabilities
+- 📤 **Export Options** - Download Mind Maps as **SVG** for high-quality sharing
 - 📝 **Quiz Mode** - Test your understanding with auto-generated quizzes and **refreshable questions**
 - 👣 **Step-by-Step Guides** - Extract actionable steps and tutorials from videos
 - 📱 **Mobile Optimized** - Responsive design with auto-scroll and touch-friendly controls
