@@ -387,7 +387,7 @@ const expandMindMapBtn = document.getElementById('expandMindMapBtn');
 const inputSection = document.querySelector('.input-card');
 
 // API Configuration
-console.log('YouTube Summarizer v2033.1 Loaded');
+console.log('YouTube Summarizer v2034.1 Loaded');
 const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
 
 // Initialize app
@@ -1088,8 +1088,96 @@ function resetQuiz() {
     document.getElementById('startQuizBtn').textContent = 'Start Quiz';
 }
 
+
 // --- Mind Map Feature ---
 const MERMAID_CDN = 'https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js';
+let panZoomInstance = null; // Store instance globally for controls
+
+// Control Functions
+window.mindMapZoomIn = function () {
+    if (panZoomInstance) panZoomInstance.zoomIn();
+};
+
+window.mindMapZoomOut = function () {
+    if (panZoomInstance) panZoomInstance.zoomOut();
+};
+
+window.mindMapReset = function () {
+    if (panZoomInstance) {
+        panZoomInstance.reset();
+        panZoomInstance.fit();
+        panZoomInstance.center();
+    }
+};
+
+window.mindMapFullscreen = function () {
+    const container = document.getElementById('mindMapContent');
+    if (!container) return;
+
+    container.classList.toggle('fullscreen');
+
+    // Resize logic for pan-zoom
+    if (panZoomInstance) {
+        setTimeout(() => {
+            panZoomInstance.resize();
+            panZoomInstance.fit();
+            panZoomInstance.center();
+        }, 100);
+    }
+};
+
+window.mindMapExport = function (format) {
+    const container = document.getElementById('mermaidGraph');
+    const svg = container.querySelector('svg');
+    if (!svg) {
+        showToast('No map to export', 'error');
+        return;
+    }
+
+    // Get SVG Data
+    // We need clones to not mess up the active pan-zoom instance state if possible, 
+    // but typically getting outerHTML is fine.
+    // However, svg-pan-zoom adds a group wrapper.
+
+    // Simplest way: use the current SVG node
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+
+    if (format === 'svg') {
+        downloadFile(url, `mindmap_${Date.now()}.svg`);
+    } else if (format === 'png') {
+        const canvas = document.createElement('canvas');
+        const img = new Image();
+        img.onload = function () {
+            // High res export
+            const scale = 2; // Retina quality
+            canvas.width = (svg.clientWidth || 800) * scale;
+            canvas.height = (svg.clientHeight || 600) * scale;
+            const ctx = canvas.getContext('2d');
+
+            // Background
+            ctx.fillStyle = '#0f172a'; // Match bg
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.scale(scale, scale);
+            ctx.drawImage(img, 0, 0, svg.clientWidth || 800, svg.clientHeight || 600);
+
+            const pngUrl = canvas.toDataURL('image/png');
+            downloadFile(pngUrl, `mindmap_${Date.now()}.png`);
+        };
+        img.src = url;
+    }
+};
+
+function downloadFile(url, filename) {
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
 
 // Helper: Dynamically load Mermaid if missing
 function ensureMermaidLoaded() {
@@ -1153,6 +1241,32 @@ async function renderMindMap(container, syntax) {
         // 4. Render
         // We catch render errors specifically just in case
         await mermaid.run({ nodes: [container] });
+
+        // 5. Initialize Pan/Zoom (After Render)
+        // Find the generated SVG
+        const svg = container.querySelector('svg');
+        if (svg) {
+            // Remove fixed sizes to allow scaling
+            svg.removeAttribute('style');
+            svg.removeAttribute('height');
+            svg.removeAttribute('width');
+            svg.style.width = '100%';
+            svg.style.height = '100%';
+
+            // Simple Pan-Zoom initialization
+            if (typeof svgPanZoom !== 'undefined') {
+                panZoomInstance = svgPanZoom(svg, {
+                    zoomEnabled: true,
+                    controlIconsEnabled: false, // We use our own toolbar
+                    fit: true,
+                    center: true,
+                    minZoom: 0.5,
+                    maxZoom: 10
+                });
+            } else {
+                console.warn('svg-pan-zoom library not loaded');
+            }
+        }
 
     } catch (e) {
         console.warn("Mermaid Render Failed:", e);

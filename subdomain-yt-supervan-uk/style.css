@@ -2559,3 +2559,106 @@ body {
 .copy-steps-btn:active {
     transform: translateY(1px);
 }
+
+/* Mind Map Toolbar */
+.mindmap-toolbar {
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+    display: flex;
+    align-items: center;
+    background: rgba(30, 41, 59, 0.9);
+    /* Slate 800 */
+    border: 1px solid var(--slate-700);
+    border-radius: 0.75rem;
+    padding: 0.5rem;
+    gap: 0.5rem;
+    z-index: 10;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transition: opacity 0.3s;
+}
+
+/* Hide toolbar when loading or empty */
+.mindmap-content.hidden .mindmap-toolbar,
+.mindmap-content:empty .mindmap-toolbar {
+    display: none;
+}
+
+.mm-tool-btn {
+    background: transparent;
+    border: none;
+    color: var(--slate-400);
+    padding: 0.4rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.mm-tool-btn:hover {
+    background: var(--slate-700);
+    color: white;
+}
+
+.mm-tool-btn:active {
+    transform: translateY(1px);
+}
+
+.mindmap-toolbar .vr {
+    width: 1px;
+    height: 1.5rem;
+    background: var(--slate-700);
+    margin: 0 0.25rem;
+}
+
+/* Mind Map Container Overrides */
+.mindmap-content {
+    position: relative;
+    /* Ensure toolbar is positioned relative to this */
+    overflow: hidden;
+    /* Hide overflow for pan/zoom */
+    min-height: 400px;
+    background: #0f172a;
+    /* Slate 900 background for map */
+    border-radius: 0.75rem;
+    border: 1px solid var(--slate-800);
+}
+
+.mermaid-wrapper {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    /* Important for pan-zoom */
+}
+
+.mermaid {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Fullscreen Mode */
+.mindmap-content.fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999;
+    border-radius: 0;
+    border: none;
+}
+
+.mindmap-content.fullscreen .mermaid-wrapper {
+    height: 100vh;
+}
+
+.mindmap-content.fullscreen .mindmap-toolbar {
+    bottom: 2rem;
+    right: 2rem;
+}
