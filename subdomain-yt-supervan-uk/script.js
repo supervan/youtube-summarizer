@@ -838,6 +838,7 @@ async function handleStepsRequest() {
         if (data.success) {
             // Success State
             startView.classList.add('hidden'); // Now hide start view
+            startView.style.display = 'none'; // Force hide
             content.classList.remove('hidden'); // Show content
             if (stepsActions) stepsActions.classList.remove('hidden');
 
@@ -877,7 +878,9 @@ async function handleStepsRequest() {
 
 function resetSteps() {
     document.getElementById('stepsContent').classList.add('hidden');
-    document.getElementById('stepsStartView').classList.remove('hidden');
+    const startView = document.getElementById('stepsStartView');
+    startView.classList.remove('hidden');
+    startView.style.display = ''; // Reset inline style
     const btn = document.getElementById('generateStepsBtn');
     btn.disabled = false;
     btn.innerHTML = `
@@ -1762,7 +1765,10 @@ function loadHistoryItem(item) {
             stepsContent.innerHTML = formatMarkdown(item.steps);
             stepsContent.classList.remove('hidden');
         }
-        if (stepsStartView) stepsStartView.classList.add('hidden');
+        if (stepsStartView) {
+            stepsStartView.classList.add('hidden');
+            stepsStartView.style.display = 'none'; // Force hide
+        }
         if (stepsActions) stepsActions.classList.remove('hidden');
     }
 
