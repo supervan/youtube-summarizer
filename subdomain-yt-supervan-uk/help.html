@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Help - TL;DW YouTube Summarizer</title>
+    <link rel="stylesheet" href="style.css?v=1004">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <meta name="theme-color" content="#020617">
+    <style>
+        .help-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .help-card {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--slate-800);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(4px);
+        }
+
+        .help-section {
+            margin-bottom: 3rem;
+        }
+
+        .help-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .help-section h2 {
+            color: var(--purple-400);
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .step-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .step-item {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+
+        .step-number {
+            background: var(--slate-800);
+            color: var(--purple-400);
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            flex-shrink: 0;
+            border: 1px solid var(--slate-700);
+        }
+
+        .step-content h3 {
+            color: var(--slate-200);
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .step-content p {
+            color: var(--slate-400);
+            line-height: 1.6;
+            margin-bottom: 0;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .feature-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .feature-card {
+            background: var(--slate-900);
+            border: 1px solid var(--slate-800);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            transition: transform 0.2s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--purple-500);
+        }
+
+        .feature-icon {
+            color: var(--purple-400);
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            color: white;
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-card p {
+            color: var(--slate-400);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--slate-400);
+            text-decoration: none;
+            font-weight: 500;
+            margin-bottom: 2rem;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: var(--purple-400);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="help-container">
+
+        <!-- Header -->
+        <header class="header" style="margin-bottom: 2rem;">
+            <div class="logo-section">
+                <a href="/" title="Back to Home">
+                    <img src="logo.png" alt="Too Long Didn't Watch" class="logo-image">
+                </a>
+            </div>
+
+            <a href="/" class="back-link" style="margin-bottom: 0;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 12H5" />
+                    <path d="M12 19l-7-7 7-7" />
+                </svg>
+                Back to App
+            </a>
+        </header>
+
+        <div class="help-card">
+
+            <!-- Quick Start Section -->
+            <div class="help-section">
+                <h2>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                    </svg>
+                    Getting Started
+                </h2>
+                <div class="step-list">
+                    <div class="step-item">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h3>Paste URL</h3>
+                            <p>Copy links from YouTube videos and paste them into the input box. We support both regular
+                                video links and Shorts.</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h3>Customize</h3>
+                            <p>Choose your preferred summary <strong>Length</strong> (Short, Medium, Long) and
+                                <strong>Tone</strong> (Conversational, Professional, Witty, etc.) to get exactly what
+                                you need.</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h3>Generate</h3>
+                            <p>Click <strong>"Let's Go"</strong> and wait a few seconds. Our AI will analyze the video
+                                captions and produce a concise summary for you.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Features Section -->
+            <div class="help-section">
+                <h2>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                    </svg>
+                    Features
+                </h2>
+                <div class="feature-grid">
+                    <!-- Feature 1 -->
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <polyline points="10 9 9 9 8 9"></polyline>
+                            </svg>
+                        </div>
+                        <h3>AI Summary</h3>
+                        <p>Get instant summaries broken down by key points. Perfect for long tutorials, lectures, or
+                            news updates.</p>
+                    </div>
+
+                    <!-- Feature 2 -->
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                        </div>
+                        <h3>AI Chat</h3>
+                        <p>Have specific questions? Chat with the video content to find exactly what you're looking for
+                            without watching.</p>
+                    </div>
+
+                    <!-- Feature 3 -->
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                            </svg>
+                        </div>
+                        <h3>Quiz Mode</h3>
+                        <p>Test your understanding of the video with a quick 5-question interactive quiz generated from
+                            the content.</p>
+                    </div>
+
+                    <!-- Feature 4 -->
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
+                                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                            </svg>
+                        </div>
+                        <h3>Read Aloud & Podcast</h3>
+                        <p>Listen to the summary on the go with our realistic text-to-speech voices, or generate a
+                            mini-podcast.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 1rem;">
+                <p style="color: var(--slate-500); margin-bottom: 2rem;">Ready to save some time?</p>
+                <a href="/" class="submit-btn"
+                    style="display: inline-flex; text-decoration: none; width: auto; padding: 0.75rem 2rem;">
+                    Back to App
+                </a>
+            </div>
+
+        </div>
+    </div>
+</body>
+
+</html>

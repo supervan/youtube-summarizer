@@ -311,6 +311,44 @@ class FreeProxyManager:
 # Global proxy manager instance
 proxy_manager = FreeProxyManager()
 
+def generate_gemini_content(prompt):
+    """
+    Generate content using Gemini API with automatic model fallback.
+    Prioritizes: 2.0 Flash -> 2.0 Flash Lite -> Flash Latest
+    """
+    api_key = os.getenv('GEMINI_API_KEY')
+    if not api_key:
+        raise Exception("API_KEY_INVALID: API key not configured")
+        
+    genai.configure(api_key=api_key)
+    
+    models_to_try = [
+        'gemini-2.5-flash',      # Newest models often have fresh quota
+        'gemini-2.5-flash-lite',
+        'gemini-2.0-flash',
+        'gemini-2.0-flash-lite',
+        'gemini-2.0-flash-exp',  # Experimental often has separate quota
+        'gemini-exp-1206',       # Another experimental model
+        'gemini-2.0-pro-exp-02-05' # Pro experimental
+    ]
+    
+    last_error = None
+    
+    for model_name in models_to_try:
+        try:
+            print(f"🔄 Gemini: Attempting with model: {model_name}")
+            model = genai.GenerativeModel(model_name)
+            response = model.generate_content(prompt)
+            print(f"✅ Gemini: Success with model: {model_name}")
+            return response
+            
+        except Exception as e:
+            print(f"⚠️ Gemini: Failed with model {model_name}: {e}")
+            last_error = e
+            continue
+            
+    raise last_error
+
 def _get_youtube_transcript_with_cookies(video_id):
     """
     Extract transcript and metadata from YouTube video.
@@ -620,23 +658,11 @@ def summarize():
         if not transcript:
             return jsonify({'error': 'Transcript is required'}), 400
         
-        # Get API key from environment variable
-        api_key = os.getenv('GEMINI_API_KEY')
-        
-        if not api_key:
-            return jsonify({'error': 'API key not configured. Please add GEMINI_API_KEY to .env file'}), 500
-        
-        # Configure Gemini API
-        genai.configure(api_key=api_key)
-        
-        # Use Gemini 2.5 Flash model for summarization
-        model = genai.GenerativeModel('gemini-flash-latest')
-        
         # Build prompt based on preferences
         prompt = build_summary_prompt(transcript, length, tone)
 
-        # Generate summary
-        response = model.generate_content(prompt)
+        # Generate summary using helper with fallback
+        response = generate_gemini_content(prompt)
         
         return jsonify({
             'success': True,
@@ -836,9 +862,6 @@ def chat_with_video():
         if not api_key:
             return jsonify({'error': 'API key not configured'}), 500
             
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-flash-latest')
-        
         prompt = f"""You are a helpful assistant answering questions based ONLY on the provided video transcript.
         
 Transcript:
@@ -848,7 +871,7 @@ Question: {question}
 
 Answer (be concise and direct, use markdown for formatting):"""
 
-        response = model.generate_content(prompt)
+        response = generate_gemini_content(prompt)
         return jsonify({'success': True, 'answer': response.text})
         
     except Exception as e:
@@ -864,12 +887,7 @@ def extract_steps():
         if not transcript:
             return jsonify({'error': 'Transcript is required'}), 400
 
-        api_key = os.getenv('GEMINI_API_KEY')
-        if not api_key:
-            return jsonify({'error': 'API key not configured'}), 500
-            
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-flash-latest')
+        print(f"DEBUG: Steps Transcript length: {len(transcript)} chars")
         
         prompt = f"""Analyze the following transcript and determine if it contains instructions, a tutorial, or actionable advice.
         
@@ -883,10 +901,13 @@ Return exactly: "NO_STEPS_FOUND"
 Transcript:
 {transcript}"""
 
-        response = model.generate_content(prompt)
+        response = generate_gemini_content(prompt)
         return jsonify({'success': True, 'steps': response.text})
         
     except Exception as e:
+        print(f"❌ Error in extract_steps: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/quiz', methods=['POST'])
@@ -899,12 +920,7 @@ def generate_quiz():
         if not transcript:
             return jsonify({'error': 'Transcript is required'}), 400
 
-        api_key = os.getenv('GEMINI_API_KEY')
-        if not api_key:
-            return jsonify({'error': 'API key not configured'}), 500
-            
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-flash-latest')
+        print(f"DEBUG: Quiz Transcript length: {len(transcript)} chars")
         
         # Force JSON response for the quiz
         prompt = f"""Generate a 5-question multiple choice quiz based on this transcript.
@@ -922,7 +938,7 @@ def generate_quiz():
         Transcript:
         {transcript}"""
 
-        response = model.generate_content(prompt)
+        response = generate_gemini_content(prompt)
         
         # Clean up potential markdown code blocks if the model ignores instructions
         text = response.text.strip()
@@ -954,12 +970,7 @@ def generate_podcast():
         if not transcript:
             return jsonify({'error': 'Transcript is required'}), 400
 
-        api_key = os.getenv('GEMINI_API_KEY')
-        if not api_key:
-            return jsonify({'error': 'API key not configured'}), 500
-            
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-flash-latest')
+        print(f"DEBUG: Podcast Transcript length: {len(transcript)} chars")
         
         # Tone instructions for podcast
         tone_map = {
@@ -1002,7 +1013,7 @@ def generate_podcast():
         Transcript:
         {transcript}"""
 
-        response = model.generate_content(prompt)
+        response = generate_gemini_content(prompt)
         
         # Clean up potential markdown code blocks
         text = response.text.strip()
@@ -1016,6 +1027,9 @@ def generate_podcast():
         return jsonify({'success': True, 'script': json.loads(text)})
         
     except Exception as e:
+        print(f"❌ Error in generate_podcast: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':

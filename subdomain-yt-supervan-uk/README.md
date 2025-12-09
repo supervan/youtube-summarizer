@@ -13,10 +13,11 @@ https://yt.supervan.uk/
 - 🤖 **AI-Powered Summaries** - Uses Google Gemini AI for intelligent summarization
 - 🎧 **Audio Podcast Generation** - Converts summaries into engaging 2-host audio dialogues
 - 📜 **History Log** - Automatically saves your recent summaries for easy access with **pagination**
+- 💾 **Steps Persistence** - Generated steps are saved to history and reload instantly
 - 📊 **Rich Metadata** - Displays Uploader, Subscriber Count, Views, and Upload Date
 - 💬 **Interactive Chat** - Ask questions and chat with the video content
 - 🧠 **Mind Map Visualization** - View a visual breakdown of the video's key concepts
-- 📝 **Quiz Mode** - Test your understanding with auto-generated quizzes
+- 📝 **Quiz Mode** - Test your understanding with auto-generated quizzes and **refreshable questions**
 - 👣 **Step-by-Step Guides** - Extract actionable steps and tutorials from videos
 - 📱 **Mobile Optimized** - Responsive design with auto-scroll and touch-friendly controls
 - 📲 **PWA Support** - Install as a native app on mobile and desktop with a **smart install button** that appears only when supported

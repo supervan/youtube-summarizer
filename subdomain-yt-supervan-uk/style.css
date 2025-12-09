@@ -799,14 +799,41 @@ body {
     color: rgba(226, 232, 240, 0.95);
 }
 
-.summary-text h3,
-.summary-text h4 {
+/* Markdown Heading Styles within Summary/Steps */
+.summary-text h1,
+.summary-text h2 {
     color: white;
     font-weight: 700;
+    font-size: 1.25rem;
+    /* constrained size */
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    line-height: 1.4;
+}
 
-    height: 100%;
-    object-fit: contain;
-    border-radius: 1rem;
+.summary-text h3,
+.summary-text h4 {
+    color: var(--slate-200);
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-top: 1.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.summary-text ul,
+.summary-text ol {
+    margin-bottom: 1rem;
+    padding-left: 1.5rem;
+}
+
+.summary-text li {
+    margin-bottom: 0.5rem;
+}
+
+.summary-text strong {
+    color: var(--primary-400);
+    /* Highlight bold text */
+    font-weight: 600;
 }
 
 .live-error-content .error-title {
@@ -2012,24 +2039,53 @@ body {
 
 .quiz-start-view {
     text-align: center;
-    padding: 3rem 1rem;
+    padding: 2rem 1rem;
+}
+
+.quiz-start-view h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 0.75rem;
+}
+
+.quiz-start-view p {
+    color: var(--slate-400);
+    margin-bottom: 2rem;
+    font-size: 1rem;
+    max-width: 24rem;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .primary-btn,
 .quiz-start-btn,
 #generateStepsBtn {
-    background: var(--primary-600);
+    background: linear-gradient(to right, var(--purple-600), var(--indigo-600));
     color: white;
     border: none;
-    padding: 0.75rem 2rem;
-    border-radius: 0.5rem;
-    font-size: 1rem;
-    font-weight: 600;
+    padding: 1rem 2.5rem;
+    /* Larger padding */
+    border-radius: 9999px;
+    /* Pill shape */
+    font-size: 1.125rem;
+    /* Larger font */
+    font-weight: 700;
+    /* Bolder */
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.75rem;
+    box-shadow: 0 10px 15px -3px rgba(88, 28, 135, 0.3);
+}
+
+.primary-btn:hover,
+.quiz-start-btn:hover,
+#generateStepsBtn:hover {
+    background: linear-gradient(to right, var(--purple-500), var(--indigo-500));
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-xl);
 }
 
 .quiz-start-btn:hover,
@@ -2257,6 +2313,15 @@ body {
     animation: spin 1s linear infinite;
 }
 
+.spinner-sm {
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
 @keyframes spin {
     to {
         transform: rotate(360deg);
@@ -2315,4 +2380,268 @@ body {
 .page-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+}
+
+/* Feature Tabs */
+#tabsContainer {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--slate-800);
+}
+
+.tab-btn {
+    background: transparent;
+    border: none;
+    color: var(--slate-400);
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+    border-bottom: 2px solid transparent;
+    font-size: 0.95rem;
+}
+
+.tab-btn:hover {
+    color: var(--slate-200);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.tab-btn.active {
+    color: var(--purple-400);
+    border-bottom-color: var(--purple-400);
+    background: rgba(192, 132, 252, 0.05);
+}
+
+/* Summary Toolbar */
+.summary-actions-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--slate-800);
+}
+
+.toolbar-group {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.tool-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: transparent;
+    border: 1px solid var(--slate-700);
+    color: var(--slate-300);
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tool-btn:hover {
+    background: var(--slate-800);
+    color: white;
+    border-color: var(--slate-600);
+}
+
+.tool-btn.primary {
+    background: rgba(192, 132, 252, 0.1);
+    border-color: var(--purple-900);
+    color: var(--purple-400);
+}
+
+.tool-btn.primary:hover {
+    background: rgba(192, 132, 252, 0.2);
+}
+
+.tool-btn.icon-only {
+    padding: 0.5rem;
+}
+
+.btn-label {
+    display: none;
+}
+
+@media (min-width: 640px) {
+    .btn-label {
+        display: inline;
+    }
+}
+
+.voice-control-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.voice-select-mini {
+    background: transparent;
+    border: none;
+    color: var(--slate-500);
+    font-size: 0.75rem;
+    width: 60px;
+    cursor: pointer;
+    outline: none;
+}
+
+.voice-select-mini:hover {
+    color: var(--slate-300);
+}
+
+/* Redesigned Feature Tabs */
+#tabsContainer {
+    display: flex;
+    gap: 1.5rem;
+    /* More space */
+    margin-bottom: 2.5rem;
+    margin-top: 2rem;
+    border-bottom: none;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.tab-btn {
+    background: var(--slate-800);
+    border: 1px solid var(--slate-700);
+    color: var(--slate-300);
+    padding: 1rem 2.5rem;
+    /* Much larger */
+    cursor: pointer;
+    font-weight: 700;
+    /* Bolder */
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 9999px;
+    /* Pill */
+    font-size: 1.25rem;
+    /* Larger font */
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Hover Effects */
+.tab-btn:hover {
+    transform: translateY(-4px);
+    /* Lift up */
+    background: var(--slate-700);
+    color: white;
+    box-shadow: var(--shadow-xl);
+}
+
+.tab-btn:active {
+    transform: translateY(-1px);
+}
+
+/* Specific Active Colors */
+
+/* Chat: Purple */
+.tab-btn[data-tab="chat"].active {
+    background: var(--purple-600);
+    color: white;
+    border-color: var(--purple-500);
+    box-shadow: 0 0 25px rgba(147, 51, 234, 0.5);
+}
+
+/* Quiz: Indigo/Blue-ish */
+.tab-btn[data-tab="quiz"].active {
+    background: var(--indigo-600);
+    color: white;
+    border-color: var(--indigo-500);
+    box-shadow: 0 0 25px rgba(79, 70, 229, 0.5);
+}
+
+/* Steps: Blue/Cyan */
+.tab-btn[data-tab="steps"].active {
+    background: var(--blue-600);
+    color: white;
+    border-color: #2563eb;
+    box-shadow: 0 0 25px rgba(37, 99, 235, 0.5);
+}
+
+/* Add subtle glow on hover for inactive buttons too? */
+.tab-btn[data-tab="chat"]:hover:not(.active) {
+    border-color: var(--purple-400);
+    color: var(--purple-400);
+}
+
+.tab-btn[data-tab="quiz"]:hover:not(.active) {
+    border-color: var(--indigo-500);
+    color: var(--indigo-500);
+}
+
+.tab-btn[data-tab="steps"]:hover:not(.active) {
+    border-color: var(--blue-600);
+    color: var(--blue-600);
+}
+
+/* Spacing for Start Views */
+.quiz-start-view h3,
+.quiz-start-view p {
+    margin-bottom: 2rem;
+    /* Increased from default */
+}
+
+/* Feature Loader */
+.feature-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 2rem;
+    color: var(--slate-400);
+}
+
+.feature-loading .spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--slate-700);
+    border-top-color: var(--purple-500);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* Steps Actions */
+.steps-actions {
+    display: flex;
+    justify-content: flex-end;
+    /* Align to right */
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--slate-800);
+}
+
+.copy-steps-btn {
+    background: transparent;
+    border: 1px solid var(--slate-700);
+    color: var(--slate-300);
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    /* Rounded rect */
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s;
+}
+
+.copy-steps-btn:hover {
+    background: var(--slate-800);
+    color: white;
+    border-color: var(--purple-500);
+}
+
+.copy-steps-btn:active {
+    transform: translateY(1px);
 }

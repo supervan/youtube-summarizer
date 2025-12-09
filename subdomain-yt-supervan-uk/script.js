@@ -168,13 +168,13 @@ if (window.speechSynthesis) {
 async function fetchFeatures() {
     try {
         const response = await fetch(`${API_BASE}/api/features`);
-        const features = await response.json();
+        enabledFeatures = await response.json(); // Update global variable
 
         // Toggle Ads
         const adFooter = document.getElementById('google-ad-footer');
         const adDeck = document.getElementById('google-ad-deck');
 
-        if (features.ads) {
+        if (enabledFeatures.ads) {
             if (adFooter) adFooter.classList.remove('hidden');
             if (adDeck) adDeck.classList.remove('hidden');
         } else {
@@ -182,11 +182,24 @@ async function fetchFeatures() {
             if (adDeck) adDeck.classList.add('hidden');
         }
 
-        // Toggle other features if needed (e.g. hide tabs if disabled)
-        // ...
+        // Toggle Tabs based on flags
+        const tabsContainer = document.getElementById('tabsContainer');
+        if (tabsContainer) {
+            const tabs = tabsContainer.querySelectorAll('.tab-btn');
+            tabs.forEach(tab => {
+                const featureKey = tab.dataset.tab; // 'chat', 'quiz', 'steps'
+                if (enabledFeatures[featureKey] === false) {
+                    tab.classList.add('hidden');
+                } else {
+                    tab.classList.remove('hidden');
+                }
+            });
+        }
 
     } catch (error) {
         console.error('Failed to fetch features:', error);
+        // Fallback defaults
+        enabledFeatures = { chat: true, steps: true, quiz: true, podcast: true, ads: false };
     }
 }
 
@@ -283,27 +296,30 @@ function updateReadAloudButton(state) {
 
     if (state === 'playing') {
         btn.innerHTML = `
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="6" y="4" width="4" height="16"></rect>
                 <rect x="14" y="4" width="4" height="16"></rect>
             </svg>
-            Pause
+            <span class="btn-label">Pause</span>
         `;
+        btn.classList.add('active'); // Optional: Add active styling
     } else if (state === 'paused') {
         btn.innerHTML = `
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none">
                 <polygon points="5 3 19 12 5 21 5 3"></polygon>
             </svg>
-            Resume
+            <span class="btn-label">Resume</span>
         `;
+        btn.classList.add('active'); // Keep active styling
     } else {
         btn.innerHTML = `
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
                 <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
             </svg>
-            Read Aloud
+            <span class="btn-label">Listen</span>
         `;
+        btn.classList.remove('active');
     }
 }
 
@@ -405,17 +421,7 @@ if (window.matchMedia('(display-mode: standalone)').matches) {
     if (installPrompt) installPrompt.classList.add('hidden');
 }
 
-// Fetch feature flags
-async function fetchFeatures() {
-    try {
-        const response = await fetch(`${API_BASE}/api/features`);
-        enabledFeatures = await response.json();
-    } catch (error) {
-        console.error('Failed to fetch features:', error);
-        // Fallback defaults
-        enabledFeatures = { chat: true, steps: true, quiz: true };
-    }
-}
+
 
 // Setup event listeners
 function setupEventListeners() {
@@ -604,6 +610,15 @@ function setupEventListeners() {
                 }
             }
         });
+
+        // Initial Validation on Load (for auto-filled inputs)
+        const initialUrl = youtubeUrlInput.value.trim();
+        const initialId = extractVideoId(initialUrl);
+        if (initialId) {
+            submitBtn.disabled = false;
+        } else {
+            submitBtn.disabled = true;
+        }
     }
 
     // Toggle Summary Button
@@ -626,6 +641,32 @@ function setupEventListeners() {
     if (generateStepsBtn) {
         generateStepsBtn.addEventListener('click', handleStepsRequest);
     }
+    const copyStepsBtn = document.getElementById('copyStepsBtn');
+    if (copyStepsBtn) {
+        copyStepsBtn.addEventListener('click', () => {
+            const stepsContent = document.getElementById('stepsContent');
+            if (!stepsContent) return;
+
+            // Get simple text
+            const text = stepsContent.innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                const originalHTML = copyStepsBtn.innerHTML;
+                copyStepsBtn.innerHTML = `
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    Copied!
+                 `;
+                showToast('Steps copied to clipboard', 'success');
+                setTimeout(() => {
+                    copyStepsBtn.innerHTML = originalHTML;
+                }, 2000);
+            }).catch(err => {
+                showToast('Failed to copy', 'error');
+                console.error('Copy failed', err);
+            });
+        });
+    }
 
     // Quiz Generation
     const startQuizBtn = document.getElementById('startQuizBtn');
@@ -635,11 +676,24 @@ function setupEventListeners() {
 }
 
 // Switch Feature Tabs
+// Switch Feature Tabs
 function switchTab(selectedTab) {
+    if (selectedTab.classList.contains('active')) {
+        // Toggle off if already active? 
+        // Or do nothing? Standard tabs usually stay active.
+        // Let's allow toggling off since they are incidental features now.
+        selectedTab.classList.remove('active');
+        const tabName = selectedTab.dataset.tab;
+        const targetId = 'content' + tabName.charAt(0).toUpperCase() + tabName.slice(1);
+        const targetContent = document.getElementById(targetId);
+        if (targetContent) targetContent.classList.add('hidden');
+        return;
+    }
+
     // Deactivate all tabs
     tabs.forEach(tab => {
         tab.classList.remove('active');
-        tab.classList.add('inactive');
+        tab.classList.remove('inactive'); // Clean up
     });
 
     // Hide all content panes
@@ -649,7 +703,6 @@ function switchTab(selectedTab) {
 
     // Activate selected
     selectedTab.classList.add('active');
-    selectedTab.classList.remove('inactive');
 
     // Show content
     const tabName = selectedTab.dataset.tab;
@@ -657,20 +710,39 @@ function switchTab(selectedTab) {
     const targetContent = document.getElementById(targetId);
     if (targetContent) {
         targetContent.classList.remove('hidden');
+        // Scroll to it?
+        setTimeout(() => {
+            targetContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
     }
 }
 
 // Show available features (Tabs)
+// Show available features (Tabs)
 function showFeatures() {
+    // Show Toolbar
+    const toolbar = document.querySelector('.summary-actions-toolbar');
+    if (toolbar) toolbar.classList.remove('hidden');
+
+    // Show Tabs Container
     if (tabsContainer) tabsContainer.classList.remove('hidden');
+
+    // Show Tab Content Area
     if (tabContent) tabContent.classList.remove('hidden');
 
-    // Ensure Chat tab is active by default if none active
-    const activeTab = document.querySelector('.tab-btn.active');
-    if (!activeTab) {
-        const chatTab = document.querySelector('.tab-btn[data-tab="chat"]');
-        if (chatTab) switchTab(chatTab);
-    }
+    // Ensure NO tab is active initially? Or maybe Chat?
+    // User said: "I would like for those to stay visible" which implies the Summary is separate.
+    // The previous logic defaulted to 'chat'.
+    // If we want tabs to be "closed" by default, we shouldn't click any.
+    // But then 'tabContent' would be visible but empty (or all hidden).
+
+    // Let's reset tabs state:
+    tabs.forEach(t => t.classList.remove('active'));
+    tabContents.forEach(c => c.classList.add('hidden'));
+
+    // Actually, if we want "Chat/Quiz/Steps" to be optional sections below,
+    // maybe we start with them closed.
+    // Let's just default to hidden pane content.
 }
 
 // --- Chat Feature ---
@@ -729,44 +801,77 @@ function addChatMessage(text, sender, isLoading = false) {
 }
 
 // --- Steps Feature ---
+// --- Steps Feature ---
 async function handleStepsRequest() {
     const btn = document.getElementById('generateStepsBtn');
     const content = document.getElementById('stepsContent');
     const startView = document.getElementById('stepsStartView');
+    const loading = document.getElementById('stepsLoading');
+    const stepsActions = document.getElementById('stepsActions');
+
+    // UI Updates: Disable Button, Show Spinner IN Button
+    const originalBtnContent = btn.innerHTML;
+    // Store original content on the button element to retrieve if needed
+    btn.dataset.originalContent = originalBtnContent;
 
     btn.disabled = true;
-    const originalText = btn.innerHTML;
-    btn.innerHTML = 'Generating Steps...';
+    btn.innerHTML = `<div class="spinner-sm"></div> Generating...`;
 
-    // content.innerHTML = '<div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text"></div>';
+    // Ensure separate loading is hidden (we use button loading now)
+    loading.classList.add('hidden');
+
+    // Timeout Controller
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 120000); // 120s timeout
 
     try {
         const response = await fetch(`${API_BASE}/api/steps`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ transcript: currentTranscript })
+            body: JSON.stringify({ transcript: currentTranscript }),
+            signal: controller.signal
         });
+        clearTimeout(timeoutId);
+
         const data = await response.json();
 
         if (data.success) {
-            startView.classList.add('hidden');
-            content.classList.remove('hidden');
+            // Success State
+            startView.classList.add('hidden'); // Now hide start view
+            content.classList.remove('hidden'); // Show content
+            if (stepsActions) stepsActions.classList.remove('hidden');
 
             if (data.steps.includes('NO_STEPS_FOUND')) {
                 content.innerHTML = '<div class="text-center py-8 text-slate-400"><p>No specific tutorial steps found in this video.</p><button class="secondary-btn mt-4" onclick="resetSteps()">Try Again</button></div>';
+                if (stepsActions) stepsActions.classList.add('hidden');
             } else {
                 content.innerHTML = formatMarkdown(data.steps);
-                // Add a reset button at the bottom? Or just leave it.
+
+                if (videoId) {
+                    updateHistoryItem(videoId, { steps: data.steps });
+                }
             }
+
+            // We keep the button disabled (and hidden) until manually reset
+            // btn.disabled = false;
+            // btn.innerHTML = originalBtnContent;
+
         } else {
-            showToast('Failed to generate steps', 'error');
-            btn.disabled = false;
-            btn.innerHTML = originalText;
+            throw new Error(data.error || 'Failed to generate steps');
         }
     } catch (error) {
-        showToast('Network error', 'error');
+        if (error.name === 'AbortError') {
+            showToast('Request timed out. Please try again.', 'error');
+        } else {
+            showToast(error.message || 'Network error', 'error');
+        }
+        console.error(error);
+
+        // Revert UI
         btn.disabled = false;
-        btn.innerHTML = originalText;
+        btn.innerHTML = originalBtnContent;
+        // Ensure start view is visible
+        startView.classList.remove('hidden');
     }
 }
 
@@ -787,32 +892,57 @@ function resetSteps() {
 async function handleQuizRequest() {
     const startView = document.getElementById('quizStartView');
     const quizContent = document.getElementById('quizContent');
+    const loading = document.getElementById('quizLoading');
     const btn = document.getElementById('startQuizBtn');
 
+    // UI Updates: Disable Button, Show Spinner IN Button
+    const originalBtnContent = btn.innerHTML;
+    btn.dataset.originalContent = originalBtnContent;
+
     btn.disabled = true;
-    btn.textContent = 'Generating Quiz...';
+    btn.innerHTML = `<div class="spinner-sm"></div> Generating...`;
+
+    loading.classList.add('hidden'); // Ensure separate loading is hidden
+
+    // Timeout Controller
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 120000); // 120s timeout
 
     try {
         const response = await fetch(`${API_BASE}/api/quiz`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ transcript: currentTranscript })
+            body: JSON.stringify({ transcript: currentTranscript }),
+            signal: controller.signal
         });
+        clearTimeout(timeoutId);
+
         const data = await response.json();
 
         if (data.success) {
+            // Success State
             startView.classList.add('hidden');
             quizContent.classList.remove('hidden');
             renderQuiz(data.quiz);
-        } else {
-            alert('Failed to generate quiz');
+
+            // Restore button
             btn.disabled = false;
-            btn.textContent = 'Start Quiz';
+            btn.innerHTML = originalBtnContent;
+        } else {
+            throw new Error(data.error || 'Failed to generate quiz');
         }
     } catch (error) {
-        alert('Network error');
+        if (error.name === 'AbortError') {
+            showToast('Request timed out. Please try again.', 'error');
+        } else {
+            showToast(error.message || 'Network error', 'error');
+        }
+        console.error(error);
+
+        // Revert UI
         btn.disabled = false;
-        btn.textContent = 'Start Quiz';
+        btn.innerHTML = originalBtnContent;
+        startView.classList.remove('hidden');
     }
 }
 
@@ -840,6 +970,23 @@ function renderQuiz(questions) {
         `;
         container.appendChild(card);
     });
+
+    // Add "New Questions" button at the bottom of the active quiz
+    const actionDiv = document.createElement('div');
+    actionDiv.className = 'quiz-actions-footer';
+    actionDiv.style.cssText = 'display: flex; justify-content: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--slate-800);';
+    actionDiv.innerHTML = `
+        <button class="quiz-retry-btn" onclick="regenerateQuiz()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                <path d="M3 3v5h5"></path>
+                <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"></path>
+                <path d="M16 21h5v-5"></path>
+            </svg>
+            New Questions
+        </button>
+    `;
+    container.appendChild(actionDiv);
 }
 
 window.checkAnswer = function (btn, selectedIndex, correctIndex, questionIndex) {
@@ -902,6 +1049,16 @@ function resetQuiz() {
     document.getElementById('quizStartView').classList.remove('hidden');
     document.getElementById('startQuizBtn').disabled = false;
     document.getElementById('startQuizBtn').textContent = 'Start Quiz';
+    document.getElementById('startQuizBtn').textContent = 'Start Quiz';
+}
+
+function regenerateQuiz() {
+    resetQuiz();
+    // Use timeout to ensure UI updates before click (though sync usually fine)
+    setTimeout(() => {
+        const btn = document.getElementById('startQuizBtn');
+        if (btn) btn.click();
+    }, 50);
 }
 
 // Reset Application
@@ -1095,6 +1252,12 @@ function setLoading(isLoading) {
 function showSkeletonLoading(videoId) {
     // Show results container
     resultsContainer.classList.remove('hidden');
+
+    // Hide Toolbar and Tabs explicitly during loading
+    const toolbar = document.querySelector('.summary-actions-toolbar');
+    if (toolbar) toolbar.classList.add('hidden');
+
+    if (tabsContainer) tabsContainer.classList.add('hidden');
 
     // Show Thumbnail immediately if we have ID
     if (videoId) {
@@ -1397,8 +1560,6 @@ function showLiveVideoError() {
 }
 
 // Save to History
-// Save to History
-// Save to History
 function saveToHistory(data) {
     const historyItem = {
         id: data.id,
@@ -1424,6 +1585,18 @@ function saveToHistory(data) {
 
     localStorage.setItem('yt_summary_history', JSON.stringify(history));
     loadHistory();
+}
+
+// Update History Item (Partial Update)
+function updateHistoryItem(id, updates) {
+    let history = JSON.parse(localStorage.getItem('yt_summary_history') || '[]');
+    const index = history.findIndex(item => item.id === id);
+
+    if (index !== -1) {
+        history[index] = { ...history[index], ...updates };
+        localStorage.setItem('yt_summary_history', JSON.stringify(history));
+        // We don't reload list here to avoid distracting re-renders
+    }
 }
 
 // Load History
@@ -1560,13 +1733,32 @@ function loadHistoryItem(item) {
     }
 
     // Clear previous feature data
+    // Clear previous feature data
     const chatHistory = document.getElementById('chatHistory');
     if (chatHistory) chatHistory.innerHTML = '<div class="chat-message ai"><div class="message-content"><p>Hi! Ask me anything about this video.</p></div></div>';
 
     const stepsContent = document.getElementById('stepsContent');
+    const stepsStartView = document.getElementById('stepsStartView');
+    const stepsActions = document.getElementById('stepsActions');
+
     if (stepsContent) stepsContent.innerHTML = '';
 
     resetQuiz();
+    if (typeof resetSteps === 'function') resetSteps();
+
+    // Check for saved steps
+    if (item.steps) {
+        if (stepsContent) {
+            stepsContent.innerHTML = formatMarkdown(item.steps);
+            stepsContent.classList.remove('hidden');
+        }
+        if (stepsStartView) stepsStartView.classList.add('hidden');
+        if (stepsActions) stepsActions.classList.remove('hidden');
+    }
+
+    // Assuming resetChat doesn't exist, we manually reset chat if needed or leave as is since we clear innerHTML above
+    // Actually, chat history is cleared in line 1695-1696.
+
 
     // Set global state
     currentTranscript = item.transcript;
@@ -2332,3 +2524,59 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// Toast Notification
+function showToast(message, type = 'info') {
+    // Create toast container if not exists
+    let toastContainer = document.getElementById('toastContainer');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toastContainer';
+        toastContainer.style.cssText = `
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            pointer-events: none;
+        `;
+        document.body.appendChild(toastContainer);
+    }
+
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+
+    // Icon based on type
+    const icon = type === 'error' ? '❌' : (type === 'success' ? '✅' : 'ℹ️');
+
+    toast.style.cssText = `
+        background: ${type === 'error' ? '#ef4444' : '#1e293b'};
+        color: white;
+        padding: 12px 24px;
+        border-radius: 50px;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        font-size: 14px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        animation: slideUpFade 0.3s ease-out;
+        pointer-events: auto;
+        border: 1px solid rgba(255,255,255,0.1);
+    `;
+
+    toast.innerHTML = `<span>${icon}</span> ${message}`;
+
+    // Add to container
+    toastContainer.appendChild(toast);
+
+    // Remove after 3 seconds
+    setTimeout(() => {
+        toast.style.animation = 'fadeOut 0.3s ease-in forwards';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}

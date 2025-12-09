@@ -46,6 +46,15 @@
                         <polyline points="12 7 12 12 15 15" />
                     </svg>
                 </button>
+                <a href="help.html" class="history-btn" title="Help & Tutorial"
+                    style="display: flex; align-items: center; justify-content: center; text-decoration: none;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                        <path d="M12 17h.01"></path>
+                    </svg>
+                </a>
             </div>
         </header>
 
@@ -121,7 +130,7 @@
                             </svg>
                         </div>
 
-                        <button type="submit" id="submitBtn" class="submit-btn">
+                        <button type="submit" id="submitBtn" class="submit-btn" disabled>
                             <span id="btnText">Let's Go</span>
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
@@ -164,93 +173,119 @@
 
         <!-- Scrollable Content Area -->
         <div id="resultsContainer" class="hidden">
-            <div id="tabContent" class="tab-content-scrollable">
-                <!-- Summary Tab -->
-                <div id="contentSummary" class="tab-pane">
-                    <!-- Video Player Section -->
-                    <div id="videoPlayerWrapper" class="video-player-wrapper">
-                        <div id="player" class="hidden"></div>
-                        <img id="videoThumbnail" class="video-thumbnail" src="" alt="Video Thumbnail">
-                        <div class="play-overlay">
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M8 5v14l11-7z" />
-                            </svg>
-                        </div>
-                        <div class="live-badge hidden">LIVE</div>
-                        <h2 id="videoTitle" class="video-title"></h2>
+            <!-- Persistent Video Player -->
+            <div id="videoPlayerWrapper" class="video-player-wrapper">
+                <div id="player" class="hidden"></div>
+                <img id="videoThumbnail" class="video-thumbnail" src="" alt="Video Thumbnail">
+                <div class="play-overlay">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M8 5v14l11-7z" />
+                    </svg>
+                </div>
+                <div class="live-badge hidden">LIVE</div>
+                <h2 id="videoTitle" class="video-title"></h2>
+            </div>
+
+            <!-- Persistent Summary Content -->
+            <div class="summary-content-wrapper">
+                <div class="summary-header">
+                    <div class="summary-title">
+                        <h3>AI Summary</h3>
                     </div>
 
-                    <div class="summary-content-wrapper">
-                        <div class="summary-header">
-                            <div class="summary-title">
-                                <h3>AI Summary</h3>
+                    <!-- Action Toolbar -->
+                    <div class="summary-actions-toolbar">
+                        <div class="toolbar-group">
+                            <div class="voice-control-wrapper">
+                                <button id="readAloudBtn" class="tool-btn primary" title="Read Aloud">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                                    </svg>
+                                    <span class="btn-label">Listen</span>
+                                </button>
+                                <select id="voiceSelect" class="voice-select-mini" title="Select Voice">
+                                    <option value="">Auto</option>
+                                </select>
                             </div>
-                            <div class="action-buttons">
-                                <div class="read-aloud-group">
-                                    <button id="readAloudBtn" class="action-btn secondary-btn"
-                                        title="Read Summary Aloud">
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                            stroke-linejoin="round">
-                                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                                            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07">
-                                            </path>
-                                        </svg>
-                                        Read Aloud
-                                    </button>
-                                    <select id="voiceSelect" class="voice-select" title="Select Voice">
-                                        <option value="">Loading voices...</option>
-                                    </select>
-                                </div>
-                                <div class="secondary-actions">
-                                    <button id="copyBtn" class="action-btn secondary-btn" title="Copy to Clipboard">
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                            stroke-linejoin="round">
-                                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1">
-                                            </path>
-                                        </svg>
-                                        Copy
-                                    </button>
-                                    <button id="podcastBtn" class="action-btn" title="Generate Podcast">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                            stroke-linejoin="round">
-                                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-                                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                                            <line x1="12" y1="19" x2="12" y2="23"></line>
-                                            <line x1="8" y1="23" x2="16" y2="23"></line>
-                                        </svg>
-                                        Podcast
-                                    </button>
-                                    <button id="watchAnotherBtn" class="action-btn" title="Watch Another Video"
-                                        onclick="resetApp()">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                            stroke-linejoin="round">
-                                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11">
-                                            </path>
-                                            <path d="M21 2l-2 2m-2-2l2 2"></path>
-                                        </svg>
-                                        Watch Another
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Loading Animation -->
-                        <div id="summaryLoading" class="summary-loading hidden">
-                            <div class="loading-spinner"></div>
-                            <p>Generating Summary...</p>
+
+                            <button id="podcastBtn" class="tool-btn" title="Generate Podcast">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                                    <line x1="12" y1="19" x2="12" y2="23"></line>
+                                    <line x1="8" y1="23" x2="16" y2="23"></line>
+                                </svg>
+                                <span class="btn-label">Podcast</span>
+                            </button>
                         </div>
 
-                        <div id="summaryText" class="summary-text">
-                            <!-- Summary injected here -->
+                        <div class="toolbar-group right">
+                            <button id="copyBtn" class="tool-btn icon-only" title="Copy to Clipboard">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                </svg>
+                            </button>
+                            <button id="watchAnotherBtn" class="tool-btn icon-only" title="Watch Another Video"
+                                onclick="resetApp()">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                                    <path d="M21 2l-2 2m-2-2l2 2"></path>
+                                </svg>
+                            </button>
                         </div>
-                        <div id="summaryFooter" class="summary-footer"></div>
                     </div>
                 </div>
 
+                <!-- Loading Animation -->
+                <div id="summaryLoading" class="summary-loading hidden">
+                    <div class="loading-spinner"></div>
+                    <p>Generating Summary...</p>
+                </div>
+
+                <div id="summaryText" class="summary-text">
+                    <!-- Summary injected here -->
+                </div>
+                <div id="summaryFooter" class="summary-footer"></div>
+            </div>
+
+            <!-- Feature Tabs (Moved Below Summary) -->
+            <div id="tabsContainer">
+                <button class="tab-btn" data-tab="chat">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path
+                            d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z">
+                        </path>
+                    </svg>
+                    Chat
+                </button>
+                <button class="tab-btn" data-tab="quiz">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                    Quiz
+                </button>
+                <button class="tab-btn" data-tab="steps">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path
+                            d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z">
+                        </path>
+                    </svg>
+                    Steps
+                </button>
+            </div>
+
+            <div id="tabContent" class="tab-content-scrollable">
                 <!-- Podcast Controls (Hidden by default) -->
                 <div id="podcastControls" class="podcast-controls hidden">
                     <div class="podcast-player">
@@ -306,22 +341,46 @@
                         </div>
                         <h3>Test Your Knowledge</h3>
                         <p>Take a quick 5-question quiz based on the video content.</p>
-                        <button id="startQuizBtn" class="primary-btn">Start Quiz</button>
+                        <button id="startQuizBtn" class="primary-btn">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                            </svg>
+                            Start Quiz
+                        </button>
+                    </div>
+                    <div id="quizLoading" class="feature-loading hidden">
+                        <div class="spinner"></div>
+                        <p>Generating Quiz...</p>
                     </div>
                     <div id="quizContent" class="quiz-content hidden"></div>
                     <div id="quizScore" class="quiz-score-view hidden">
                         <div class="score-circle"><span id="scoreValue">0</span>/5</div>
                         <h3>Quiz Completed!</h3>
-                        <button class="quiz-retry-btn" onclick="resetQuiz()">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M23 4v6h-6"></path>
-                                <path d="M1 20v-6h6"></path>
-                                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15">
-                                </path>
-                            </svg>
-                            Try Again
-                        </button>
+                        <div class="quiz-actions-row" style="display: flex; gap: 12px; justify-content: center; margin-top: 1rem;">
+                            <button class="quiz-retry-btn secondary" onclick="resetQuiz()">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 4v6h6"></path>
+                                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"></path>
+                                    <path d="M23 20v-6h-6"></path>
+                                    <path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"></path>
+                                </svg>
+                                Retry
+                            </button>
+                            <button class="quiz-retry-btn" onclick="regenerateQuiz()">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                                    <path d="M3 3v5h5"></path>
+                                    <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"></path>
+                                    <path d="M16 21h5v-5"></path>
+                                </svg>
+                                New Questions
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -345,6 +404,20 @@
                                 </path>
                             </svg>
                             Generate Steps
+                        </button>
+                    </div>
+                    <div id="stepsLoading" class="feature-loading hidden">
+                        <div class="spinner"></div>
+                        <p>Generating Steps...</p>
+                    </div>
+                    <div id="stepsActions" class="steps-actions hidden">
+                        <button id="copyStepsBtn" class="copy-steps-btn">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                            Copy Steps
                         </button>
                     </div>
                     <div id="stepsContent" class="steps-content hidden summary-text"></div>
@@ -402,7 +475,7 @@
 
 
 
-    <script src="script.js?v=1004"></script>
+    <script src="script.js?v=1006"></script>
     <script>
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js?t=' + Date.now());
