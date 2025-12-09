@@ -68,6 +68,7 @@ let isReading = false;
 let isPaused = false;
 let currentCharIndex = 0;
 let isSwappingVoice = false;
+let currentVideoId = null; // Global to track current video ID
 
 function populateVoiceList() {
     if (!window.speechSynthesis) return;
@@ -848,8 +849,8 @@ async function handleStepsRequest() {
             } else {
                 content.innerHTML = formatMarkdown(data.steps);
 
-                if (videoId) {
-                    updateHistoryItem(videoId, { steps: data.steps });
+                if (currentVideoId) {
+                    updateHistoryItem(currentVideoId, { steps: data.steps });
                 }
             }
 
@@ -1356,6 +1357,7 @@ async function handleSubmit(e) {
             showError('Invalid YouTube URL. Please enter a valid YouTube video link.');
             return;
         }
+        currentVideoId = videoId; // Update global ID
 
         // Check History Cache
         let history = [];
@@ -1732,6 +1734,7 @@ function loadHistoryItem(item) {
 
     // Use freshItem for everything below
     item = freshItem;
+    currentVideoId = item.id; // Update global ID
 
     hideAllCards();
     stopPodcast(); // Stop podcast if playing
