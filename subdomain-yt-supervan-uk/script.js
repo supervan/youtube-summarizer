@@ -1111,6 +1111,15 @@ function ensureMermaidLoaded() {
     });
 }
 
+// Helper: Sanitize Mermaid Syntax to prevent render errors
+function sanitizeMermaidSyntax(syntax) {
+    if (!syntax) return '';
+    // Replace backticks with single quotes to prevent 'Lexical error'
+    // Also ensuring we don't accidentally break existing quotes if possible, 
+    // but primarily targeting the known issue where `code` style text breaks the graph label validation.
+    return syntax.replace(/`/g, "'");
+}
+
 // Helper: Centralized, Robust Rendering
 async function renderMindMap(container, syntax) {
     if (!container) return;
@@ -1125,11 +1134,17 @@ async function renderMindMap(container, syntax) {
     try {
         await ensureMermaidLoaded();
 
-        // 1. Parse Validation (catches syntax errors early)
-        await mermaid.parse(syntax);
+        // 0. Sanitize Syntax
+        const cleanSyntax = sanitizeMermaidSyntax(syntax);
 
-        // 2. Set Content
-        container.innerHTML = syntax;
+        // 1. Parse Validation (catches syntax errors early)
+        await mermaid.parse(cleanSyntax);
+
+        // 2. Set Content - Use the CLEAN syntax for the container
+        // Note: Mermaid might still use the text content for callbacks if we used the API differently,
+        // but for 'mermaid.run' on a containerElement, it often re-reads. 
+        // Best to set the INNER HTML to the clean syntax.
+        container.innerHTML = cleanSyntax;
 
         // 3. Wait for Paint (Fixes "firstChild" crash)
         // We use double RequestAnimationFrame to ensure a paint frame has passed

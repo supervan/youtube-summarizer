@@ -34,6 +34,16 @@ export default function Home() {
           >
             Learn More
           </Link>
+          <a
+            href="#"
+            className="inline-flex items-center gap-2 bg-red-900/50 hover:bg-red-800/50 text-red-300 font-bold py-3 px-6 rounded-full transition-all border border-red-700/50"
+            title="Video Tutorial Coming Soon"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+            Watch Tutorial
+          </a>
           {import.meta.env.DEV && (
             <a
               href="http://localhost:5174"
