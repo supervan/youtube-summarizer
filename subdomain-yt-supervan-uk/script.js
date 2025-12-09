@@ -387,8 +387,8 @@ const expandMindMapBtn = document.getElementById('expandMindMapBtn');
 const inputSection = document.querySelector('.input-card');
 
 // API Configuration
-const CACHE_NAME = 'yt-summarizer-v2034.3';
-console.log('YouTube Summarizer v2034.3 Loaded');
+const CACHE_NAME = 'yt-summarizer-v2034.4';
+console.log('YouTube Summarizer v2034.4 Loaded');
 const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
 
 // Initialize app
