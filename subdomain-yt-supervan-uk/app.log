@@ -843,3 +843,333 @@ INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:40:40] "GET /index.html HTTP/1.1" 20
 INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:40:40] "GET /script.js HTTP/1.1" 200 -
 INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:40:40] "GET /api/features HTTP/1.1" 200 -
 INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:40:40] "GET /api/features HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:25] "GET / HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:26] "GET /style.css?v=1016 HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:26] "GET /logo.png HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:26] "GET /script.js?v=1016 HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:26] "GET /sw.js?t=1765309586787 HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:26] "GET / HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:26] "GET /index.html HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:26] "GET /style.css HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:26] "GET /script.js HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:26] "GET /api/features HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:26] "GET /api/features HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:26] "GET /favicon.png HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:55] "GET /sw.js?t=1765309615190 HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:55] "GET / HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:55] "GET /style.css HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:55] "GET /index.html HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:55] "GET /script.js HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:57] "GET / HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:57] "GET /style.css?v=1016 HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:57] "GET /logo.png HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:57] "GET /script.js?v=1016 HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:58] "GET /sw.js?t=1765309618154 HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:58] "GET / HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:58] "GET /style.css HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:58] "GET /index.html HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:58] "GET /script.js HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:58] "GET /api/features HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:58] "GET /api/features HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:58] "GET /favicon.png HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:58] "GET / HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:58] "GET /style.css?v=1016 HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:58] "GET /logo.png HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:58] "GET /script.js?v=1016 HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:59] "GET /sw.js?t=1765309619117 HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:59] "GET / HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:59] "GET /index.html HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:59] "GET /style.css HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:59] "GET /script.js HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:59] "GET /api/features HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:59] "GET /api/features HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:59] "GET /favicon.png HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:59] "GET / HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:59] "GET /style.css?v=1016 HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:59] "GET /logo.png HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:59] "GET /script.js?v=1016 HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:59] "GET /sw.js?t=1765309619847 HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:59] "GET /api/features HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:59] "GET /api/features HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:59] "GET /favicon.png HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:59] "GET / HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:59] "GET /style.css HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:59] "GET /index.html HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:46:59] "GET /script.js HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:47:23] "GET / HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:47:23] "GET /style.css?v=1016 HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:47:23] "GET /logo.png HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:47:23] "GET /script.js?v=1016 HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:47:24] "GET /sw.js?t=1765309644001 HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:47:24] "GET /api/features HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:47:24] "GET /api/features HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:47:24] "GET / HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:47:24] "GET /index.html HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:47:24] "GET /style.css HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:47:24] "GET /script.js HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:47:24] "GET /manifest.json HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:48:30] "GET / HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:48:30] "GET /style.css?v=1016 HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:48:30] "GET /script.js?v=1016 HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:48:30] "GET /logo.png HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:48:31] "GET /sw.js?t=1765309711151 HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:48:31] "GET / HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:48:31] "GET /style.css HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:48:31] "GET /index.html HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:48:31] "GET /script.js HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:48:31] "GET /api/features HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:48:31] "GET /api/features HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:48:31] "GET /manifest.json HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:48:31] "GET /icon-192.png HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:48:31] "GET /favicon.png HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:48:36] "GET / HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:48:36] "GET /logo.png HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:48:36] "GET /style.css?v=1016 HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:48:36] "GET /script.js?v=1016 HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:48:36] "GET /sw.js?t=1765309716877 HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:48:36] "GET / HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:48:36] "GET /style.css HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:48:36] "GET /index.html HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:48:36] "GET /api/features HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:48:36] "GET /api/features HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:48:36] "GET /script.js HTTP/1.1" 200 -
+WARNING: [youtube] No supported JavaScript runtime could be found. Only deno is enabled by default; to use another runtime add  --js-runtimes RUNTIME[:PATH]  to your command/config. YouTube extraction without a JS runtime has been deprecated, and some formats may be missing. See  https://github.com/yt-dlp/yt-dlp/wiki/EJS  for details on installing one
+WARNING: [youtube] Y5LJF4rKylc: Some web_safari client https formats have been skipped as they are missing a url. YouTube is forcing SABR streaming for this client. See  https://github.com/yt-dlp/yt-dlp/issues/12482  for more details
+WARNING: [youtube] Y5LJF4rKylc: Some web client https formats have been skipped as they are missing a url. YouTube is forcing SABR streaming for this client. See  https://github.com/yt-dlp/yt-dlp/issues/12482  for more details
+WARNING: ffmpeg not found. The downloaded format may not be the best available. Installing ffmpeg is strongly recommended: https://github.com/yt-dlp/yt-dlp#dependencies
+WARNING: You have asked for UNPLAYABLE formats to be listed/downloaded. This is a developer option intended for debugging. 
+         If you experience any issues while using this option, DO NOT open a bug report
+[youtube] Extracting URL: https://www.youtube.com/watch?v=Y5LJF4rKylc
+✅ Method 1.5 Success! yt-dlp direct worked.
+📝 Generating SUMMARY with Tone: conversational, Length: short
+🔄 Gemini: Attempting with model: gemini-2.5-flash
+✅ Gemini: Success with model: gemini-2.5-flash
+🔄 Gemini: Attempting with model: gemini-2.5-flash
+✅ Gemini: Success with model: gemini-2.5-flash
+🔄 Gemini: Attempting with model: gemini-2.5-flash
+✅ Gemini: Success with model: gemini-2.5-flash
+🔍 Checking if video Y5LJF4rKylc is live/VOD...
+🚀 Attempting Method 1: YouTubeTranscriptApi for Y5LJF4rKylc...
+⚠️ Direct YouTubeTranscriptApi failed: no element found: line 1, column 0
+🚀 Attempting Method 1.5: yt-dlp Direct Connection...
+[youtube] Y5LJF4rKylc: Downloading webpage
+WARNING: [youtube] No supported JavaScript runtime could be found. Only deno is enabled by default; to use another runtime add  --js-runtimes RUNTIME[:PATH]  to your command/config. YouTube extraction without a JS runtime has been deprecated, and some formats may be missing. See  https://github.com/yt-dlp/yt-dlp/wiki/EJS  for details on installing one
+[youtube] Y5LJF4rKylc: Downloading android sdkless player API JSON
+[youtube] Y5LJF4rKylc: Downloading web safari player API JSON
+WARNING: [youtube] Y5LJF4rKylc: Some web_safari client https formats have been skipped as they are missing a url. YouTube is forcing SABR streaming for this client. See  https://github.com/yt-dlp/yt-dlp/issues/12482  for more details
+[youtube] Y5LJF4rKylc: Downloading m3u8 information
+WARNING: [youtube] Y5LJF4rKylc: Some web client https formats have been skipped as they are missing a url. YouTube is forcing SABR streaming for this client. See  https://github.com/yt-dlp/yt-dlp/issues/12482  for more details
+[info] Y5LJF4rKylc: Downloading subtitles: en
+[info] Y5LJF4rKylc: Downloading 1 format(s): 91-0
+[info] Writing video subtitles to: /tmp/tmp1nwvv3se/Y5LJF4rKylc.en.vtt
+WARNING: The extractor specified to use impersonation for this download, but no impersonate target is available. If you encounter errors, then see  https://github.com/yt-dlp/yt-dlp#impersonation  for information on installing the required dependencies
+[download] Destination: /tmp/tmp1nwvv3se/Y5LJF4rKylc.en.vtt
+[download]    1.00KiB at  Unknown B/s (00:00:00)[download]    3.00KiB at    1.23MiB/s (00:00:00)[download]    7.00KiB at    1.64MiB/s (00:00:00)[download]   15.00KiB at    2.23MiB/s (00:00:00)[download]   31.00KiB at    3.60MiB/s (00:00:00)[download]   60.45KiB at    5.16MiB/s (00:00:00)[download] 100% of   60.45KiB in 00:00:00 at 634.69KiB/s
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:48:46] "POST /api/extract-transcript HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:48:50] "POST /api/summarize HTTP/1.1" 200 -
+WARNING: [youtube] No supported JavaScript runtime could be found. Only deno is enabled by default; to use another runtime add  --js-runtimes RUNTIME[:PATH]  to your command/config. YouTube extraction without a JS runtime has been deprecated, and some formats may be missing. See  https://github.com/yt-dlp/yt-dlp/wiki/EJS  for details on installing one
+WARNING: [youtube] htOMgqt7SV4: Some web_safari client https formats have been skipped as they are missing a url. YouTube is forcing SABR streaming for this client. See  https://github.com/yt-dlp/yt-dlp/issues/12482  for more details
+WARNING: [youtube] htOMgqt7SV4: Some web client https formats have been skipped as they are missing a url. YouTube is forcing SABR streaming for this client. See  https://github.com/yt-dlp/yt-dlp/issues/12482  for more details
+WARNING: ffmpeg not found. The downloaded format may not be the best available. Installing ffmpeg is strongly recommended: https://github.com/yt-dlp/yt-dlp#dependencies
+WARNING: You have asked for UNPLAYABLE formats to be listed/downloaded. This is a developer option intended for debugging. 
+         If you experience any issues while using this option, DO NOT open a bug report
+[youtube] Extracting URL: https://www.youtube.com/watch?v=htOMgqt7SV4
+✅ Method 1.5 Success! yt-dlp direct worked.
+📝 Generating SUMMARY with Tone: conversational, Length: short
+🔄 Gemini: Attempting with model: gemini-2.5-flash
+✅ Gemini: Success with model: gemini-2.5-flash
+🔍 Checking if video htOMgqt7SV4 is live/VOD...
+🚀 Attempting Method 1: YouTubeTranscriptApi for htOMgqt7SV4...
+⚠️ Direct YouTubeTranscriptApi failed: no element found: line 1, column 0
+🚀 Attempting Method 1.5: yt-dlp Direct Connection...
+[youtube] htOMgqt7SV4: Downloading webpage
+WARNING: [youtube] No supported JavaScript runtime could be found. Only deno is enabled by default; to use another runtime add  --js-runtimes RUNTIME[:PATH]  to your command/config. YouTube extraction without a JS runtime has been deprecated, and some formats may be missing. See  https://github.com/yt-dlp/yt-dlp/wiki/EJS  for details on installing one
+[youtube] htOMgqt7SV4: Downloading android sdkless player API JSON
+[youtube] htOMgqt7SV4: Downloading web safari player API JSON
+WARNING: [youtube] htOMgqt7SV4: Some web_safari client https formats have been skipped as they are missing a url. YouTube is forcing SABR streaming for this client. See  https://github.com/yt-dlp/yt-dlp/issues/12482  for more details
+[youtube] htOMgqt7SV4: Downloading m3u8 information
+WARNING: [youtube] htOMgqt7SV4: Some web client https formats have been skipped as they are missing a url. YouTube is forcing SABR streaming for this client. See  https://github.com/yt-dlp/yt-dlp/issues/12482  for more details
+[info] htOMgqt7SV4: Downloading subtitles: en
+[info] htOMgqt7SV4: Downloading 1 format(s): 91-0
+[info] Writing video subtitles to: /tmp/tmp1k78g4rk/htOMgqt7SV4.en.vtt
+WARNING: The extractor specified to use impersonation for this download, but no impersonate target is available. If you encounter errors, then see  https://github.com/yt-dlp/yt-dlp#impersonation  for information on installing the required dependencies
+[download] Destination: /tmp/tmp1k78g4rk/htOMgqt7SV4.en.vtt
+[download]    1.00KiB at  Unknown B/s (00:00:00)[download]    3.00KiB at    1.12MiB/s (00:00:00)[download]    7.00KiB at    1.63MiB/s (00:00:00)[download]   15.00KiB at    2.53MiB/s (00:00:00)[download]   31.00KiB at    3.99MiB/s (00:00:00)[download]   63.00KiB at    6.25MiB/s (00:00:00)[download]  127.00KiB at   10.09MiB/s (00:00:00)[download]  242.94KiB at    7.99MiB/s (00:00:00)[download] 100% of  242.94KiB in 00:00:00 at 1.60MiB/s
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:49:20] "POST /api/extract-transcript HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:49:23] "POST /api/summarize HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 19:49:43] "POST /api/mindmap HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:23:08] "GET / HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:23:09] "GET /style.css?v=1016 HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:23:09] "GET /logo.png HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:23:09] "GET /script.js?v=1016 HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:23:09] "GET /sw.js?t=1765311789311 HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:23:09] "GET /api/features HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:23:09] "GET /api/features HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:23:09] "GET / HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:23:09] "GET /index.html HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:23:09] "GET /style.css HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:23:09] "GET /script.js HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:24:54] "GET / HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:24:54] "GET /style.css?v=1016 HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:24:54] "GET /script.js?v=1016 HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:24:54] "GET /logo.png HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:24:54] "[33mGET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1[0m" 404 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:24:55] "GET /sw.js?t=1765311895205 HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:24:55] "GET /api/features HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:24:55] "GET / HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:24:55] "GET /api/features HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:24:55] "GET /style.css HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:24:55] "GET /index.html HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:24:55] "GET /manifest.json HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:24:55] "GET /script.js HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:24:55] "GET /icon-192.png HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:24:55] "GET /icon-192.png HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:24:55] "GET /icon-512.png HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:24:56] "GET /favicon.png HTTP/1.1" 200 -
+WARNING: [youtube] No supported JavaScript runtime could be found. Only deno is enabled by default; to use another runtime add  --js-runtimes RUNTIME[:PATH]  to your command/config. YouTube extraction without a JS runtime has been deprecated, and some formats may be missing. See  https://github.com/yt-dlp/yt-dlp/wiki/EJS  for details on installing one
+WARNING: [youtube] Y5LJF4rKylc: Some web_safari client https formats have been skipped as they are missing a url. YouTube is forcing SABR streaming for this client. See  https://github.com/yt-dlp/yt-dlp/issues/12482  for more details
+WARNING: [youtube] Y5LJF4rKylc: Some web client https formats have been skipped as they are missing a url. YouTube is forcing SABR streaming for this client. See  https://github.com/yt-dlp/yt-dlp/issues/12482  for more details
+WARNING: ffmpeg not found. The downloaded format may not be the best available. Installing ffmpeg is strongly recommended: https://github.com/yt-dlp/yt-dlp#dependencies
+WARNING: You have asked for UNPLAYABLE formats to be listed/downloaded. This is a developer option intended for debugging. 
+         If you experience any issues while using this option, DO NOT open a bug report
+[youtube] Extracting URL: https://www.youtube.com/watch?v=Y5LJF4rKylc
+✅ Method 1.5 Success! yt-dlp direct worked.
+📝 Generating SUMMARY with Tone: conversational, Length: short
+🔄 Gemini: Attempting with model: gemini-2.5-flash
+✅ Gemini: Success with model: gemini-2.5-flash
+🔄 Gemini: Attempting with model: gemini-2.5-flash
+✅ Gemini: Success with model: gemini-2.5-flash
+🔍 Checking if video Y5LJF4rKylc is live/VOD...
+🚀 Attempting Method 1: YouTubeTranscriptApi for Y5LJF4rKylc...
+⚠️ Direct YouTubeTranscriptApi failed: no element found: line 1, column 0
+🚀 Attempting Method 1.5: yt-dlp Direct Connection...
+[youtube] Y5LJF4rKylc: Downloading webpage
+WARNING: [youtube] No supported JavaScript runtime could be found. Only deno is enabled by default; to use another runtime add  --js-runtimes RUNTIME[:PATH]  to your command/config. YouTube extraction without a JS runtime has been deprecated, and some formats may be missing. See  https://github.com/yt-dlp/yt-dlp/wiki/EJS  for details on installing one
+[youtube] Y5LJF4rKylc: Downloading android sdkless player API JSON
+[youtube] Y5LJF4rKylc: Downloading web safari player API JSON
+WARNING: [youtube] Y5LJF4rKylc: Some web_safari client https formats have been skipped as they are missing a url. YouTube is forcing SABR streaming for this client. See  https://github.com/yt-dlp/yt-dlp/issues/12482  for more details
+[youtube] Y5LJF4rKylc: Downloading m3u8 information
+WARNING: [youtube] Y5LJF4rKylc: Some web client https formats have been skipped as they are missing a url. YouTube is forcing SABR streaming for this client. See  https://github.com/yt-dlp/yt-dlp/issues/12482  for more details
+[info] Y5LJF4rKylc: Downloading subtitles: en
+[info] Y5LJF4rKylc: Downloading 1 format(s): 91-0
+[info] Writing video subtitles to: /tmp/tmp1y596oua/Y5LJF4rKylc.en.vtt
+WARNING: The extractor specified to use impersonation for this download, but no impersonate target is available. If you encounter errors, then see  https://github.com/yt-dlp/yt-dlp#impersonation  for information on installing the required dependencies
+[download] Destination: /tmp/tmp1y596oua/Y5LJF4rKylc.en.vtt
+[download]    1.00KiB at  Unknown B/s (00:00:00)[download]    3.00KiB at    1.13MiB/s (00:00:00)[download]    7.00KiB at    1.60MiB/s (00:00:00)[download]   15.00KiB at    2.18MiB/s (00:00:00)[download]   31.00KiB at    3.46MiB/s (00:00:00)[download]   60.45KiB at    5.36MiB/s (00:00:00)[download] 100% of   60.45KiB in 00:00:00 at 628.91KiB/s
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:25:07] "POST /api/extract-transcript HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:25:11] "POST /api/summarize HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:25:25] "POST /api/mindmap HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:25:32] "GET /manifest.json HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:25:32] "GET /style.css?v=1016 HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:25:32] "[33mGET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1[0m" 404 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:25:32] "GET /icon-192.png HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:25:32] "GET /icon-512.png HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:25:40] "GET / HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:25:40] "GET /style.css?v=1016 HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:25:40] "GET /logo.png HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:25:40] "GET /script.js?v=1016 HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:25:40] "[33mGET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1[0m" 404 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:25:40] "GET /manifest.json HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:25:40] "GET /icon-192.png HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:25:40] "GET /icon-192.png HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:25:40] "GET /icon-512.png HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:25:40] "GET /sw.js?t=1765311940730 HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:25:40] "GET / HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:25:40] "GET /style.css HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:25:40] "GET /index.html HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:25:40] "GET /script.js HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:25:40] "GET /api/features HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:25:40] "GET /api/features HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:25:40] "GET /icon-192.png HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:25:40] "GET /icon-512.png HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:25:49] "GET /icon-192.png HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:25:49] "GET /icon-512.png HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:26:04] "GET /icon-192.png HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:26:04] "GET /icon-512.png HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:27:34] "GET / HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:27:34] "GET /style.css?v=1016 HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:27:34] "GET /script.js?v=1016 HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:27:34] "GET /logo.png HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:27:34] "GET /sw.js?t=1765312054657 HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:27:34] "GET / HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:27:34] "GET /index.html HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:27:34] "GET /style.css HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:27:34] "GET /script.js HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:27:34] "GET /api/features HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:27:34] "GET /api/features HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:27:34] "GET /manifest.json HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:27:35] "GET /favicon.png HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:27:35] "GET /icon-192.png HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:27:54] "[33mGET /live_video_not_supported.png HTTP/1.1[0m" 404 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:28:27] "[33mGET /live_video_not_supported.png HTTP/1.1[0m" 404 -
+WARNING: [youtube] No supported JavaScript runtime could be found. Only deno is enabled by default; to use another runtime add  --js-runtimes RUNTIME[:PATH]  to your command/config. YouTube extraction without a JS runtime has been deprecated, and some formats may be missing. See  https://github.com/yt-dlp/yt-dlp/wiki/EJS  for details on installing one
+WARNING: [youtube] p7SRuKWZMvQ: Some web_safari client https formats have been skipped as they are missing a url. YouTube is forcing SABR streaming for this client. See  https://github.com/yt-dlp/yt-dlp/issues/12482  for more details
+WARNING: [youtube] p7SRuKWZMvQ: Some web client https formats have been skipped as they are missing a url. YouTube is forcing SABR streaming for this client. See  https://github.com/yt-dlp/yt-dlp/issues/12482  for more details
+WARNING: ffmpeg not found. The downloaded format may not be the best available. Installing ffmpeg is strongly recommended: https://github.com/yt-dlp/yt-dlp#dependencies
+WARNING: You have asked for UNPLAYABLE formats to be listed/downloaded. This is a developer option intended for debugging. 
+         If you experience any issues while using this option, DO NOT open a bug report
+[youtube] Extracting URL: https://www.youtube.com/watch?v=p7SRuKWZMvQ
+✅ Method 1.5 Success! yt-dlp direct worked.
+📝 Generating SUMMARY with Tone: conversational, Length: short
+🔄 Gemini: Attempting with model: gemini-2.5-flash
+✅ Gemini: Success with model: gemini-2.5-flash
+🔄 Gemini: Attempting with model: gemini-2.5-flash
+✅ Gemini: Success with model: gemini-2.5-flash
+🔍 Checking if video p7SRuKWZMvQ is live/VOD...
+🚀 Attempting Method 1: YouTubeTranscriptApi for p7SRuKWZMvQ...
+⚠️ Direct YouTubeTranscriptApi failed: no element found: line 1, column 0
+🚀 Attempting Method 1.5: yt-dlp Direct Connection...
+[youtube] p7SRuKWZMvQ: Downloading webpage
+WARNING: [youtube] No supported JavaScript runtime could be found. Only deno is enabled by default; to use another runtime add  --js-runtimes RUNTIME[:PATH]  to your command/config. YouTube extraction without a JS runtime has been deprecated, and some formats may be missing. See  https://github.com/yt-dlp/yt-dlp/wiki/EJS  for details on installing one
+[youtube] p7SRuKWZMvQ: Downloading android sdkless player API JSON
+[youtube] p7SRuKWZMvQ: Downloading web safari player API JSON
+WARNING: [youtube] p7SRuKWZMvQ: Some web_safari client https formats have been skipped as they are missing a url. YouTube is forcing SABR streaming for this client. See  https://github.com/yt-dlp/yt-dlp/issues/12482  for more details
+[youtube] p7SRuKWZMvQ: Downloading m3u8 information
+WARNING: [youtube] p7SRuKWZMvQ: Some web client https formats have been skipped as they are missing a url. YouTube is forcing SABR streaming for this client. See  https://github.com/yt-dlp/yt-dlp/issues/12482  for more details
+[info] p7SRuKWZMvQ: Downloading subtitles: en
+[info] p7SRuKWZMvQ: Downloading 1 format(s): 91-0
+[info] Writing video subtitles to: /tmp/tmpoc0oferv/p7SRuKWZMvQ.en.vtt
+WARNING: The extractor specified to use impersonation for this download, but no impersonate target is available. If you encounter errors, then see  https://github.com/yt-dlp/yt-dlp#impersonation  for information on installing the required dependencies
+[download] Destination: /tmp/tmpoc0oferv/p7SRuKWZMvQ.en.vtt
+[download]    1.00KiB at  Unknown B/s (00:00:00)[download]    3.00KiB at    1.26MiB/s (00:00:00)[download]    7.00KiB at    1.75MiB/s (00:00:00)[download]   15.00KiB at    2.50MiB/s (00:00:00)[download]   31.00KiB at    3.71MiB/s (00:00:00)[download]   63.00KiB at    5.72MiB/s (00:00:00)[download]  127.00KiB at    9.05MiB/s (00:00:00)[download]  158.95KiB at    9.37MiB/s (00:00:00)[download] 100% of  158.95KiB in 00:00:00 at 1.70MiB/s
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:28:57] "POST /api/extract-transcript HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:28:59] "POST /api/summarize HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:29:19] "POST /api/mindmap HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:29:34] "GET /sw.js?t=1765312174404 HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:29:34] "GET /index.html HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:29:34] "GET /style.css HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:29:34] "GET / HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:29:34] "GET /script.js HTTP/1.1" 200 -
+WARNING: [youtube] No supported JavaScript runtime could be found. Only deno is enabled by default; to use another runtime add  --js-runtimes RUNTIME[:PATH]  to your command/config. YouTube extraction without a JS runtime has been deprecated, and some formats may be missing. See  https://github.com/yt-dlp/yt-dlp/wiki/EJS  for details on installing one
+WARNING: [youtube] RvP-uVNwnXo: Some web_safari client https formats have been skipped as they are missing a url. YouTube is forcing SABR streaming for this client. See  https://github.com/yt-dlp/yt-dlp/issues/12482  for more details
+WARNING: [youtube] RvP-uVNwnXo: Some web client https formats have been skipped as they are missing a url. YouTube is forcing SABR streaming for this client. See  https://github.com/yt-dlp/yt-dlp/issues/12482  for more details
+WARNING: ffmpeg not found. The downloaded format may not be the best available. Installing ffmpeg is strongly recommended: https://github.com/yt-dlp/yt-dlp#dependencies
+WARNING: You have asked for UNPLAYABLE formats to be listed/downloaded. This is a developer option intended for debugging. 
+         If you experience any issues while using this option, DO NOT open a bug report
+[youtube] Extracting URL: https://www.youtube.com/watch?v=RvP-uVNwnXo
+✅ Method 1.5 Success! yt-dlp direct worked.
+📝 Generating SUMMARY with Tone: conversational, Length: short
+🔄 Gemini: Attempting with model: gemini-2.5-flash
+✅ Gemini: Success with model: gemini-2.5-flash
+🔄 Gemini: Attempting with model: gemini-2.5-flash
+✅ Gemini: Success with model: gemini-2.5-flash
+🔍 Checking if video RvP-uVNwnXo is live/VOD...
+🚀 Attempting Method 1: YouTubeTranscriptApi for RvP-uVNwnXo...
+⚠️ Direct YouTubeTranscriptApi failed: no element found: line 1, column 0
+🚀 Attempting Method 1.5: yt-dlp Direct Connection...
+[youtube] RvP-uVNwnXo: Downloading webpage
+WARNING: [youtube] No supported JavaScript runtime could be found. Only deno is enabled by default; to use another runtime add  --js-runtimes RUNTIME[:PATH]  to your command/config. YouTube extraction without a JS runtime has been deprecated, and some formats may be missing. See  https://github.com/yt-dlp/yt-dlp/wiki/EJS  for details on installing one
+[youtube] RvP-uVNwnXo: Downloading android sdkless player API JSON
+[youtube] RvP-uVNwnXo: Downloading web safari player API JSON
+WARNING: [youtube] RvP-uVNwnXo: Some web_safari client https formats have been skipped as they are missing a url. YouTube is forcing SABR streaming for this client. See  https://github.com/yt-dlp/yt-dlp/issues/12482  for more details
+[youtube] RvP-uVNwnXo: Downloading m3u8 information
+WARNING: [youtube] RvP-uVNwnXo: Some web client https formats have been skipped as they are missing a url. YouTube is forcing SABR streaming for this client. See  https://github.com/yt-dlp/yt-dlp/issues/12482  for more details
+[info] RvP-uVNwnXo: Downloading subtitles: en
+[info] RvP-uVNwnXo: Downloading 1 format(s): 91-0
+[info] Writing video subtitles to: /tmp/tmpimrboyhm/RvP-uVNwnXo.en.vtt
+WARNING: The extractor specified to use impersonation for this download, but no impersonate target is available. If you encounter errors, then see  https://github.com/yt-dlp/yt-dlp#impersonation  for information on installing the required dependencies
+[download] Destination: /tmp/tmpimrboyhm/RvP-uVNwnXo.en.vtt
+[download]    1.00KiB at  Unknown B/s (00:00:00)[download]    3.00KiB at  Unknown B/s (00:00:00)[download]    7.00KiB at  Unknown B/s (00:00:00)[download]   15.00KiB at   11.65MiB/s (00:00:00)[download]   31.00KiB at   18.65MiB/s (00:00:00)[download]   63.00KiB at   29.81MiB/s (00:00:00)[download]  127.00KiB at   15.69MiB/s (00:00:00)[download]  158.34KiB at   13.13MiB/s (00:00:00)[download] 100% of  158.34KiB in 00:00:00 at 2.25MiB/s
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:29:45] "POST /api/extract-transcript HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:29:48] "POST /api/summarize HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [09/Dec/2025 20:30:13] "POST /api/mindmap HTTP/1.1" 200 -
