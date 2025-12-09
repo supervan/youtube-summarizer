@@ -387,7 +387,8 @@ const expandMindMapBtn = document.getElementById('expandMindMapBtn');
 const inputSection = document.querySelector('.input-card');
 
 // API Configuration
-console.log('YouTube Summarizer v2034.1 Loaded');
+const CACHE_NAME = 'yt-summarizer-v2034.2';
+console.log('YouTube Summarizer v2034.3 Loaded');
 const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
 
 // Initialize app
@@ -1263,8 +1264,10 @@ async function renderMindMap(container, syntax) {
                     minZoom: 0.5,
                     maxZoom: 10
                 });
+                console.log("PanZoom initialized:", panZoomInstance);
             } else {
                 console.warn('svg-pan-zoom library not loaded');
+                showToast('Zoom library missing', 'error');
             }
         }
 
