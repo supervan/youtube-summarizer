@@ -34,6 +34,16 @@ const youtubeUrlInput = document.getElementById('youtubeUrl');
 const summaryLengthSelect = document.getElementById('summaryLength');
 const summaryToneSelect = document.getElementById('summaryTone');
 const submitBtn = document.getElementById('submitBtn');
+
+// Unregister Service Workers to avoid stale cache issues during development
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(function (registrations) {
+        for (let registration of registrations) {
+            registration.unregister();
+            console.log('ServiceWorker unregistered.');
+        }
+    });
+}
 const btnText = document.getElementById('btnText');
 const btnLoader = document.getElementById('btnLoader');
 const toggleInputBtn = document.getElementById('toggleInputBtn');
@@ -377,7 +387,8 @@ const expandMindMapBtn = document.getElementById('expandMindMapBtn');
 const inputSection = document.querySelector('.input-card');
 
 // API Configuration
-const API_BASE = window.location.origin;
+console.log('YouTube Summarizer v2033.1 Loaded');
+const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
 
 // Initialize app
 // Global state
@@ -404,6 +415,15 @@ window.onYouTubeIframeAPIReady = function () {
             'playsinline': 1
         }
     });
+    if (typeof mermaid !== 'undefined') {
+        mermaid.initialize({
+            startOnLoad: false,
+            theme: 'dark',
+            securityLevel: 'loose',
+        });
+    } else {
+        console.warn('Mermaid library not loaded/defined.');
+    }
 };
 
 // Initialize app
@@ -471,8 +491,15 @@ function setupEventListeners() {
     }
 
     // Tabs
+    // Tabs
+    if (tabs.length === 0) console.error("No tabs found during setup!");
+    else console.log("Found tabs:", tabs.length);
+
     tabs.forEach(tab => {
-        tab.addEventListener('click', () => switchTab(tab));
+        tab.addEventListener('click', () => {
+            console.log("Tab clicked via listener:", tab.dataset.tab);
+            switchTab(tab);
+        });
     });
 
     // Video Player Interaction
@@ -492,193 +519,146 @@ function setupEventListeners() {
         }
     });
 
-    // Copy Button
-    document.getElementById('copyBtn').addEventListener('click', copySummary);
-
-    // Share Button
-    const shareBtn = document.getElementById('shareBtn');
-    if (shareBtn) {
-        if (navigator.share) {
-            shareBtn.classList.remove('hidden');
-            shareBtn.addEventListener('click', shareSummary);
-        }
-    }
-
-    // Chat
-    document.getElementById('chatSubmitBtn').addEventListener('click', handleChatSubmit);
-    document.getElementById('chatInput').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') handleChatSubmit(e);
+    // Event Listeners
+    youtubeUrlInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleSubmit(e);
     });
 
-    // Podcast Button (Toggle Controls)
-    const podcastBtn = document.getElementById('podcastBtn');
-    if (podcastBtn) {
-        podcastBtn.replaceWith(podcastBtn.cloneNode(true));
-        const newPodcastBtn = document.getElementById('podcastBtn');
-        newPodcastBtn.addEventListener('click', togglePodcastControls);
+    submitBtn.addEventListener('click', handleSubmit);
+
+    summaryLengthSelect.addEventListener('change', () => {
+        // Optional: Trigger re-summarization or just update pref?
+        // For now, user must click button to regenerate if they change settings
+    });
+
+
+
+    // Action Buttons
+    document.getElementById('readAloudBtn').addEventListener('click', toggleReadAloud);
+    document.getElementById('copyBtn').addEventListener('click', copySummary);
+    // document.getElementById('podcastBtn').addEventListener('click', generatePodcast); // Old logic
+    document.getElementById('podcastBtn').addEventListener('click', () => {
+        // Podcast is now inside the Read Aloud/Podcast section, which has its own generate button.
+        // But the top button should probably jump to that section or trigger generation?
+        // For now, let's make it scroll to the podcast section
+        const podcastSection = document.getElementById('podcastSection');
+        if (podcastSection) podcastSection.scrollIntoView({ behavior: 'smooth' });
+    });
+
+    document.getElementById('chatInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleChatSubmit();
+    });
+
+    document.getElementById('copyStepsBtn').addEventListener('click', () => {
+        const text = document.getElementById('stepsContent').innerText;
+        navigator.clipboard.writeText(text).then(() => showToast('Steps copied to clipboard!'));
+    });
+
+    document.getElementById('generateStepsBtn').addEventListener('click', handleStepsRequest);
+    document.getElementById('startQuizBtn').addEventListener('click', handleQuizRequest);
+
+    // Mind Map Event Listener
+    const mmBtn = document.getElementById('generateMindMapBtn');
+    if (mmBtn) {
+        console.log("Attaching Mind Map Event Listener");
+        mmBtn.addEventListener('click', handleMindMapRequest);
+    } else {
+        console.error("Mind Map Button NOT Found in DOM");
     }
 
-    // Podcast Controls
-    const playPauseBtn = document.getElementById('podcastPlayPauseBtn');
-    if (playPauseBtn) {
-        playPauseBtn.addEventListener('click', togglePodcastPlayback);
-    }
-
-    const stopBtn = document.getElementById('stopPodcastBtn');
-    if (stopBtn) {
-        stopBtn.addEventListener('click', stopPodcast);
-    }
-
-    // Read Aloud
-    const readAloudBtn = document.getElementById('readAloudBtn');
-    if (readAloudBtn) {
-        readAloudBtn.addEventListener('click', toggleReadAloud);
-    }
-
-    // Reset Button
+    // Initial Load
+    loadHistory(1);
+    handleSharedContent();
+    // Reset Button Logic
     const resetBtn = document.getElementById('resetBtn');
     if (resetBtn) {
         resetBtn.addEventListener('click', resetApp);
-        // Show/Hide reset button based on input
-        const updateResetBtnVisibility = () => {
-            if (youtubeUrlInput.value.trim()) {
-                resetBtn.classList.remove('hidden');
-            } else {
-                resetBtn.classList.add('hidden');
-            }
-        };
+    }
 
-        // Initial check
+    const updateResetBtnVisibility = () => {
+        if (youtubeUrlInput.value.trim()) {
+            if (resetBtn) resetBtn.classList.remove('hidden');
+        } else {
+            if (resetBtn) resetBtn.classList.add('hidden');
+        }
+    };
+    updateResetBtnVisibility();
+
+    // Input Logic (Auto-Load & Live Check)
+    youtubeUrlInput.addEventListener('input', () => {
         updateResetBtnVisibility();
+        const url = youtubeUrlInput.value.trim();
+        const btnText = submitBtn.childNodes[0].nodeType === 3 ? submitBtn : (submitBtn.querySelector('span') || submitBtn);
+        // Note: btnText might be the button itself or a span. Let's simplify.
+        // Actually, submitBtn content is "Let's Go" or "Generatin...".
 
-        youtubeUrlInput.addEventListener('input', () => {
-            updateResetBtnVisibility();
+        if (url.includes('/live/')) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = 'Live Not Supported';
+            showLiveVideoError();
+            return;
+        }
 
-            const url = youtubeUrlInput.value.trim();
-
-            // Check for live video URL immediately
-            if (url.includes('/live/')) {
-                submitBtn.disabled = true;
-                btnText.textContent = 'Live Not Supported';
-                showLiveVideoError();
-                return;
-            } else {
-                // Reset button state if it was disabled by this check
-                if (btnText.textContent === 'Live Not Supported') {
-                    // Reset button text
-                    submitBtn.disabled = false;
-                    btnText.textContent = "Let's Go";
-
-                    // Focus input
-                    setTimeout(() => {
-                        youtubeUrlInput.focus();
-                    }, 100);
-                    // Hide error if it's the live error
-                    const errorState = document.getElementById('videoErrorState');
-                    if (errorState && errorState.classList.contains('live-error')) {
-                        errorState.remove();
-                        resultsContainer.classList.add('hidden');
-                        // Expand input if it was collapsed (though it shouldn't be collapsed on error)
-                        toggleInputSection(false);
-                    }
-                }
+        // Restore button state if it was showing an error
+        if (submitBtn.innerHTML === 'Live Not Supported') {
+            submitBtn.innerHTML = `
+                <span id="btnText">Let's Go</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M5 12h14" />
+                    <path d="m12 5 7 7-7 7" />
+                </svg>
+                <span id="btnLoader" class="loader hidden"></span>
+            `;
+            const errorState = document.getElementById('videoErrorState');
+            if (errorState) {
+                errorState.remove();
+                if (resultsContainer) resultsContainer.classList.add('hidden');
             }
+        }
 
-            if (url) {
-                // Auto-load from history if match found
-                const videoId = extractVideoId(url);
-                if (videoId) {
-                    const history = JSON.parse(localStorage.getItem('yt_summary_history') || '[]');
-                    const cachedItem = history.find(item => item.id === videoId);
-                    if (cachedItem) {
-                        // Auto-loading from cache
-                        loadHistoryItem(cachedItem);
-                    }
-                    // Valid URL
-                    if (btnText.textContent === "Let's Go") {
-                        submitBtn.disabled = false;
-                    }
-                } else {
-                    // Invalid URL (not a YouTube URL)
-                    if (btnText.textContent === "Let's Go") {
-                        submitBtn.disabled = true;
-                    }
-                }
-            } else {
-                // Empty URL
-                if (btnText.textContent === "Let's Go") {
-                    submitBtn.disabled = true;
-                }
-            }
-        });
-
-        // Initial Validation on Load (for auto-filled inputs)
-        const initialUrl = youtubeUrlInput.value.trim();
-        const initialId = extractVideoId(initialUrl);
-        if (initialId) {
+        // Enable/Disable based on URL presence
+        if (url.trim().length > 0) {
             submitBtn.disabled = false;
         } else {
             submitBtn.disabled = true;
         }
-    }
+
+        if (url) {
+            const videoId = extractVideoId(url);
+            if (videoId) {
+                const history = JSON.parse(localStorage.getItem('yt_summary_history') || '[]');
+                const cachedItem = history.find(item => item.id === videoId);
+                if (cachedItem) loadHistoryItem(cachedItem);
+            }
+        }
+    });
 
     // Toggle Summary Button
     const toggleSummaryBtn = document.getElementById('toggleSummaryBtn');
     if (toggleSummaryBtn) {
         toggleSummaryBtn.addEventListener('click', () => {
             const summaryContent = document.getElementById('summaryText');
-            if (summaryContent.classList.contains('hidden')) {
-                summaryContent.classList.remove('hidden');
-                toggleSummaryBtn.classList.remove('collapsed');
-            } else {
-                summaryContent.classList.add('hidden');
-                toggleSummaryBtn.classList.add('collapsed');
+            if (summaryContent) {
+                if (summaryContent.classList.contains('hidden')) {
+                    summaryContent.classList.remove('hidden');
+                    toggleSummaryBtn.classList.remove('collapsed');
+                } else {
+                    summaryContent.classList.add('hidden');
+                    toggleSummaryBtn.classList.add('collapsed');
+                }
             }
         });
     }
 
-    // Steps Generation
-    const generateStepsBtn = document.getElementById('generateStepsBtn');
-    if (generateStepsBtn) {
-        generateStepsBtn.addEventListener('click', handleStepsRequest);
-    }
-    const copyStepsBtn = document.getElementById('copyStepsBtn');
-    if (copyStepsBtn) {
-        copyStepsBtn.addEventListener('click', () => {
-            const stepsContent = document.getElementById('stepsContent');
-            if (!stepsContent) return;
-
-            // Get simple text
-            const text = stepsContent.innerText;
-            navigator.clipboard.writeText(text).then(() => {
-                const originalHTML = copyStepsBtn.innerHTML;
-                copyStepsBtn.innerHTML = `
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                    Copied!
-                 `;
-                showToast('Steps copied to clipboard', 'success');
-                setTimeout(() => {
-                    copyStepsBtn.innerHTML = originalHTML;
-                }, 2000);
-            }).catch(err => {
-                showToast('Failed to copy', 'error');
-                console.error('Copy failed', err);
-            });
-        });
-    }
-
-    // Quiz Generation
-    const startQuizBtn = document.getElementById('startQuizBtn');
-    if (startQuizBtn) {
-        startQuizBtn.addEventListener('click', handleQuizRequest);
-    }
 }
 
-// Switch Feature Tabs
+
+
+// Initial check
+
 // Switch Feature Tabs
 function switchTab(selectedTab) {
+    console.log("switchTab called for:", selectedTab.dataset.tab);
     if (selectedTab.classList.contains('active')) {
         // Toggle off if already active? 
         // Or do nothing? Standard tabs usually stay active.
@@ -711,6 +691,43 @@ function switchTab(selectedTab) {
     const targetContent = document.getElementById(targetId);
     if (targetContent) {
         targetContent.classList.remove('hidden');
+
+        // SAFETY CHECK: Mind Map
+        if (targetId === 'contentMindMap') {
+            const mmContent = document.getElementById('mindMapContent');
+            const mmStartView = document.getElementById('mindMapStartView');
+            const mermaidGraph = document.getElementById('mermaidGraph');
+
+            console.log('Switching to Mind Map. Content present?', mermaidGraph && mermaidGraph.innerHTML.trim().length > 10);
+
+            // RELAXED CHECK: If graph has content, show it.
+            // LAZY RENDER CHECK: If needs render, triggering it now (because tab is visible)
+            if (mermaidGraph && mermaidGraph.dataset.needsRender === 'true') {
+                console.log("Triggering Lazy Render for Mind Map...");
+                const syntax = mermaidGraph.dataset.pendingSyntax || '';
+
+                // Clear flags
+                mermaidGraph.removeAttribute('data-needs-render');
+                mermaidGraph.removeAttribute('data-pending-syntax');
+
+                // Render
+                renderMindMap(mermaidGraph, syntax);
+
+                // Show content pane
+                if (mmStartView) mmStartView.classList.add('hidden');
+                if (mmContent) mmContent.classList.remove('hidden');
+
+            } else if (mermaidGraph && mermaidGraph.innerHTML.trim().length > 10) {
+                // Already has content
+                if (mmStartView) {
+                    mmStartView.style.display = 'none'; // Force hide
+                    mmStartView.classList.add('hidden');
+                }
+                if (mmContent) mmContent.classList.remove('hidden');
+            } else {
+                console.log('Mind Map empty, showing start view');
+            }
+        }
 
         // SAFETY CHECK: If this is the Steps tab, check if we already have steps loaded.
         // If so, force hide the start view (button).
@@ -1071,6 +1088,193 @@ function resetQuiz() {
     document.getElementById('startQuizBtn').textContent = 'Start Quiz';
 }
 
+// --- Mind Map Feature ---
+const MERMAID_CDN = 'https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js';
+
+// Helper: Dynamically load Mermaid if missing
+function ensureMermaidLoaded() {
+    return new Promise((resolve, reject) => {
+        if (typeof mermaid !== 'undefined') {
+            resolve(mermaid);
+            return;
+        }
+
+        console.log('Lazy loading Mermaid.js...');
+        const script = document.createElement('script');
+        script.src = MERMAID_CDN;
+        script.onload = () => {
+            mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose' });
+            resolve(mermaid);
+        };
+        script.onerror = () => reject(new Error('Failed to load Mermaid.js'));
+        document.head.appendChild(script);
+    });
+}
+
+// Helper: Centralized, Robust Rendering
+async function renderMindMap(container, syntax) {
+    if (!container) return;
+
+    // Clear and Show Loader
+    container.innerHTML = `<div class="flex flex-col items-center justify-center p-8 text-slate-400">
+        <div class="mapper-loader mb-4"></div>
+        <p>Rendering Map...</p>
+    </div>`;
+    container.removeAttribute('data-processed');
+
+    try {
+        await ensureMermaidLoaded();
+
+        // 1. Parse Validation (catches syntax errors early)
+        await mermaid.parse(syntax);
+
+        // 2. Set Content
+        container.innerHTML = syntax;
+
+        // 3. Wait for Paint (Fixes "firstChild" crash)
+        // We use double RequestAnimationFrame to ensure a paint frame has passed
+        await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+        // 4. Render
+        // We catch render errors specifically just in case
+        await mermaid.run({ nodes: [container] });
+
+    } catch (e) {
+        console.warn("Mermaid Render Failed:", e);
+        container.innerHTML = `<div class="p-4 text-red-400 bg-red-900/20 rounded text-center">
+            <div class="mb-2">
+                <svg class="mx-auto h-12 w-12 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+            </div>
+            <p class="font-bold">Error Displaying Mind Map</p>
+            <p class="text-sm mb-3 text-red-300">The saved version uses an outdated format.</p>
+            <button onclick="handleMindMapRequest()" class="px-4 py-2 bg-red-600 rounded text-sm font-medium hover:bg-red-500 transition-colors">
+                Regenerate Mind Map
+            </button>
+        </div>`;
+    }
+}
+
+window.handleMindMapRequest = handleMindMapRequest;
+async function handleMindMapRequest() {
+    console.log("Mind Map Button Clicked!");
+    const btn = document.getElementById('generateMindMapBtn');
+    const content = document.getElementById('mindMapContent');
+    const startView = document.getElementById('mindMapStartView');
+    const loading = document.getElementById('mindMapLoading');
+    const mermaidGraph = document.getElementById('mermaidGraph');
+
+    // UX: If regenerating from error state (where startView is hidden), show feedback in graph area
+    if (mermaidGraph && mermaidGraph.innerHTML.includes('Regenerate')) {
+        mermaidGraph.innerHTML = `
+            <div class="flex flex-col items-center justify-center p-8 text-slate-400">
+                <div class="mapper-loader mb-4"></div>
+                <p>Constructing new map...</p>
+            </div>
+        `;
+    }
+
+    // UI Updates
+    const originalBtnContent = btn.innerHTML;
+    btn.dataset.originalContent = originalBtnContent;
+    btn.disabled = true;
+    btn.innerHTML = `<div class="spinner-sm"></div> Structuring...`;
+
+    loading.classList.remove('hidden'); // Show loading
+    startView.classList.add('hidden'); // Hide start
+
+    // Timeout Controller
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 120000); // 120s timeout
+
+    try {
+        const response = await fetch(`${API_BASE}/api/mindmap`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ transcript: currentTranscript }),
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+
+        const data = await response.json();
+
+        if (data.success) {
+            console.log("Received MindMap Syntax:\\n", data.mindmap);
+            // Success State
+            loading.classList.add('hidden');
+            content.classList.remove('hidden');
+
+            // Render safely
+            await renderMindMap(mermaidGraph, data.mindmap);
+
+            if (currentVideoId) {
+                updateHistoryItem(currentVideoId, { mindmap: data.mindmap });
+            }
+
+            // Keep button state until reset (which happens on new video)
+            // But here we want to allow regeneration? Maybe later. 
+            // For now, let's reset button so it doesn't look stuck if they reset manually.
+            btn.disabled = false;
+            btn.innerHTML = originalBtnContent;
+
+        } else {
+            throw new Error(data.error || 'Failed to generate mind map');
+        }
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            showToast('Request timed out.', 'error');
+        } else {
+            showToast(error.message || 'Network error', 'error');
+        }
+        console.error(error);
+
+        // Revert UI
+        loading.classList.add('hidden');
+        startView.classList.remove('hidden');
+        btn.disabled = false;
+        btn.innerHTML = originalBtnContent;
+    }
+}
+
+function resetMindMap() {
+    const content = document.getElementById('mindMapContent');
+    const startView = document.getElementById('mindMapStartView');
+    const loading = document.getElementById('mindMapLoading');
+    const btn = document.getElementById('generateMindMapBtn');
+    const mermaidGraph = document.getElementById('mermaidGraph');
+
+    if (content) content.classList.add('hidden');
+    if (loading) loading.classList.add('hidden');
+
+    // CRITICAL: Clear graph content to prevent ghost state
+    if (mermaidGraph) {
+        mermaidGraph.innerHTML = '';
+        mermaidGraph.removeAttribute('data-processed');
+    }
+
+    if (startView) {
+        startView.classList.remove('hidden');
+        startView.style.display = '';
+    }
+
+    if (btn) {
+        btn.disabled = false;
+        if (btn.dataset.originalContent) {
+            btn.innerHTML = btn.dataset.originalContent;
+        } else {
+            btn.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2v20"></path>
+                    <path d="M2 12h20"></path>
+                    <path d="M12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"></path>
+                </svg>
+                Generate Map
+            `;
+        }
+    }
+}
+
 function regenerateQuiz() {
     // Directly switch to loading state to avoid "flash" of start view
     document.getElementById('quizContent').classList.add('hidden');
@@ -1110,10 +1314,10 @@ function resetApp() {
         const contentSteps = document.getElementById('contentSteps');
         if (contentSteps) contentSteps.classList.add('hidden');
 
-        const contentQuiz = document.getElementById('contentQuiz');
-        if (contentQuiz) contentQuiz.classList.add('hidden');
-
-        // Clear chat history
+        // Reset Sections
+        if (typeof resetQuiz === 'function') resetQuiz();
+        if (typeof resetSteps === 'function') resetSteps();
+        if (typeof resetMindMap === 'function') resetMindMap();
         const chatHistory = document.getElementById('chatHistory');
         if (chatHistory) chatHistory.innerHTML = '<div class="chat-message ai"><div class="message-content"><p>Hi! Ask me anything about this video.</p></div></div>';
 
@@ -1633,8 +1837,10 @@ function updateHistoryItem(id, updates) {
 
 // Load History
 function loadHistory(page = 1) {
+    console.log("Loading history, page:", page);
     currentPage = page;
     let history = JSON.parse(localStorage.getItem('yt_summary_history') || '[]');
+    console.log("History from storage:", history);
 
     // Filter out corrupted items (where id is not a string)
     history = history.filter(item => item && typeof item.id === 'string');
@@ -1704,6 +1910,7 @@ function renderPagination(totalPages) {
     if (!paginationControls) return;
 
     paginationControls.innerHTML = '';
+
 
     if (totalPages <= 1) return;
 
@@ -1800,6 +2007,48 @@ function loadHistoryItem(item) {
             stepsStartView.style.display = 'none'; // Force hide
         }
         if (stepsActions) stepsActions.classList.remove('hidden');
+    }
+
+    resetMindMap();
+    // Check for saved mind map
+    if (item.mindmap) {
+        const mmContent = document.getElementById('mindMapContent');
+        const mmStartView = document.getElementById('mindMapStartView');
+        const mermaidGraph = document.getElementById('mermaidGraph');
+
+        if (mmContent) {
+            mmContent.classList.remove('hidden');
+            // Important: Mark it as active/loaded so switchTab doesn't reset it
+            mmContent.dataset.loaded = 'true';
+        }
+        if (mmStartView) {
+            mmStartView.classList.add('hidden');
+            mmStartView.style.display = 'none';
+        }
+
+        // Use centralized renderer in LAZY MODE
+        if (mermaidGraph) {
+            // We do NOT render immediately because tab is hidden (display:none)
+            // Mermaid will crash (getBBox failure) if rendered in hidden container.
+            // Instead, we stage the data.
+            mermaidGraph.dataset.needsRender = 'true';
+            mermaidGraph.dataset.pendingSyntax = item.mindmap;
+            mermaidGraph.innerHTML = ''; // Clear old content
+        }
+    } else {
+        // Reset state if no mindmap
+        const mmContent = document.getElementById('mindMapContent');
+        const mmStartView = document.getElementById('mindMapStartView');
+        const mermaidGraph = document.getElementById('mermaidGraph');
+        if (mmContent) {
+            mmContent.classList.add('hidden');
+            delete mmContent.dataset.loaded;
+        }
+        if (mmStartView) {
+            mmStartView.classList.remove('hidden');
+            mmStartView.style.display = 'block';
+        }
+        if (mermaidGraph) mermaidGraph.innerHTML = '';
     }
 
     // Assuming resetChat doesn't exist, we manually reset chat if needed or leave as is since we clear innerHTML above
@@ -2625,4 +2874,12 @@ function showToast(message, type = 'info') {
         toast.style.animation = 'fadeOut 0.3s ease-in forwards';
         setTimeout(() => toast.remove(), 300);
     }, 3000);
+}
+
+function clearHistory() {
+    if (confirm('Are you sure you want to clear your entire history?')) {
+        localStorage.removeItem('yt_summary_history');
+        loadHistory();
+        showToast('History cleared.');
+    }
 }

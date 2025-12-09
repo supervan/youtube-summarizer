@@ -12,9 +12,16 @@ import requests
 import json
 from dotenv import load_dotenv
 from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled, NoTranscriptFound
+import logging
 
 # Load environment variables from .env file
 load_dotenv()
+
+# Configure Logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+MAX_TRANSCRIPT_LENGTH = 50000 # Limit for context window
 
 app = Flask(__name__, static_folder='.', template_folder='.')
 CORS(app)
@@ -862,33 +869,97 @@ def share_target():
     return redirect(url_for('index', url=url))
 
 @app.route('/api/chat', methods=['POST'])
-def chat_with_video():
-    """Chat with the video transcript"""
+def chat():
+    """Chat with the video content using Gemini (Context Caching manually implemented for now)"""
+    data = request.json
+    transcript_text = data.get('transcript')
+    question = data.get('question')
+
+    if not transcript_text or not question:
+        return jsonify({'error': 'Missing transcript or question'}), 400
+
     try:
-        data = request.json
-        transcript = data.get('transcript', '')
-        question = data.get('question', '')
+        # Construct prompt
+        prompt = f"""
+        You are a helpful AI assistant answering questions about a YouTube video based on its transcript.
         
-        if not transcript or not question:
-            return jsonify({'error': 'Transcript and question are required'}), 400
-
-        api_key = os.getenv('GEMINI_API_KEY')
-        if not api_key:
-            return jsonify({'error': 'API key not configured'}), 500
-            
-        prompt = f"""You are a helpful assistant answering questions based ONLY on the provided video transcript.
+        TRANSCRIPT:
+        {transcript_text[:MAX_TRANSCRIPT_LENGTH]}
         
-Transcript:
-{transcript}
-
-Question: {question}
-
-Answer (be concise and direct, use markdown for formatting):"""
-
-        response = generate_gemini_content(prompt)
-        return jsonify({'success': True, 'answer': response.text})
+        USER QUESTION: {question}
         
+        ANSWER (be concise and direct):
+        """
+        
+        answer = generate_gemini_content(prompt)
+        return jsonify({'success': True, 'answer': answer})
+
     except Exception as e:
+        logger.error(f"Chat error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/mindmap', methods=['POST'])
+def generate_mindmap():
+    """Generates a Mermaid.js mind map from the transcript"""
+    data = request.json
+    transcript_text = data.get('transcript')
+
+    if not transcript_text:
+        return jsonify({'error': 'Missing transcript'}), 400
+
+    try:
+        # Construct prompt for Mermaid.js (Using Graph LR for robustness)
+        prompt = f"""
+        Create a Mermaid.js diagram to visualize the key concepts of this video transcript.
+        Use a Left-to-Right Graph (flowchart) style, which looks like a mind map.
+
+        Rules:
+        1. Start with `graph LR`
+        2. Define the central topic node using double circles: `root((Central Topic))`
+        3. Connect nodes using arrows `-->`.
+        4. USE QUOTED LABELS for child nodes: `id["Node Label"]`.
+        5. DO NOT use double quotes `"` INSIDE the label. Use single quotes `'` instead if needed.
+        6. Assign unique IDs to every node (e.g., A, B, C1, C2).
+        7. Keep labels concise (1-5 words).
+        8. Return ONLY the raw Mermaid syntax. Do not use markdown blocks.
+
+        Example Format:
+        graph LR
+            root((Start))
+            root --> A[Topic A]
+            root --> B[Topic B]
+            A --> A1[Detail 1]
+            A --> A2[Detail 2]
+            B --> B1[Detail 3]
+
+        TRANSCRIPT:
+        {transcript_text[:MAX_TRANSCRIPT_LENGTH]}
+        
+        MERMAID SYNTAX:
+        """
+        
+        response = generate_gemini_content(prompt)
+        mermaid_syntax = response.text
+        
+        # Cleanup: Remove markdown code blocks
+        mermaid_syntax = mermaid_syntax.replace('```mermaid', '').replace('```', '').strip()
+
+        # Basic cleanup
+        if not mermaid_syntax.startswith('graph'):
+             # If model forgot 'graph LR', try to prepend it if it looks like edges
+             if '-->' in mermaid_syntax:
+                 mermaid_syntax = "graph LR\n" + mermaid_syntax
+
+        # Safety: Ensure content inside [] is quoted if not already
+        # Pattern: [ followed by non-quote chars, ending with ]
+        # Replace with ["contents"]
+        # This fixes issues like [Facebook (2011)] breaking syntax
+        mermaid_syntax = re.sub(r'\[([^"\]]+?)\]', r'["\1"]', mermaid_syntax)
+        
+        return jsonify({'success': True, 'mindmap': mermaid_syntax})
+
+    except Exception as e:
+        logger.error(f"Mind map error: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/steps', methods=['POST'])
