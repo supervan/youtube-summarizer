@@ -387,7 +387,7 @@ const expandMindMapBtn = document.getElementById('expandMindMapBtn');
 const inputSection = document.querySelector('.input-card');
 
 // API Configuration
-const CACHE_NAME = 'yt-summarizer-v2034.2';
+const CACHE_NAME = 'yt-summarizer-v2034.3';
 console.log('YouTube Summarizer v2034.3 Loaded');
 const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
 
@@ -1117,15 +1117,28 @@ window.mindMapFullscreen = function () {
 
     container.classList.toggle('fullscreen');
 
-    // Resize logic for pan-zoom
+    // Use ResizeObserver for robust handling
+    // (This is redundant if we implement the observer globally, but good for the toggle)
     if (panZoomInstance) {
+        // Force a resize check after a short delay for transitions
         setTimeout(() => {
             panZoomInstance.resize();
             panZoomInstance.fit();
             panZoomInstance.center();
-        }, 100);
+        }, 300); // Increased delay
     }
 };
+
+// Global Resize Observer for the Mind Map Container
+const mindMapObserver = new ResizeObserver(entries => {
+    if (panZoomInstance) {
+        panZoomInstance.resize();
+        panZoomInstance.fit();
+        panZoomInstance.center();
+    }
+});
+const mmContainer = document.getElementById('mindMapContent');
+if (mmContainer) mindMapObserver.observe(mmContainer);
 
 window.mindMapExport = function (format) {
     const container = document.getElementById('mermaidGraph');
@@ -1261,10 +1274,16 @@ async function renderMindMap(container, syntax) {
                     controlIconsEnabled: false, // We use our own toolbar
                     fit: true,
                     center: true,
-                    minZoom: 0.5,
+                    minZoom: 0.1, // Allow zooming out further
                     maxZoom: 10
                 });
                 console.log("PanZoom initialized:", panZoomInstance);
+
+                // Attach observer if not already
+                const mmContainer = document.getElementById('mindMapContent');
+                if (mmContainer && typeof mindMapObserver !== 'undefined') {
+                    mindMapObserver.observe(mmContainer);
+                }
             } else {
                 console.warn('svg-pan-zoom library not loaded');
                 showToast('Zoom library missing', 'error');
