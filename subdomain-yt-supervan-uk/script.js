@@ -1382,6 +1382,10 @@ async function handleSubmit(e) {
         }
         currentVideoId = videoId; // Update global ID
 
+        // Reset Steps and Quiz UI for new video
+        resetQuiz();
+        resetSteps();
+
         // Check History Cache
         let history = [];
         try {
