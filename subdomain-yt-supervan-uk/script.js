@@ -550,9 +550,40 @@ function setupEventListeners() {
         if (e.key === 'Enter') handleChatSubmit();
     });
 
-    document.getElementById('copyStepsBtn').addEventListener('click', () => {
-        const text = document.getElementById('stepsContent').innerText;
-        navigator.clipboard.writeText(text).then(() => showToast('Steps copied to clipboard!'));
+    document.getElementById('copyStepsBtn').addEventListener('click', async () => {
+        const content = document.getElementById('stepsContent');
+        if (!content) return;
+
+        try {
+            const html = content.innerHTML;
+            // Improved plain text extraction (simple cleanup)
+            // We use the browser's selection to get a better text representation if possible, 
+            // or just rely on innerText. innerText in Chrome usually skips list bullets.
+            // Let's manually construct a slightly better text version for the plain text fallback.
+            // Clone and replace li with * 
+            const clone = content.cloneNode(true);
+            const lis = clone.querySelectorAll('li');
+            lis.forEach(li => {
+                li.innerHTML = '• ' + li.innerHTML; // Add bullet for text version
+            });
+            // Add newlines between block elements
+            const blocks = clone.querySelectorAll('p, h2, h3, h4');
+            blocks.forEach(b => b.innerHTML = b.innerHTML + '\n');
+
+            const plainText = clone.innerText;
+
+            const clipboardAuthentication = new ClipboardItem({
+                "text/html": new Blob([html], { type: "text/html" }),
+                "text/plain": new Blob([plainText], { type: "text/plain" })
+            });
+
+            await navigator.clipboard.write([clipboardAuthentication]);
+            showToast('Steps copied to clipboard!');
+        } catch (err) {
+            console.warn('Rich copy failed, falling back to plain text:', err);
+            const text = content.innerText;
+            navigator.clipboard.writeText(text).then(() => showToast('Steps copied to clipboard!'));
+        }
     });
 
     document.getElementById('generateStepsBtn').addEventListener('click', handleStepsRequest);
@@ -718,6 +749,15 @@ function switchTab(selectedTab) {
                 if (mmStartView) mmStartView.classList.add('hidden');
                 if (mmContent) mmContent.classList.remove('hidden');
 
+                // RESIZE FIX: Ensure PanZoom logic is updated when tab becomes visible
+                if (panZoomInstance) {
+                    setTimeout(() => {
+                        panZoomInstance.resize();
+                        panZoomInstance.fit();
+                        panZoomInstance.center();
+                    }, 50);
+                }
+
             } else if (mermaidGraph && mermaidGraph.innerHTML.trim().length > 10) {
                 // Already has content
                 if (mmStartView) {
@@ -725,6 +765,15 @@ function switchTab(selectedTab) {
                     mmStartView.classList.add('hidden');
                 }
                 if (mmContent) mmContent.classList.remove('hidden');
+
+                // RESIZE FIX: Ensure PanZoom logic is updated when tab becomes visible
+                if (panZoomInstance) {
+                    setTimeout(() => {
+                        panZoomInstance.resize();
+                        panZoomInstance.fit();
+                        panZoomInstance.center();
+                    }, 50);
+                }
             } else {
                 // console.log('Mind Map empty, showing start view');
             }
