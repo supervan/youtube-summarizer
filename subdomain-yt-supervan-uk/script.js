@@ -554,27 +554,42 @@ function setupEventListeners() {
         const content = document.getElementById('stepsContent');
         if (!content) return;
 
+        // Get Heading Info
+        const videoTitle = document.getElementById('videoTitle').textContent;
+        const videoId = extractVideoId(youtubeUrlInput.value);
+        const shortUrl = videoId ? `https://youtu.be/${videoId}` : youtubeUrlInput.value;
+
+        // Get Footer Info
+        const promoText = "\n\nSummarized by TL;DW - https://yt.supervan.uk\n(Installable as an App on Mobile & Desktop)";
+        const promoHtml = "<br><br><p>Summarized by <a href='https://yt.supervan.uk'>TL;DW</a><br><em>(Installable as an App on Mobile & Desktop)</em></p>";
+
         try {
-            const html = content.innerHTML;
-            // Improved plain text extraction (simple cleanup)
-            // We use the browser's selection to get a better text representation if possible, 
-            // or just rely on innerText. innerText in Chrome usually skips list bullets.
-            // Let's manually construct a slightly better text version for the plain text fallback.
-            // Clone and replace li with * 
+            const stepsHtml = content.innerHTML;
+
+            // Construct Rich HTML
+            const fullHtml = `
+                <h2>${videoTitle}</h2>
+                <p><a href="${shortUrl}">${shortUrl}</a></p>
+                <hr>
+                ${stepsHtml}
+                ${promoHtml}
+            `;
+
+            // Construct Plain Text
             const clone = content.cloneNode(true);
             const lis = clone.querySelectorAll('li');
             lis.forEach(li => {
-                li.innerHTML = '• ' + li.innerHTML; // Add bullet for text version
+                li.innerHTML = '• ' + li.innerHTML;
             });
-            // Add newlines between block elements
             const blocks = clone.querySelectorAll('p, h2, h3, h4');
             blocks.forEach(b => b.innerHTML = b.innerHTML + '\n');
+            const stepsText = clone.innerText;
 
-            const plainText = clone.innerText;
+            const fullText = `${videoTitle}\n${shortUrl}\n\n${stepsText}${promoText}`;
 
             const clipboardAuthentication = new ClipboardItem({
-                "text/html": new Blob([html], { type: "text/html" }),
-                "text/plain": new Blob([plainText], { type: "text/plain" })
+                "text/html": new Blob([fullHtml], { type: "text/html" }),
+                "text/plain": new Blob([fullText], { type: "text/plain" })
             });
 
             await navigator.clipboard.write([clipboardAuthentication]);
@@ -2572,25 +2587,18 @@ function copySummary() {
     const promoHtml = "<br><br><p>Summarized by <a href='https://yt.supervan.uk'>TL;DW</a><br><em>(Installable as an App on Mobile & Desktop)</em></p>";
 
     // --- Plain Text Version ---
-    // Remove timestamps [MM:SS]
-    const cleanSummaryText = rawSummaryText.replace(/\[\d{1,2}:\d{2}(:\d{2})?\]\s*/g, '');
+    // Remove timestamps [MM:SS] or [MM:SS-MM:SS, ...]
+    const cleanSummaryText = rawSummaryText.replace(/\[[\d:\s,\-]+\]\s*/g, '');
     const clipboardText = `${videoTitle}\n${shortUrl}\n\n${cleanSummaryText}${promoText}`;
 
     // --- HTML Version ---
-    // Convert timestamps [MM:SS] to links
+    // Convert internal timestamp links to external YouTube links
     let cleanSummaryHtml = rawSummaryHtml;
 
     if (videoId) {
-        cleanSummaryHtml = cleanSummaryHtml.replace(/\[(\d{1,2}):(\d{2})(?::(\d{2}))?\]/g, (match, p1, p2, p3) => {
-            let seconds = 0;
-            if (p3) {
-                // HH:MM:SS
-                seconds = parseInt(p1) * 3600 + parseInt(p2) * 60 + parseInt(p3);
-            } else {
-                // MM:SS
-                seconds = parseInt(p1) * 60 + parseInt(p2);
-            }
-            return `<a href="https://youtu.be/${videoId}?t=${seconds}" target="_blank">${match}</a>`;
+        // Find formatMarkdown generated links: <a ... onclick="seekTo(123)...">text</a>
+        cleanSummaryHtml = cleanSummaryHtml.replace(/<a href="#" class="timestamp-link" onclick="seekTo\((\d+)\); return false;">(.*?)<\/a>/g, (match, seconds, text) => {
+            return `<a href="https://youtu.be/${videoId}?t=${seconds}" target="_blank">${text}</a>`;
         });
     }
 
@@ -2637,7 +2645,8 @@ async function shareSummary() {
     const shortUrl = videoId ? `https://youtu.be/${videoId}` : youtubeUrlInput.value;
 
     // Clean text (remove timestamps for cleaner share)
-    const cleanSummaryText = rawSummaryText.replace(/\[\d{1,2}:\d{2}(:\d{2})?\]\s*/g, '');
+    // Clean text (remove timestamps for cleaner share)
+    const cleanSummaryText = rawSummaryText.replace(/\[[\d:\s,\-]+\]\s*/g, '');
 
     const shareData = {
         title: `Summary: ${videoTitle}`,
@@ -2705,7 +2714,19 @@ function formatMarkdown(text) {
     text = text.replace(/class="ordered"/g, '');
 
     // 7. Timestamps
-    text = text.replace(/\[(\d{1,2}):(\d{2})\]/g, '<a href="#" class="timestamp-link" onclick="seekTo($1 * 60 + $2 * 1); return false;">[$1:$2]</a>');
+    // Improved regex to handle timestamps inside or outside brackets, ranges, etc.
+    // We match individual timestamps to linkify them.
+    text = text.replace(/(\d{1,2}):(\d{2})(?::(\d{2}))?/g, (match, p1, p2, p3) => {
+        let seconds = 0;
+        if (p3) {
+            // HH:MM:SS
+            seconds = parseInt(p1) * 3600 + parseInt(p2) * 60 + parseInt(p3);
+        } else {
+            // MM:SS
+            seconds = parseInt(p1) * 60 + parseInt(p2);
+        }
+        return `<a href="#" class="timestamp-link" onclick="seekTo(${seconds}); return false;">${match}</a>`;
+    });
 
     // 8. Paragraphs (double newlines)
     text = text.replace(/\n\n/g, '<br><br>');
