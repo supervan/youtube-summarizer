@@ -457,6 +457,16 @@ export default function App() {
         </div>
 
       </main>
+
+      {/* Footer for AdSense Compliance */}
+      <footer className="max-w-6xl mx-auto mt-12 py-8 border-t border-slate-800 text-center text-sm text-slate-500">
+        <div className="flex justify-center space-x-6 mb-4">
+          <a href="https://supervan.uk/privacy" className="hover:text-white transition-colors">Privacy Policy</a>
+          <a href="https://supervan.uk/terms" className="hover:text-white transition-colors">Terms of Service</a>
+          <a href="https://supervan.uk/contact" className="hover:text-white transition-colors">Contact</a>
+        </div>
+        <p>&copy; {new Date().getFullYear()} SuperVan Digital. All rights reserved.</p>
+      </footer>
     </div>
   );
 }

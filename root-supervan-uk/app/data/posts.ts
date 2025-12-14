@@ -12,6 +12,25 @@ export interface BlogPost {
 
 export const posts: BlogPost[] = [
     {
+        id: "new-speed-test",
+        slug: "internet-speed-test",
+        title: "Introducing SuperVan Speed Test: Professional Grade Diagnostics",
+        excerpt: "A professional-grade internet diagnostic tool designed for accuracy, privacy, and ease of use.",
+        content: `We are excited to launch our second major tool: SuperVan Speed Test, a professional-grade internet diagnostic tool designed for accuracy, privacy, and ease of use.
+        
+Most internet speed tests are cluttered with ads, slow to load, or track excessive amounts of user data. We wanted to build something different: a tool that is lightweight, beautiful, and privacy-focused.
+
+Key Features:
+- Detailed Metrics: Measure Download, Upload, and Ping latency with high precision.
+- Historical Logging: Automatically save your test history locally.
+- Privacy First: No account required.
+- Dark Mode UI: A sleek, modern interface.`,
+        date: "2025-12-14",
+        imageUrl: "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=1200&q=80",
+        videoUrl: "",
+        category: "Product Launch"
+    },
+    {
         id: "1",
         slug: "ai-expert-warning-2030",
         title: "AI Expert: (Warning) 2030 Might Be The Point Of No Return!",

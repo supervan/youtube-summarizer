@@ -30,9 +30,14 @@ export default function Layout() {
                                     <Link to="/contact" className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">
                                         Contact
                                     </Link>
-                                    <a href="https://digest.supervan.uk" className="ml-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 transition-colors">
-                                        Open Web App
-                                    </a>
+                                    <div className="ml-4 flex items-center space-x-3">
+                                        <a href="https://digest.supervan.uk" className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-colors">
+                                            Summarizer
+                                        </a>
+                                        <a href="https://speed.supervan.uk" className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 transition-colors">
+                                            Speed Test
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
