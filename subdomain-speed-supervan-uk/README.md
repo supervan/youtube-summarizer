@@ -1,7 +1,7 @@
 # SuperVan Speed Test
 
 A professional-grade internet speed test application built with React and Vite.
-Hosted at: [https://speed.supervan.uk](https://speed.supervan.uk)
+Hosted at: [https://supervan.uk/speed](https://supervan.uk/speed)
 
 ## Features
 

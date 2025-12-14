@@ -14,7 +14,7 @@ This repository contains the source code for the Supervan.uk ecosystem.
   - Tech Stack: Python, Flask, yt-dlp.
 
 - **`subdomain-speed-supervan-uk/`**: The Internet Speed Test application (React/Vite).
-  - Hosted at: `https://speed.supervan.uk`
+  - Hosted at: `https://supervan.uk/speed`
   - Tech Stack: React, Vite, TailwindCSS.
 
 ## Deployment
