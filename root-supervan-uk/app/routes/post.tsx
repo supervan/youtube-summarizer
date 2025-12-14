@@ -14,7 +14,12 @@ export function meta({ params }: Route.MetaArgs) {
     ];
 }
 
-export function loader({ params }: Route.LoaderArgs) {
+// Generate static paths for all posts
+export function prerender() {
+    return posts.map((post) => `/post/${post.slug}`);
+}
+
+export function clientLoader({ params }: Route.ClientLoaderArgs) {
     const post = posts.find((p) => p.slug === params.slug);
     if (!post) {
         throw new Response("Not Found", { status: 404 });
