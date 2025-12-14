@@ -1,16 +1,46 @@
-# React + Vite
+# SuperVan Speed Test
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A professional-grade internet speed test application built with React and Vite.
+Hosted at: [https://speed.supervan.uk](https://speed.supervan.uk)
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+-   **Download Speed:** Simulates file downloads to measure bandwidth.
+-   **Upload Speed:** Simulates file uploads.
+-   **Ping/Latency:** Measures connection response time.
+-   **Local History:** Automatically saves test results to the browser's LocalStorage.
+-   **Visual Gauge:** Smooth, animated gauge for real-time feedback.
+-   **AdSense Compliance:** Includes footer with Privacy/Terms links.
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+-   **React 19**: Core framework.
+-   **Vite**: Build tool and dev server.
+-   **TailwindCSS 4**: Styling.
+-   **Bun**: Package manager.
+-   **Recharts**: Charting library (ready for future graph implementations).
+-   **Lucide React**: Icon library.
 
-## Expanding the ESLint configuration
+## Development
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+1.  **Install dependencies:**
+    ```bash
+    bun install
+    ```
+
+2.  **Run Dev Server:**
+    ```bash
+    bun run dev
+    ```
+
+3.  **Build for Production:**
+    ```bash
+    bun run build
+    ```
+    Output will be in the `dist` directory.
+
+## Deployment
+
+Deployed as a **Static Site** on Render.com.
+-   **Build Command:** `bun run build`
+-   **Publish Directory:** `dist`
