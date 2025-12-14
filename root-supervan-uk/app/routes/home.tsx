@@ -1,100 +1,241 @@
 import type { Route } from "./+types/home";
-import { posts } from "../data/posts";
 import { Link } from "react-router";
 
 export function meta({ }: Route.MetaArgs) {
   return [
-    { title: "Supervan.uk - Home" },
-    { name: "description", content: "Welcome to Supervan.uk - AI, Tech, and Engineering Insights" },
+    { title: "SuperVan Digital | Video Intelligence, Digested" },
+    { name: "description", content: "Transform long-form video content into professional summaries, mind maps, and quizzes." },
   ];
 }
 
 export default function Home() {
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="bg-slate-50 text-slate-900 min-h-screen font-sans">
+      {/* Navigation */}
+      <nav className="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex items-center">
+              <span className="text-xl font-bold text-slate-900">SuperVan Digital</span>
+            </div>
+            <div className="flex items-center space-x-6">
+              <a href="#features" className="text-sm font-medium text-slate-500 hover:text-slate-900">Features</a>
+              <a href="/blog/index.html" className="text-sm font-medium text-slate-500 hover:text-slate-900">Engineering Blog</a>
+              <a href="https://digest.supervan.uk"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
+                Open Web App
+              </a>
+            </div>
+          </div>
+        </div>
+      </nav>
+
       {/* Hero Section */}
-      <div className="text-center mb-16">
-        <div className="flex justify-center mb-8">
-          <img src="/logo-full.png" alt="Supervan.uk" className="h-24 md:h-32 object-contain" />
-        </div>
-        <p className="text-xl text-slate-400 max-w-2xl mx-auto mb-8">
-          Exploring the frontiers of Artificial Intelligence, Engineering, and the Future of Tech.
-        </p>
-        <div className="flex justify-center gap-4">
-          <a
-            href="https://yt.supervan.uk"
-            className="inline-flex items-center gap-3 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-full transition-all hover:scale-105 shadow-lg shadow-purple-900/20"
-          >
-            <img src="/logo.png" alt="App Logo" className="h-8 w-8 rounded-lg shadow-sm" />
-            Launch YouTube Summarizer
-          </a>
-          <Link
-            to="/about"
-            className="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 px-6 rounded-full transition-all border border-slate-700"
-          >
-            Learn More
-          </Link>
-          <a
-            href="#"
-            className="inline-flex items-center gap-2 bg-red-900/50 hover:bg-red-800/50 text-red-300 font-bold py-3 px-6 rounded-full transition-all border border-red-700/50"
-            title="Video Tutorial Coming Soon"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M8 5v14l11-7z" />
-            </svg>
-            Watch Tutorial
-          </a>
-          {import.meta.env.DEV && (
-            <a
-              href="http://localhost:5174"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-cyan-900/50 hover:bg-cyan-800/50 text-cyan-300 font-bold py-3 px-6 rounded-full transition-all border border-cyan-700/50"
-            >
-              ⚡ Local Speed Test
-            </a>
-          )}
-        </div>
-      </div>
-
-      {/* Blog Grid */}
-      <h2 className="text-2xl font-bold text-white mb-8 border-b border-slate-800 pb-4">Latest Articles</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {posts.map((post) => (
-          <Link key={post.id} to={`/post/${post.slug}`} className="group bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 hover:border-purple-500/50 transition-all hover:shadow-2xl hover:shadow-purple-900/10 flex flex-col h-full">
-            <div className="aspect-video w-full overflow-hidden bg-slate-950 relative">
-              {post.imageUrl ? (
-                <img
-                  src={post.imageUrl}
-                  alt={post.title}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 opacity-90 group-hover:opacity-100"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-slate-800 text-slate-600">
-                  No Image
+      <div className="relative bg-white overflow-hidden">
+        <div className="max-w-7xl mx-auto">
+          <div className="relative z-10 pb-8 bg-white sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32">
+            <main className="mt-10 mx-auto max-w-7xl px-4 sm:mt-12 sm:px-6 md:mt-16 lg:mt-20 lg:px-8 xl:mt-28">
+              <div className="sm:text-center lg:text-left">
+                <h1 className="text-4xl tracking-tight font-extrabold text-slate-900 sm:text-5xl md:text-6xl">
+                  <span className="block xl:inline">Video Intelligence,</span>
+                  <span className="block text-indigo-600 xl:inline">Digested.</span>
+                </h1>
+                <p className="mt-3 text-base text-slate-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
+                  Transform long-form video content into professional summaries, mind maps, and quizzes in
+                  seconds. Analyze captions, test your knowledge, and visualize relationships without watching
+                  hours of footage.
+                </p>
+                <div className="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
+                  <div className="rounded-md shadow">
+                    <a href="https://digest.supervan.uk"
+                      className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 md:py-4 md:text-lg">
+                      Open Web App
+                    </a>
+                  </div>
+                  <div className="mt-3 sm:mt-0 sm:ml-3">
+                    <a href="#features"
+                      className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 md:py-4 md:text-lg">
+                      Learn More
+                    </a>
+                  </div>
                 </div>
-              )}
-              <div className="absolute top-4 left-4 bg-slate-900/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-medium text-purple-400 border border-slate-700">
-                {post.category}
               </div>
-            </div>
-            <div className="p-6 flex flex-col flex-grow">
-              <div className="text-sm text-slate-500 mb-2">{post.date}</div>
-              <h3 className="text-xl font-bold text-white mb-3 group-hover:text-purple-400 transition-colors line-clamp-2">
-                {post.title}
-              </h3>
-              <p className="text-slate-400 text-sm line-clamp-3 mb-4 flex-grow">
-                {post.excerpt}
-              </p>
-              <div className="flex items-center text-purple-400 text-sm font-medium group-hover:translate-x-1 transition-transform">
-                Read Article &rarr;
-              </div>
-            </div>
-          </Link>
-        ))}
+            </main>
+          </div>
+        </div>
       </div>
 
+      {/* Features Section */}
+      <div id="features" className="py-12 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="lg:text-center">
+            <h2 className="text-base text-indigo-600 font-semibold tracking-wide uppercase">Capabilities</h2>
+            <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+              A comprehensive suite for video analysis
+            </p>
+            <p className="mt-4 max-w-2xl text-xl text-slate-500 lg:mx-auto">
+              Our platform leverages advanced Large Language Models (LLMs) to process video captions and extract
+              high-value insights.
+            </p>
+          </div>
 
+          <div className="mt-10">
+            <dl className="space-y-10 md:space-y-0 md:grid md:grid-cols-2 md:gap-x-8 md:gap-y-10">
+
+              {/* Feature 1 */}
+              <div className="relative">
+                <dt>
+                  <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+                    <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                      </path>
+                    </svg>
+                  </div>
+                  <p className="ml-16 text-lg leading-6 font-medium text-slate-900">AI-Powered Summaries</p>
+                </dt>
+                <dd className="mt-2 ml-16 text-base text-slate-500">
+                  Stop wasting time scrubbing through 2-hour long podcasts or lectures. Our AI analyzes the
+                  entire transcript to generate concise, readable summaries. You can even customize the output
+                  tone—choose "Professional" for business reports or "Witty" for a more engaging read. The
+                  engine identifies key points, timestamps, and actionable takeaways, ensuring you get the
+                  core value without the fluff.
+                </dd>
+              </div>
+
+              {/* Feature 2 */}
+              <div className="relative">
+                <dt>
+                  <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+                    <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                        d="M12 2v20M2 12h20"></path>
+                    </svg>
+                  </div>
+                  <p className="ml-16 text-lg leading-6 font-medium text-slate-900">Interactive Mind Maps</p>
+                </dt>
+                <dd className="mt-2 ml-16 text-base text-slate-500">
+                  Visual learners rejoice. We automatically convert linear video content into structured,
+                  interactive Mind Maps using Mermaid.js technology. This allows you to see the hierarchical
+                  relationship between concepts, making it perfect for understanding complex tutorials or
+                  educational material. You can zoom, pan, and export these maps as SVGs for your own notes or
+                  presentations.
+                </dd>
+              </div>
+
+              {/* Feature 3 */}
+              <div className="relative">
+                <dt>
+                  <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+                    <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                  </div>
+                  <p className="ml-16 text-lg leading-6 font-medium text-slate-900">Active Recall Quizzes</p>
+                </dt>
+                <dd className="mt-2 ml-16 text-base text-slate-500">
+                  Passive watching is the enemy of retention. Our system generates dynamic quizzes based on
+                  the video content to test your understanding immediately. By engaging in "Active Recall,"
+                  you reinforce the knowledge pathways in your brain, moving information from short-term to
+                  long-term memory. Perfect for students preparing for exams or professionals learning new
+                  skills.
+                </dd>
+              </div>
+
+              {/* Feature 4 */}
+              <div className="relative">
+                <dt>
+                  <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+                    <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                        d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z">
+                      </path>
+                    </svg>
+                  </div>
+                  <p className="ml-16 text-lg leading-6 font-medium text-slate-900">Chat-to-Video Interface</p>
+                </dt>
+                <dd className="mt-2 ml-16 text-base text-slate-500">
+                  Have a specific question about the video? Don't search; just ask. Our "Chat with Video"
+                  feature allows you to query the content using natural language. It performs a semantic
+                  search across the transcript to find the exact answer you need. Whether you're looking for a
+                  specific quote, a definition, or a clarification of a complex topic, the AI provides
+                  instant, context-aware responses.
+                </dd>
+              </div>
+
+            </dl>
+          </div>
+        </div>
+      </div>
+
+      {/* FAQ Section */}
+      <div className="bg-slate-50 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-extrabold text-slate-900 text-center mb-8">Frequently Asked Questions</h2>
+          <div className="space-y-8">
+            {/* FAQ 1 */}
+            <div className="bg-white shadow rounded-lg p-6">
+              <h3 className="text-lg font-medium text-slate-900">Does SuperVan download the actual video files?</h3>
+              <p className="mt-3 text-base text-slate-500">
+                No. Our service operates strictly by analyzing the public caption tracks (subtitles) provided by
+                YouTube. We do not download, cache, storage, or redistribute video or audio files. This ensures
+                we remain lightweight and fully compliant with content usage policies.
+              </p>
+            </div>
+            {/* FAQ 2 */}
+            <div className="bg-white shadow rounded-lg p-6">
+              <h3 className="text-lg font-medium text-slate-900">Is this tool free to use?</h3>
+              <p className="mt-3 text-base text-slate-500">
+                Yes! The core functionality available at digest.supervan.uk is currently free to use. We rely on
+                standard ad-supported revenue to maintain our servers and API costs. We believe in democratizing
+                access to educational tools.
+              </p>
+            </div>
+            {/* FAQ 3 */}
+            <div className="bg-white shadow rounded-lg p-6">
+              <h3 className="text-lg font-medium text-slate-900">How accurate are the AI summaries?</h3>
+              <p className="mt-3 text-base text-slate-500">
+                We use state-of-the-art Large Language Models (LLMs) to process text. While
+                highly accurate, the quality of the summary depends on the quality of the original video
+                captions. Validating important information with the original source is always recommended.
+              </p>
+            </div>
+            {/* FAQ 4 */}
+            <div className="bg-white shadow rounded-lg p-6">
+              <h3 className="text-lg font-medium text-slate-900">Can I use this for private or unlisted videos?</h3>
+              <p className="mt-3 text-base text-slate-500">
+                Our tool is designed for public YouTube content. We do not attempt to bypass privacy settings,
+                authentication walls, or DRM. If a video is unlisted but you have the link, it may work
+                depending on caption availability, but private videos are not accessible.
+              </p>
+            </div>
+            {/* FAQ 5 */}
+            <div className="bg-white shadow rounded-lg p-6">
+              <h3 className="text-lg font-medium text-slate-900">Do you store my chat data?</h3>
+              <p className="mt-3 text-base text-slate-500">
+                Summaries and chat sessions are generated in real-time for your active session. We do not build
+                permanent profiles of your usage or store your chat queries long-term. Please review our Privacy
+                Policy for detailed data practices.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <footer className="bg-white border-t border-slate-200 mt-12">
+        <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center">
+            <p className="text-base text-slate-400">&copy; 2025 SuperVan Digital. All rights reserved.</p>
+            <div className="flex space-x-6">
+              {/* Note: Linking to static html files in public folder */}
+              <a href="/blog/index.html" className="text-base text-slate-500 hover:text-slate-900">Blog</a>
+              <Link to="/privacy" className="text-base text-slate-500 hover:text-slate-900">Privacy Policy</Link>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
