@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Compliance & Privacy | SuperVan Blog</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-white text-slate-900">
+    <nav class="bg-white border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center"><a href="/blog"
+                class="font-bold text-indigo-600">← Back to Blog</a></div>
+    </nav>
+    <article class="max-w-3xl mx-auto px-4 py-12 prose prose-lg prose-indigo">
+        <h1>Understanding YouTube Data Compliance and Privacy</h1>
+        <p class="lead">Building tools on top of the YouTube ecosystem requires strict adherence to their Terms of
+            Service (ToS) and Developer Policies. Here is how we ensure compliance and protect creator rights.</p>
+
+        <h3>The API vs. Scraping</h3>
+        <p>There are two ways to get data from YouTube: the official Data API v3 and scraping. The API is the official
+            front door. It has quotas, limits, and strict rules. Scraping is the "back door." At SuperVan, we primarily
+            utilize official caption tracks and legitimate data access methods. We respect the `robots.txt` and the
+            platform's integrity.</p>
+
+        <h3>Copyright and Fair Use</h3>
+        <p>Analyzing a transcript is generally considered "Fair Use" when it is transformative—creating a summary,
+            critique, or educational tool—and does not replace the original market for the work. However, reproducing
+            the *entire* transcript verbatim can be a gray area. That is why our tools focus on *summarization* and
+            *extraction*. We create new value (summaries, quizzes) rather than just mirroring the creator's content.</p>
+
+        <h3>No Video Storage</h3>
+        <p>A cardinal rule of YouTube compliance is that you cannot store independent copies of video streams. This
+            protects the creator's view counts and ad revenue. If a platform downloads and re-hosts a video, they are
+            stealing views. SuperVan is a "pass-through" analysis tool. We process the metadata and text; we do not
+            touch the video binary. All video playback on our result pages is done via the official YouTube IFrame
+            Player API, ensuring the creator gets their view and ad impression.</p>
+
+        <h3>User Privacy</h3>
+        <p>When you use an analysis tool, you are sharing what you watch. We take this seriously. We treat chat logs and
+            summary requests as ephemeral data. We do not sell user watch histories to advertisers. Our business model
+            is based on providing a utility, not data brokering.</p>
+
+        <h3>Conclusion</h3>
+        <p>The developer ecosystem around YouTube is vibrant, but it must be respectful. By sticking to the rules—no
+            downloading, official players, and transformative data use—we build a sustainable tool that benefits viewers
+            without harming creators.</p>
+    </article>
+</body>
+
+</html>

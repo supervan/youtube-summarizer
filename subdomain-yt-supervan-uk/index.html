@@ -31,6 +31,9 @@
     <div class="container">
         <!-- Header -->
         <header class="header">
+            <div id="ad-slot-header" style="height: 60px; width: 100%; text-align: center; margin-bottom: 10px;">
+                <!-- AdSense Header Slot -->
+            </div>
             <div class="logo-section">
                 <a href="https://supervan.uk" title="Back to Home">
                     <img src="logo.png" alt="Too Long Didn't Watch" class="logo-image">
@@ -563,13 +566,13 @@
     </div>
 
 
-
-    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js"></script>
+    <div id="ad-slot-footer" style="height: 60px; width: 100%; text-align: center; margin-top: 20px;">
+        <!-- AdSense Footer Slot -->
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
     <script src="script.js?v=2034.9"></script>
-    </script>
-    </script>
-    </script>
+    <script src="sw.js"></script>
     <script>
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js?t=' + Date.now());

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Science of Summarization | SuperVan Blog</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-white text-slate-900">
+    <nav class="bg-white border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center"><a href="/blog"
+                class="font-bold text-indigo-600">← Back to Blog</a></div>
+    </nav>
+    <article class="max-w-3xl mx-auto px-4 py-12 prose prose-lg prose-indigo">
+        <h1>The Science of Summarization: How LLMs Process Video Captions</h1>
+        <p class="lead">In an age of infinite content, our attention is the scarcest resource. Large Language Models
+            (LLMs) are fundamentally changing how we consume video by turning hours of footage into minutes of reading.
+            But how does it actually work?</p>
+
+        <h3>The Tokenization Challenge</h3>
+        <p>Video captions are unstructured data. They contain filler words ("um," "uh"), simpler sentence structures,
+            and often lack punctuation. For an AI to summarize this, it first needs to clean and tokenize the input.
+            Modern models like Gemini use vast context windows—often exceeding 1 million tokens—allowing them to ingest
+            an entire 2-hour lecture in a single pass. This is a massive leap from earlier models that required
+            "chunking" (breaking text into small pieces), which often resulted in lost context between segments.</p>
+
+        <h3>Extraction vs. Abstraction</h3>
+        <p>There are two main types of summarization in NLP (Natural Language Processing):</p>
+        <ul>
+            <li><strong>Extractive Summarization:</strong> The old school method. The algorithm identifies the most
+                "important" sentences and copies them verbatim. It's safe but often disjointed.</li>
+            <li><strong>Abstractive Summarization:</strong> The LLM approach. The model understands the semantic meaning
+                and generates entirely new sentences to describe the content. This allows for tone adjustment—making a
+                technical lecture sound "witty" or "professional."</li>
+        </ul>
+
+        <h3>Attention Mechanisms</h3>
+        <p>The "Transformer" architecture, which powers GPT and Gemini, uses "Self-Attention" mechanisms. When
+            processing a video transcript, the model weighs the importance of every word relative to every other word.
+            It learns that when a speaker says "In conclusion," the following sentences likely carry higher
+            informational weight than the introductory banter. By optimizing for these high-weight segments, the model
+            can compress a 10,000-word transcript into a 500-word summary without losing the core message.</p>
+
+        <h3>The Hallucination Problem</h3>
+        <p>A critical challenge in video summarization is ensuring factual accuracy. Because abstractive models
+            facilitate creativity, they can occasionally "hallucinate" details not present in the video. At SuperVan, we
+            mitigate this by using low-temperature settings in our API calls, forcing the model to stick strictly to the
+            provided context (the transcript) rather than its general training data. This ensures that the summary you
+            read is a faithful representation of the video you didn't watch.</p>
+
+        <h3>Conclusion</h3>
+        <p>The science of summarization is moving fast. We are transitioning from simple text compression to
+            "intelligence extraction," where AI doesn't just shorten the content but restructures it into more useful
+            formats like Mind Maps and Quizzes. This is the core mission of digest.supervan.uk.</p>
+    </article>
+</body>
+
+</html>
