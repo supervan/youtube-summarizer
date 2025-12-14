@@ -52,56 +52,15 @@ def extract_video_id(url):
 
 @app.route('/')
 def index():
-    """
-    Main Route with Host-Based Routing.
-    - supervan.uk (Marketing) -> Serve marketing/landing.html
-    - digest.supervan.uk (App) -> Serve index.html
-    """
-    host = request.host.lower()
-    
-    # Logic: 
-    # If host starts with 'digest', it's the App.
-    # If host contains 'supervan.uk' but not digest, it's Marketing.
-    # Fallback/Localhost: We default to App for easier development unless specified.
-    # User can test marketing locally via /marketing route or editing hosts.
-    # BUT, strict adherence to request:
-    
-    # Check for Marketing Domain
-    is_app_subdomain = 'digest' in host or 'localhost' in host or '127.0.0.1' in host
-    # NOTE: User might want 'localhost' to show App. 
-    
-    # If strict production check:
-    if 'supervan.uk' in host and 'digest' not in host:
-        return render_template('templates/marketing/landing.html')
-    
-    # Default to App (Digest)
+    """Serve the main HTML file with feature flags"""
+    # Feature Flag: Check if ads should be enabled from environment variables
+    # Defaults to False if not set.
+    # This controls the injection of the AdSense placeholder in the footer of index.html.
     enable_ads = os.getenv('ENABLE_ADS', 'False').lower() == 'true'
-    return render_template('index.html', enable_ads=enable_ads)
-
-# --- Marketing Routes ---
-@app.route('/privacy-policy')
-def privacy_policy():
-    return render_template('templates/marketing/privacy_policy.html')
-
-@app.route('/blog')
-def blog_index():
-    return render_template('templates/marketing/blog/index.html')
-
-@app.route('/blog/<path:slug>')
-def blog_article(slug):
-    # Mapping slugs to filenames
-    articles = {
-        'science-of-summarization': 'article_science_of_summarization.html',
-        'active-recall-quizzes': 'article_active_recall_quizzes.html',
-        'visual-learning-mind-maps': 'article_visual_learning_mind_maps.html',
-        'reading-vs-watching': 'article_reading_vs_watching.html',
-        'youtube-compliance': 'article_youtube_compliance.html'
-    }
     
-    filename = articles.get(slug)
-    if filename:
-        return render_template(f'templates/marketing/blog/{filename}')
-    return "Article Not Found", 404
+    # Note: PWA support is handled entirely on the frontend via manifest.json, sw.js, and script.js.
+    # The backend simply serves these static files.
+    return render_template('index.html', enable_ads=enable_ads)
 
 @app.route('/ads.txt')
 def ads_txt():
@@ -114,8 +73,6 @@ def ads_txt():
 @app.route('/<path:path>')
 def serve_static(path):
     """Serve static files"""
-    # Safety: ensure we don't serve template files raw if they are protected?
-    # But current setup serves '.' so everything is valid.
     return send_from_directory('.', path)
 
 def _parse_vtt(vtt_content):
