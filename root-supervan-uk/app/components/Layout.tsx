@@ -82,7 +82,7 @@ export default function Layout() {
                                                             <p className="text-xs text-slate-500 leading-tight mt-0.5">AI Video Summarizer & Mind Maps</p>
                                                         </div>
                                                     </a>
-                                                    <a href="https://speed.supervan.uk" className="flex items-start gap-4 p-3 rounded-lg hover:bg-slate-50 transition-colors group">
+                                                    <a href="/speed" className="flex items-start gap-4 p-3 rounded-lg hover:bg-slate-50 transition-colors group">
                                                         <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex-shrink-0 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all">
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12A10 10 0 1 1 12 2a10 10 0 0 1 10 10Z" /><path d="m16.192 15.519-4.95-4.95" /><path d="M4.93 19.07 7.76 16.24" /><path d="M16.24 7.76l2.83-2.83" /></svg>
                                                         </div>
