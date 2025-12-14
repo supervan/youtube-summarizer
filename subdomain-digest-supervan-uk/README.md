@@ -5,7 +5,7 @@ An AI-powered web application that extracts transcripts from YouTube videos and 
 ![YouTube Summarizer](https://img.shields.io/badge/AI-Powered-blue) ![Python](https://img.shields.io/badge/Python-3.8+-green) ![Flask](https://img.shields.io/badge/Flask-3.0-lightgrey)
 
 ## ✨ Demo
-https://yt.supervan.uk/
+https://digest.supervan.uk/
 
 ## ✨ Features
 
