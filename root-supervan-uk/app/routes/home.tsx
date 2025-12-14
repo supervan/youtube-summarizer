@@ -1,5 +1,6 @@
 import type { Route } from "./+types/home";
 import { Link } from "react-router";
+import LauncherGrid from "../components/LauncherGrid";
 
 export function meta({ }: Route.MetaArgs) {
   return [
@@ -28,9 +29,9 @@ export default function Home() {
                 </p>
                 <div className="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
                   <div className="rounded-md shadow">
-                    <a href="https://digest.supervan.uk"
+                    <a href="#apps"
                       className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 md:py-4 md:text-lg">
-                      Open Web App
+                      View Apps
                     </a>
                   </div>
                   <div className="mt-3 sm:mt-0 sm:ml-3">
@@ -45,6 +46,8 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      <LauncherGrid />
 
       {/* Features Section */}
       <div id="features" className="py-12 bg-white">

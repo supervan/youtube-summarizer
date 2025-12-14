@@ -1,6 +1,21 @@
 import { Link, Outlet } from "react-router";
+import { useState, useEffect, useRef } from "react";
 
 export default function Layout() {
+    const [isAppsOpen, setIsAppsOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    // Close dropdown on click outside
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsAppsOpen(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
     return (
         <div className="flex flex-col min-h-screen bg-slate-50 text-slate-900 font-sans">
             {/* Navigation */}
@@ -30,13 +45,55 @@ export default function Layout() {
                                     <Link to="/contact" className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">
                                         Contact
                                     </Link>
-                                    <div className="ml-4 flex items-center space-x-3">
-                                        <a href="https://digest.supervan.uk" className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-colors">
-                                            Summarizer
-                                        </a>
-                                        <a href="https://speed.supervan.uk" className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 transition-colors">
-                                            Speed Test
-                                        </a>
+
+                                    {/* App Launcher */}
+                                    <div className="ml-4 relative" ref={dropdownRef}>
+                                        <button
+                                            onClick={() => setIsAppsOpen(!isAppsOpen)}
+                                            className={`p-2 rounded-full transition-colors focus:outline-none ${isAppsOpen ? 'bg-indigo-50 text-indigo-600' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'}`}
+                                            title="SuperVan Apps"
+                                            aria-label="Open App Launcher"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <circle cx="12" cy="12" r="1" />
+                                                <circle cx="19" cy="12" r="1" />
+                                                <circle cx="5" cy="12" r="1" />
+                                                <circle cx="12" cy="5" r="1" />
+                                                <circle cx="19" cy="5" r="1" />
+                                                <circle cx="5" cy="5" r="1" />
+                                                <circle cx="12" cy="19" r="1" />
+                                                <circle cx="19" cy="19" r="1" />
+                                                <circle cx="5" cy="19" r="1" />
+                                            </svg>
+                                        </button>
+
+                                        {isAppsOpen && (
+                                            <div className="absolute right-0 mt-3 w-72 bg-white rounded-xl shadow-xl border border-slate-100 py-3 z-50 ring-1 ring-black ring-opacity-5 animate-in fade-in zoom-in-95 duration-100">
+                                                <div className="px-4 pb-2 border-b border-slate-50 mb-2 flex justify-between items-center">
+                                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">SuperVan Apps</p>
+                                                </div>
+                                                <div className="grid grid-cols-1 gap-1 px-2">
+                                                    <a href="https://digest.supervan.uk" className="flex items-start gap-4 p-3 rounded-lg hover:bg-slate-50 transition-colors group">
+                                                        <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex-shrink-0 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /><line x1="10" y1="9" x2="8" y2="9" /></svg>
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-sm font-semibold text-slate-900">Digest</p>
+                                                            <p className="text-xs text-slate-500 leading-tight mt-0.5">AI Video Summarizer & Mind Maps</p>
+                                                        </div>
+                                                    </a>
+                                                    <a href="https://speed.supervan.uk" className="flex items-start gap-4 p-3 rounded-lg hover:bg-slate-50 transition-colors group">
+                                                        <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex-shrink-0 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12A10 10 0 1 1 12 2a10 10 0 0 1 10 10Z" /><path d="m16.192 15.519-4.95-4.95" /><path d="M4.93 19.07 7.76 16.24" /><path d="M16.24 7.76l2.83-2.83" /></svg>
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-sm font-semibold text-slate-900">Speed Test</p>
+                                                            <p className="text-xs text-slate-500 leading-tight mt-0.5">Professional Network Analysis</p>
+                                                        </div>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
