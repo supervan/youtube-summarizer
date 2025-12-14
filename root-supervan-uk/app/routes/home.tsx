@@ -10,26 +10,7 @@ export function meta({ }: Route.MetaArgs) {
 
 export default function Home() {
   return (
-    <div className="bg-slate-50 text-slate-900 min-h-screen font-sans">
-      {/* Navigation */}
-      <nav className="bg-white border-b border-slate-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <span className="text-xl font-bold text-slate-900">SuperVan Digital</span>
-            </div>
-            <div className="flex items-center space-x-6">
-              <a href="#features" className="text-sm font-medium text-slate-500 hover:text-slate-900">Features</a>
-              <a href="/blog/index.html" className="text-sm font-medium text-slate-500 hover:text-slate-900">Engineering Blog</a>
-              <a href="https://digest.supervan.uk"
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
-                Open Web App
-              </a>
-            </div>
-          </div>
-        </div>
-      </nav>
-
+    <>
       {/* Hero Section */}
       <div className="relative bg-white overflow-hidden">
         <div className="max-w-7xl mx-auto">
@@ -222,20 +203,6 @@ export default function Home() {
           </div>
         </div>
       </div>
-
-      {/* Footer */}
-      <footer className="bg-white border-t border-slate-200 mt-12">
-        <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center">
-            <p className="text-base text-slate-400">&copy; 2025 SuperVan Digital. All rights reserved.</p>
-            <div className="flex space-x-6">
-              {/* Note: Linking to static html files in public folder */}
-              <a href="/blog/index.html" className="text-base text-slate-500 hover:text-slate-900">Blog</a>
-              <Link to="/privacy" className="text-base text-slate-500 hover:text-slate-900">Privacy Policy</Link>
-            </div>
-          </div>
-        </div>
-      </footer>
-    </div>
+    </>
   );
 }
