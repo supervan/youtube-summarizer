@@ -70,12 +70,12 @@ export default function Layout() {
                                         {isAppsOpen && (
                                             <div className="absolute right-0 mt-3 w-72 bg-white rounded-xl shadow-xl border border-slate-100 py-3 z-50 ring-1 ring-black ring-opacity-5 animate-in fade-in zoom-in-95 duration-100">
                                                 <div className="px-4 pb-2 border-b border-slate-50 mb-2 flex justify-between items-center">
-                                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">SuperVan Apps</p>
+                                                    <p className="text-xs font-bold text-slate-600 uppercase tracking-wider">SuperVan Apps</p>
                                                 </div>
                                                 <div className="grid grid-cols-1 gap-1 px-2">
                                                     <a href="https://digest.supervan.uk" className="flex items-start gap-4 p-3 rounded-lg hover:bg-slate-50 transition-colors group">
                                                         <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex-shrink-0 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /><line x1="10" y1="9" x2="8" y2="9" /></svg>
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0 -2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2V7.5L14.5 2z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /><line x1="10" y1="9" x2="8" y2="9" /></svg>
                                                         </div>
                                                         <div>
                                                             <p className="text-sm font-semibold text-slate-900">Digest</p>
@@ -84,7 +84,7 @@ export default function Layout() {
                                                     </a>
                                                     <a href="/speed" className="flex items-start gap-4 p-3 rounded-lg hover:bg-slate-50 transition-colors group">
                                                         <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex-shrink-0 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12A10 10 0 1 1 12 2a10 10 0 0 1 10 10Z" /><path d="m16.192 15.519-4.95-4.95" /><path d="M4.93 19.07 7.76 16.24" /><path d="M16.24 7.76l2.83-2.83" /></svg>
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12A10 10 0 1 1 12 2a10 10 0 0 1 10 10Z" /><path d="m16.192 15.519 -4.95 -4.95" /><path d="M4.93 19.07 7.76 16.24" /><path d="M16.24 7.76l2.83 -2.83" /></svg>
                                                         </div>
                                                         <div>
                                                             <p className="text-sm font-semibold text-slate-900">Speed Test</p>
@@ -112,13 +112,13 @@ export default function Layout() {
                 <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         <div>
-                            <h3 className="text-sm font-semibold text-slate-400 tracking-wider uppercase">About</h3>
+                            <h3 className="text-sm font-semibold text-slate-600 tracking-wider uppercase">About</h3>
                             <p className="mt-4 text-base text-slate-600">
                                 SuperVan Digital is the home of cutting-edge AI tools and tech insights. We explore the intersection of artificial intelligence, engineering, and the future of work.
                             </p>
                         </div>
                         <div>
-                            <h3 className="text-sm font-semibold text-slate-400 tracking-wider uppercase">Legal</h3>
+                            <h3 className="text-sm font-semibold text-slate-600 tracking-wider uppercase">Legal</h3>
                             <ul className="mt-4 space-y-4">
                                 <li>
                                     <Link to="/privacy" className="text-base text-slate-600 hover:text-slate-900 transition-colors">
@@ -133,7 +133,7 @@ export default function Layout() {
                             </ul>
                         </div>
                         <div>
-                            <h3 className="text-sm font-semibold text-slate-400 tracking-wider uppercase">Connect</h3>
+                            <h3 className="text-sm font-semibold text-slate-600 tracking-wider uppercase">Connect</h3>
                             <ul className="mt-4 space-y-4">
                                 <li>
                                     <Link to="/contact" className="text-base text-slate-600 hover:text-slate-900 transition-colors">
@@ -149,7 +149,7 @@ export default function Layout() {
                         </div>
                     </div>
                     <div className="mt-8 border-t border-slate-200 pt-8 md:flex md:items-center md:justify-between">
-                        <p className="text-base text-slate-400">
+                        <p className="text-base text-slate-600">
                             &copy; {new Date().getFullYear()} SuperVan Digital. All rights reserved.
                         </p>
                     </div>

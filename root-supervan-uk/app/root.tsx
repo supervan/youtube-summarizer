@@ -43,15 +43,32 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
         {/* Google Analytics */}
-        {/* Google Analytics */}
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZGDET9ELC1"></script>
+        {/* Google Analytics - Lazy Loaded */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', 'G-ZGDET9ELC1');
+              (function() {
+                var gtmLoaded = false;
+                function loadGTM() {
+                  if (gtmLoaded) return;
+                  gtmLoaded = true;
+                  var script = document.createElement('script');
+                  script.src = "https://www.googletagmanager.com/gtag/js?id=G-ZGDET9ELC1";
+                  script.async = true;
+                  document.head.appendChild(script);
+
+                  window.dataLayer = window.dataLayer || [];
+                  function gtag(){dataLayer.push(arguments);}
+                  gtag('js', new Date());
+                  gtag('config', 'G-ZGDET9ELC1');
+                }
+                // Load on user interaction
+                ['click', 'scroll', 'mousemove', 'touchstart'].forEach(event => 
+                  window.addEventListener(event, loadGTM, { once: true, passive: true })
+                );
+                // Fallback: load after 4 seconds
+                setTimeout(loadGTM, 4000);
+              })();
             `,
           }}
         />
