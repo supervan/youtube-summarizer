@@ -8,7 +8,7 @@ import {
 } from "react-router";
 
 import type { Route } from "./+types/root";
-import appStyles from "./app.css?url";
+import "./app.css";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -21,9 +21,6 @@ export const links: Route.LinksFunction = () => [
     rel: "stylesheet",
     href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
   },
-  // Main CSS loaded asynchronously (non-blocking) with fallback
-  { rel: "preload", href: appStyles, as: "style" },
-  { rel: "stylesheet", href: appStyles, media: "print", onLoad: "this.media='all'" },
 ];
 
 export function meta({ }: Route.MetaArgs) {
@@ -34,26 +31,6 @@ export function meta({ }: Route.MetaArgs) {
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
-
-  // Critical CSS for Navbar & Hero (approximate) to prevent FOUC/Shift
-  const criticalCss = `
-    body { font-family: 'Inter', sans-serif; margin: 0; background-color: #f8fafc; color: #0f172a; }
-    nav { background-color: white; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 50; height: 4rem; }
-    .max-w-7xl { max-width: 80rem; margin-left: auto; margin-right: auto; padding-left: 1rem; padding-right: 1rem; }
-    .flex { display: flex; } .items-center { align-items: center; } .justify-between { justify-content: space-between; }
-    .h-16 { height: 4rem; } 
-    .font-bold { font-weight: 700; } .text-xl { font-size: 1.25rem; line-height: 1.75rem; }
-    .text-slate-900 { color: #0f172a; }
-    .hidden { display: none; }
-    @media (min-width: 768px) { .md\\:block { display: block; } .md\\:flex { display: flex; } }
-    main { margin-top: 2.5rem; }
-    h1 { font-size: 2.25rem; line-height: 2.5rem; font-weight: 800; letter-spacing: -0.025em; color: #0f172a; }
-    @media (min-width: 640px) { h1 { font-size: 3rem; line-height: 1; } }
-    .text-indigo-600 { color: #4f46e5; }
-    .mt-5 { margin-top: 1.25rem; }
-    .block { display: block; }
-  `;
-
   return (
     <html lang="en">
       <head>
@@ -62,8 +39,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <link rel="icon" href="/icon.jpg" />
         <Meta />
         <Links />
-        <noscript><link rel="stylesheet" href={appStyles} /></noscript>
-        <style dangerouslySetInnerHTML={{ __html: criticalCss }} />
 
         {/* Google Analytics - Lazy Loaded */}
         <script
