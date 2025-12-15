@@ -30,19 +30,19 @@ export default function Layout() {
                             </Link>
                             <div className="hidden md:block">
                                 <div className="ml-10 flex items-baseline space-x-6">
-                                    <Link to="/" className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">
+                                    <Link to="/" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
                                         Home
                                     </Link>
-                                    <a href="/#features" className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">
+                                    <a href="/#features" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
                                         Features
                                     </a>
-                                    <Link to="/about" className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">
+                                    <Link to="/about" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
                                         About
                                     </Link>
-                                    <a href="/blog/index.html" className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">
+                                    <a href="/blog/index.html" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
                                         Engineering Blog
                                     </a>
-                                    <Link to="/contact" className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">
+                                    <Link to="/contact" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
                                         Contact
                                     </Link>
 
@@ -50,7 +50,7 @@ export default function Layout() {
                                     <div className="ml-4 relative" ref={dropdownRef}>
                                         <button
                                             onClick={() => setIsAppsOpen(!isAppsOpen)}
-                                            className={`p-2 rounded-full transition-colors focus:outline-none ${isAppsOpen ? 'bg-indigo-50 text-indigo-600' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'}`}
+                                            className={`p-2 rounded-full transition-colors focus:outline-none ${isAppsOpen ? 'bg-indigo-50 text-indigo-600' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}
                                             title="SuperVan Apps"
                                             aria-label="Open App Launcher"
                                         >
@@ -79,7 +79,7 @@ export default function Layout() {
                                                         </div>
                                                         <div>
                                                             <p className="text-sm font-semibold text-slate-900">Digest</p>
-                                                            <p className="text-xs text-slate-500 leading-tight mt-0.5">AI Video Summarizer & Mind Maps</p>
+                                                            <p className="text-xs text-slate-600 leading-tight mt-0.5">AI Video Summarizer & Mind Maps</p>
                                                         </div>
                                                     </a>
                                                     <a href="/speed" className="flex items-start gap-4 p-3 rounded-lg hover:bg-slate-50 transition-colors group">
@@ -88,7 +88,7 @@ export default function Layout() {
                                                         </div>
                                                         <div>
                                                             <p className="text-sm font-semibold text-slate-900">Speed Test</p>
-                                                            <p className="text-xs text-slate-500 leading-tight mt-0.5">Professional Network Analysis</p>
+                                                            <p className="text-xs text-slate-600 leading-tight mt-0.5">Professional Network Analysis</p>
                                                         </div>
                                                     </a>
                                                 </div>
@@ -113,7 +113,7 @@ export default function Layout() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         <div>
                             <h3 className="text-sm font-semibold text-slate-400 tracking-wider uppercase">About</h3>
-                            <p className="mt-4 text-base text-slate-500">
+                            <p className="mt-4 text-base text-slate-600">
                                 SuperVan Digital is the home of cutting-edge AI tools and tech insights. We explore the intersection of artificial intelligence, engineering, and the future of work.
                             </p>
                         </div>
@@ -121,12 +121,12 @@ export default function Layout() {
                             <h3 className="text-sm font-semibold text-slate-400 tracking-wider uppercase">Legal</h3>
                             <ul className="mt-4 space-y-4">
                                 <li>
-                                    <Link to="/privacy" className="text-base text-slate-500 hover:text-slate-900 transition-colors">
+                                    <Link to="/privacy" className="text-base text-slate-600 hover:text-slate-900 transition-colors">
                                         Privacy Policy
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link to="/terms" className="text-base text-slate-500 hover:text-slate-900 transition-colors">
+                                    <Link to="/terms" className="text-base text-slate-600 hover:text-slate-900 transition-colors">
                                         Terms of Service
                                     </Link>
                                 </li>
@@ -136,12 +136,12 @@ export default function Layout() {
                             <h3 className="text-sm font-semibold text-slate-400 tracking-wider uppercase">Connect</h3>
                             <ul className="mt-4 space-y-4">
                                 <li>
-                                    <Link to="/contact" className="text-base text-slate-500 hover:text-slate-900 transition-colors">
+                                    <Link to="/contact" className="text-base text-slate-600 hover:text-slate-900 transition-colors">
                                         Contact Us
                                     </Link>
                                 </li>
                                 <li>
-                                    <a href="https://github.com/supervan" className="text-base text-slate-500 hover:text-slate-900 transition-colors">
+                                    <a href="https://github.com/supervan" className="text-base text-slate-600 hover:text-slate-900 transition-colors">
                                         GitHub
                                     </a>
                                 </li>

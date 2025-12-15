@@ -1,0 +1,6 @@
+# Group 1: Allow all standard bots
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://supervan.uk/sitemap.xml

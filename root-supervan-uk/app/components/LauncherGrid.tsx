@@ -34,7 +34,7 @@ export default function LauncherGrid() {
                     <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-slate-900 sm:text-4xl">
                         Tools to Power Your Productivity
                     </p>
-                    <p className="mt-4 max-w-2xl text-xl text-slate-500 lg:mx-auto">
+                    <p className="mt-4 max-w-2xl text-xl text-slate-600 lg:mx-auto">
                         Explore our suite of specialized digital tools designed for efficiency.
                     </p>
                 </div>
@@ -49,7 +49,7 @@ export default function LauncherGrid() {
                                 <div className="flex-1">
                                     <a href={app.href} className="block mt-2">
                                         <p className="text-xl font-semibold text-slate-900">{app.title}</p>
-                                        <p className="mt-3 text-base text-slate-500">{app.description}</p>
+                                        <p className="mt-3 text-base text-slate-600">{app.description}</p>
                                     </a>
                                 </div>
                                 <div className="mt-6 flex items-center">

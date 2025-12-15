@@ -55,8 +55,31 @@ export function Layout({ children }: { children: React.ReactNode }) {
             `,
           }}
         />
-        {/* Google AdSense */}
-        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3475917359369599" crossOrigin="anonymous"></script>
+        {/* Google AdSense - Lazy Loaded */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                var adSenseLoaded = false;
+                function loadAdSense() {
+                  if (adSenseLoaded) return;
+                  adSenseLoaded = true;
+                  var script = document.createElement('script');
+                  script.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3475917359369599";
+                  script.async = true;
+                  script.crossOrigin = "anonymous";
+                  document.head.appendChild(script);
+                }
+                // Load on user interaction
+                ['click', 'scroll', 'mousemove', 'touchstart'].forEach(event => 
+                  window.addEventListener(event, loadAdSense, { once: true, passive: true })
+                );
+                // Fallback: load after 5 seconds if no interaction
+                setTimeout(loadAdSense, 5000);
+              })();
+            `,
+          }}
+        />
       </head>
       <body>
         {children}

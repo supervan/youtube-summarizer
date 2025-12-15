@@ -22,7 +22,7 @@ export default function Home() {
                   <span className="block xl:inline">Video Intelligence,</span>
                   <span className="block text-indigo-600 xl:inline">Digested.</span>
                 </h1>
-                <p className="mt-3 text-base text-slate-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
+                <p className="mt-3 text-base text-slate-600 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
                   Transform long-form video content into professional summaries, mind maps, and quizzes in
                   seconds. Analyze captions, test your knowledge, and visualize relationships without watching
                   hours of footage.
@@ -57,7 +57,7 @@ export default function Home() {
             <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-slate-900 sm:text-4xl">
               A comprehensive suite for video analysis
             </p>
-            <p className="mt-4 max-w-2xl text-xl text-slate-500 lg:mx-auto">
+            <p className="mt-4 max-w-2xl text-xl text-slate-600 lg:mx-auto">
               Our platform leverages advanced Large Language Models (LLMs) to process video captions and extract
               high-value insights.
             </p>
@@ -78,7 +78,7 @@ export default function Home() {
                   </div>
                   <p className="ml-16 text-lg leading-6 font-medium text-slate-900">AI-Powered Summaries</p>
                 </dt>
-                <dd className="mt-2 ml-16 text-base text-slate-500">
+                <dd className="mt-2 ml-16 text-base text-slate-600">
                   Stop wasting time scrubbing through 2-hour long podcasts or lectures. Our AI analyzes the
                   entire transcript to generate concise, readable summaries. You can even customize the output
                   tone—choose "Professional" for business reports or "Witty" for a more engaging read. The
@@ -98,7 +98,7 @@ export default function Home() {
                   </div>
                   <p className="ml-16 text-lg leading-6 font-medium text-slate-900">Interactive Mind Maps</p>
                 </dt>
-                <dd className="mt-2 ml-16 text-base text-slate-500">
+                <dd className="mt-2 ml-16 text-base text-slate-600">
                   Visual learners rejoice. We automatically convert linear video content into structured,
                   interactive Mind Maps using Mermaid.js technology. This allows you to see the hierarchical
                   relationship between concepts, making it perfect for understanding complex tutorials or
@@ -118,7 +118,7 @@ export default function Home() {
                   </div>
                   <p className="ml-16 text-lg leading-6 font-medium text-slate-900">Active Recall Quizzes</p>
                 </dt>
-                <dd className="mt-2 ml-16 text-base text-slate-500">
+                <dd className="mt-2 ml-16 text-base text-slate-600">
                   Passive watching is the enemy of retention. Our system generates dynamic quizzes based on
                   the video content to test your understanding immediately. By engaging in "Active Recall,"
                   you reinforce the knowledge pathways in your brain, moving information from short-term to
@@ -139,7 +139,7 @@ export default function Home() {
                   </div>
                   <p className="ml-16 text-lg leading-6 font-medium text-slate-900">Chat-to-Video Interface</p>
                 </dt>
-                <dd className="mt-2 ml-16 text-base text-slate-500">
+                <dd className="mt-2 ml-16 text-base text-slate-600">
                   Have a specific question about the video? Don't search; just ask. Our "Chat with Video"
                   feature allows you to query the content using natural language. It performs a semantic
                   search across the transcript to find the exact answer you need. Whether you're looking for a
@@ -161,7 +161,7 @@ export default function Home() {
             {/* FAQ 1 */}
             <div className="bg-white shadow rounded-lg p-6">
               <h3 className="text-lg font-medium text-slate-900">Does SuperVan download the actual video files?</h3>
-              <p className="mt-3 text-base text-slate-500">
+              <p className="mt-3 text-base text-slate-600">
                 No. Our service operates strictly by analyzing the public caption tracks (subtitles) provided by
                 YouTube. We do not download, cache, storage, or redistribute video or audio files. This ensures
                 we remain lightweight and fully compliant with content usage policies.
@@ -170,7 +170,7 @@ export default function Home() {
             {/* FAQ 2 */}
             <div className="bg-white shadow rounded-lg p-6">
               <h3 className="text-lg font-medium text-slate-900">Is this tool free to use?</h3>
-              <p className="mt-3 text-base text-slate-500">
+              <p className="mt-3 text-base text-slate-600">
                 Yes! The core functionality available at digest.supervan.uk is currently free to use. We rely on
                 standard ad-supported revenue to maintain our servers and API costs. We believe in democratizing
                 access to educational tools.
@@ -179,7 +179,7 @@ export default function Home() {
             {/* FAQ 3 */}
             <div className="bg-white shadow rounded-lg p-6">
               <h3 className="text-lg font-medium text-slate-900">How accurate are the AI summaries?</h3>
-              <p className="mt-3 text-base text-slate-500">
+              <p className="mt-3 text-base text-slate-600">
                 We use state-of-the-art Large Language Models (LLMs) to process text. While
                 highly accurate, the quality of the summary depends on the quality of the original video
                 captions. Validating important information with the original source is always recommended.
@@ -188,7 +188,7 @@ export default function Home() {
             {/* FAQ 4 */}
             <div className="bg-white shadow rounded-lg p-6">
               <h3 className="text-lg font-medium text-slate-900">Can I use this for private or unlisted videos?</h3>
-              <p className="mt-3 text-base text-slate-500">
+              <p className="mt-3 text-base text-slate-600">
                 Our tool is designed for public YouTube content. We do not attempt to bypass privacy settings,
                 authentication walls, or DRM. If a video is unlisted but you have the link, it may work
                 depending on caption availability, but private videos are not accessible.
@@ -197,7 +197,7 @@ export default function Home() {
             {/* FAQ 5 */}
             <div className="bg-white shadow rounded-lg p-6">
               <h3 className="text-lg font-medium text-slate-900">Do you store my chat data?</h3>
-              <p className="mt-3 text-base text-slate-500">
+              <p className="mt-3 text-base text-slate-600">
                 Summaries and chat sessions are generated in real-time for your active session. We do not build
                 permanent profiles of your usage or store your chat queries long-term. Please review our Privacy
                 Policy for detailed data practices.
