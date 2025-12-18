@@ -330,6 +330,7 @@ def generate_gemini_content(prompt):
     genai.configure(api_key=api_key)
     
     models_to_try = [
+        'gemini-3-flash-preview', # Preview alias
         'gemini-2.5-flash',      # Latest Flash
         'gemini-2.5-flash-lite',
         'gemini-2.0-flash',      # Stable Flash 2.0
