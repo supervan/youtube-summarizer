@@ -19,6 +19,15 @@ export function prerender() {
     return posts.map((post) => `/post/${post.slug}`);
 }
 
+// Server loader for SSG/Prerendering
+export async function loader({ params }: Route.LoaderArgs) {
+    const post = posts.find((p) => p.slug === params.slug);
+    if (!post) {
+        throw new Response("Not Found", { status: 404 });
+    }
+    return { post };
+}
+
 export function clientLoader({ params }: Route.ClientLoaderArgs) {
     const post = posts.find((p) => p.slug === params.slug);
     if (!post) {
