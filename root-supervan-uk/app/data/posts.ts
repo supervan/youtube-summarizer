@@ -12,6 +12,35 @@ export interface BlogPost {
 
 export const posts: BlogPost[] = [
     {
+        id: "ai-infographics",
+        slug: "introducing-ai-infographics",
+        title: "Introducing AI Infographics: Turn Video Summaries into Visuals",
+        excerpt: "We've added a powerful new feature that automatically generates beautiful, style-aware infographics for every video summary.",
+        content: `A picture is worth a thousand words, especially when trying to digest complex video content. That's why we're thrilled to announce our newest feature: **AI Infographics**.
+
+Now, whenever you generate a summary, our AI also creates a custom vector infographic that visualizes the key concepts, stats, and flows from the transcript.
+
+### 5 Unique Visual Styles
+The infographic isn't just a generic template. It adapts to the "Tone" you select for your summary:
+
+*   **Conversational:** A friendly, hand-drawn "whiteboard" sketch style with marker icons.
+*   **Professional:** A clean, corporate Swiss-design aesthetic with a structured grid.
+*   **Technical:** A schematic blueprint looking like a technical wireframe.
+*   **Witty:** A vibrant Pop Art style with bold colors and comic-book elements.
+*   **Sarcastic:** A dark, "glitch art" aesthetic with neon accents.
+
+### Solved: The "Missing Image" Copy Problem
+Have you ever tried to copy a webpage with an SVG image and paste it into Gmail, only to see a broken box? We fixed that.
+
+We built a custom rendering engine that automatically rasterizes our SVG infographics into high-resolution PNG images the moment you click "Copy". This means you can paste your full summary—including the beautiful new infographic—directly into emails, Docs, or Slack without any broken images.
+
+Try it out today on any video!`,
+        date: "2025-12-20",
+        imageUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&q=80",
+        videoUrl: "",
+        category: "Product Update"
+    },
+    {
         id: "new-speed-test",
         slug: "internet-speed-test",
         title: "Introducing SuperVan Speed Test: Professional Grade Diagnostics",
