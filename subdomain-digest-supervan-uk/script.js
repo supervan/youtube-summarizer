@@ -40,7 +40,7 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(function (registrations) {
         for (let registration of registrations) {
             registration.unregister();
-            console.log('ServiceWorker unregistered.');
+            // console.log('ServiceWorker unregistered.');
         }
     });
 }
@@ -387,8 +387,8 @@ const expandMindMapBtn = document.getElementById('expandMindMapBtn');
 const inputSection = document.querySelector('.input-card');
 
 // API Configuration
-const CACHE_NAME = 'yt-summarizer-v2034.9';
-console.log('YouTube Summarizer v2034.9 Loaded');
+const CACHE_NAME = 'yt-summarizer-v2034.11';
+// console.log('YouTube Summarizer v2034.11 Loaded');
 const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
 
 // Initialize app
@@ -494,11 +494,11 @@ function setupEventListeners() {
     // Tabs
     // Tabs
     if (tabs.length === 0) console.error("No tabs found during setup!");
-    else console.log("Found tabs:", tabs.length);
+    // else console.log("Found tabs:", tabs.length);
 
     tabs.forEach(tab => {
         tab.addEventListener('click', () => {
-            console.log("Tab clicked via listener:", tab.dataset.tab);
+            // console.log("Tab clicked via listener:", tab.dataset.tab);
             switchTab(tab);
         });
     });
@@ -1737,9 +1737,17 @@ function showError(message) {
 
 // Set loading state
 function setLoading(isLoading) {
-    submitBtn.disabled = isLoading;
-    btnText.classList.toggle('hidden', isLoading);
-    btnLoader.classList.toggle('hidden', !isLoading);
+    const btn = document.getElementById('submitBtn');
+    if (!btn) return;
+
+    btn.disabled = isLoading;
+
+    // Query dynamically because innerHTML might have been replaced
+    const textSpan = btn.querySelector('#btnText') || document.getElementById('btnText');
+    const loaderSpan = btn.querySelector('#btnLoader') || document.getElementById('btnLoader');
+
+    if (textSpan) textSpan.classList.toggle('hidden', isLoading);
+    if (loaderSpan) loaderSpan.classList.toggle('hidden', !isLoading);
 
     // Also handle the main summary loading indicator
     const summaryLoading = document.getElementById('summaryLoading');
@@ -1749,6 +1757,39 @@ function setLoading(isLoading) {
             // But we definitely want to HIDE it when isLoading is false
         } else {
             summaryLoading.classList.add('hidden');
+        }
+    }
+}
+
+// Update Loading Text & Icon dynamically
+function updateLoadingText(text, type = 'text') {
+    const summaryLoading = document.getElementById('summaryLoading');
+    if (!summaryLoading) return;
+
+    const p = summaryLoading.querySelector('p');
+    if (p) p.textContent = text;
+
+    const iconWrapper = summaryLoading.querySelector('.loading-icon-wrapper');
+    if (iconWrapper) {
+        if (type === 'chart') {
+            iconWrapper.innerHTML = `
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400 animate-pulse">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="3" y1="9" x2="21" y2="9"></line>
+                    <line x1="9" y1="21" x2="9" y2="9"></line>
+                </svg>
+            `;
+        } else {
+            // Default (Text/Doc)
+            iconWrapper.innerHTML = `
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400 animate-pulse">
+                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <line x1="10" y1="9" x2="8" y2="9"></line>
+                </svg>
+             `;
         }
     }
 }
@@ -1881,7 +1922,7 @@ async function handleSubmit(e) {
 
         if (cachedItem) {
             // Loading from cache
-            console.log('Loading from cache:', cachedItem);
+            // console.log('Loading from cache:', cachedItem);
             loadHistoryItem(cachedItem);
             return;
         }
@@ -1898,6 +1939,7 @@ async function handleSubmit(e) {
         // Show summary loading animation
         const summaryLoading = document.getElementById('summaryLoading');
         if (summaryLoading) summaryLoading.classList.remove('hidden');
+        updateLoadingText('Generating Summary...', 'text'); // Reset state
         const summaryText = document.getElementById('summaryText');
         if (summaryText) summaryText.innerHTML = ''; // Clear previous summary
 
@@ -1948,19 +1990,77 @@ async function handleSubmit(e) {
         }
 
         // Step 3: Show results
+
+        // Initial show with just summary
         showSummary(summaryData.summary);
         showFeatures(); // Show tabs
 
-        // Save to history
-        saveToHistory({
-            id: videoId,
-            title: transcriptData.title,
-            length: summaryLengthSelect.value,
-            tone: summaryToneSelect.value,
-            summary: summaryData.summary,
-            transcript: transcriptData.transcript,
-            metadata: transcriptData.metadata
-        });
+
+
+        // Save to History deferred until after infographic generation (or failure)
+        // to prevent partial updates / sync issues as requested.
+
+        // --- Async Infographic Generation ---
+
+        // Show loading state for infographic
+        // updateLoadingText handles the UI feedback now (Top Loader)
+
+        // Update TOP loader (if visible) to reflect current status
+        updateLoadingText('Generating Infographic...', 'chart');
+
+        try {
+            const infographicResponse = await fetch('/api/generate-infographic', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    summary: summaryData.summary,
+                    tone: summaryToneSelect.value
+                })
+            });
+
+            const infographicData = await infographicResponse.json();
+
+            let finalInfographic = null;
+            if (infographicData.success && infographicData.infographic) {
+                finalInfographic = infographicData.infographic;
+
+                // Update UI only if still viewing this video
+                updateInfographicUI(finalInfographic, videoId);
+            } else {
+                hideInfographicLoading();
+            }
+
+            // Save COMPLETED record to history
+            const historyEntryId = saveToHistory({
+                id: videoId,
+                title: transcriptData.title,
+                length: summaryLengthSelect.value,
+                tone: summaryToneSelect.value,
+                summary: summaryData.summary,
+                infographic: finalInfographic,
+                transcript: transcriptData.transcript,
+                metadata: transcriptData.metadata
+            });
+
+            // Track globally
+            currentHistoryEntryId = historyEntryId;
+
+        } catch (infoError) {
+            console.error("Infographic generation failed:", infoError);
+            hideInfographicLoading();
+
+            // Save record even if infographic failed
+            saveToHistory({
+                id: videoId,
+                title: transcriptData.title,
+                length: summaryLengthSelect.value,
+                tone: summaryToneSelect.value,
+                summary: summaryData.summary,
+                infographic: null,
+                transcript: transcriptData.transcript,
+                metadata: transcriptData.metadata
+            });
+        }
 
     } catch (error) {
         console.error('Summarization error:', error);
@@ -1971,6 +2071,61 @@ async function handleSubmit(e) {
         }
     } finally {
         setLoading(false);
+    }
+}
+
+function showInfographicLoading() {
+    const summaryText = document.getElementById('summaryText');
+    if (!summaryText) return;
+
+    // Check if loading already exists
+    if (document.getElementById('infographic-loader')) return;
+
+    const loaderHtml = `
+        <div id="infographic-loader" class="infographic-section mt-8 pt-8 border-t border-slate-700 w-full animate-pulse">
+            <div class="infographic-container w-full bg-slate-900/50 p-6 rounded-lg overflow-hidden flex justify-center items-center h-48 border border-slate-800 border-dashed">
+                <div class="flex items-center gap-3 text-slate-400">
+                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="animate-spin">
+                        <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+                    </svg>
+                    <span class="text-lg font-medium">Generating Infographic...</span>
+                </div>
+            </div>
+        </div>
+    `;
+
+    summaryText.insertAdjacentHTML('beforeend', loaderHtml);
+}
+
+function hideInfographicLoading() {
+    const loader = document.getElementById('infographic-loader');
+    if (loader) loader.remove();
+}
+
+function updateInfographicUI(infographic, targetVideoId) {
+    // Only update if we are still looking at the same video (or if targetVideoId is not provided, legacy behavior)
+    if (targetVideoId && typeof currentVideoId !== 'undefined' && targetVideoId !== currentVideoId) {
+        // console.log("Ignored infographic update for background video:", targetVideoId);
+        return;
+    }
+
+    hideInfographicLoading();
+
+    const summaryText = document.getElementById('summaryText');
+    if (!summaryText) return;
+
+    if (infographic && (infographic.trim().startsWith('<svg') || infographic.includes('</svg>'))) {
+        const infoHtml = `
+            <div class="infographic-section mt-8 pt-8 border-t border-slate-700 w-full fade-in">
+                <h3 class="text-xl font-bold text-slate-200 mb-4 flex items-center gap-2">
+                    Infographic
+                </h3>
+                <div class="infographic-container w-full bg-slate-900/50 p-4 rounded-lg overflow-hidden flex justify-center">
+                    ${infographic}
+                </div>
+            </div>
+        `;
+        summaryText.insertAdjacentHTML('beforeend', infoHtml);
     }
 }
 
@@ -2071,30 +2226,33 @@ function showLiveVideoError() {
 
 // Save to History
 function saveToHistory(data) {
+    const timestamp = Date.now();
     const historyItem = {
+        internalId: `${data.id}_${timestamp}`, // Unique composite key
         id: data.id,
         title: data.title,
         summary: data.summary,
+        infographic: data.infographic,
         transcript: data.transcript,
         length: data.length,
         tone: data.tone,
         metadata: data.metadata,
         thumbnail: `https://img.youtube.com/vi/${data.id}/mqdefault.jpg`,
-        timestamp: Date.now()
+        timestamp: timestamp
     };
 
     let history = JSON.parse(localStorage.getItem('yt_summary_history') || '[]');
 
-    // Remove duplicate if exists (same video AND same params)
+    // Remove duplicates based on exact params to keep list clean (optional)
     history = history.filter(item => !(item.id === data.id && item.length === data.length && item.tone === data.tone));
 
     // Add new item to top
     history.unshift(historyItem);
 
-    // Limit size - Removed to allow pagination
-
     localStorage.setItem('yt_summary_history', JSON.stringify(history));
     loadHistory();
+
+    return historyItem.internalId;
 }
 
 // Update History Item (Partial Update)
@@ -2233,16 +2391,27 @@ function renderPagination(totalPages) {
 
 
 
+
 function loadHistoryItem(item) {
-    // CRITICAL FIX: Fetch the latest version of this item from localStorage
-    // The 'item' passed here is stale (captured when the list was rendered).
-    // If we generated Steps/Quiz since then, this stale object won't have them.
+    // CRITICAL FIX: Fetch the latest version of this item from localStorage using Unique Internal ID
     const allHistory = JSON.parse(localStorage.getItem('yt_summary_history') || '[]');
-    const freshItem = allHistory.find(i => i.id === item.id) || item;
+
+    // Fallback: If item has no internalId (old data), try to match by ID and Tone (or just ID)
+    let freshItem;
+    if (item.internalId) {
+        freshItem = allHistory.find(i => i.internalId === item.internalId);
+    } else {
+        // Legacy fallback
+        freshItem = allHistory.find(i => i.id === item.id && i.tone === item.tone) || allHistory.find(i => i.id === item.id);
+    }
+
+    freshItem = freshItem || item;
 
     // Use freshItem for everything below
     item = freshItem;
     currentVideoId = item.id; // Update global ID
+    // We can track currentHistoryEntryId if needed
+    currentHistoryEntryId = item.internalId;
 
     hideAllCards();
     stopPodcast(); // Stop podcast if playing
@@ -2333,6 +2502,9 @@ function loadHistoryItem(item) {
     currentTranscript = item.transcript;
     youtubeUrlInput.value = `https://www.youtube.com/watch?v=${item.id}`;
 
+    // Explicitly enable submit button since we have a valid URL
+    if (submitBtn) submitBtn.disabled = false;
+
     // Ensure reset button is visible
     const resetBtn = document.getElementById('resetBtn');
     if (resetBtn) resetBtn.classList.remove('hidden');
@@ -2344,7 +2516,7 @@ function loadHistoryItem(item) {
     if (item.length && summaryLengthSelect) summaryLengthSelect.value = item.length;
     if (item.tone && summaryToneSelect) summaryToneSelect.value = item.tone;
 
-    showSummary(item.summary);
+    showSummary(item.summary, item.infographic);
     showFeatures();
 
     // Collapse input
@@ -2485,12 +2657,28 @@ function showVideoInfo(videoId, data) {
 }
 
 // Show summary
-function showSummary(text) {
+function showSummary(text, infographic) {
     const summaryText = document.getElementById('summaryText');
     if (!summaryText) return;
 
+    let html = formatMarkdown(text);
+
+    // Append Infographic if available
+    if (infographic && (infographic.trim().startsWith('<svg') || infographic.includes('</svg>'))) {
+        html += `
+            <div class="infographic-section mt-8 pt-8 border-t border-slate-700 w-full">
+                <h3 class="text-xl font-bold text-slate-200 mb-4 flex items-center gap-2">
+                    Infographic
+                </h3>
+                <div class="infographic-container w-full bg-slate-900/50 p-4 rounded-lg overflow-hidden flex justify-center">
+                    ${infographic}
+                </div>
+            </div>
+        `;
+    }
+
     // Update summary text
-    summaryText.innerHTML = formatMarkdown(text);
+    summaryText.innerHTML = html;
 
     // Update metadata footer
     const summaryFooter = document.getElementById('summaryFooter');
@@ -2605,6 +2793,7 @@ function copySummary() {
     const clipboardHtml = `
         <h2>${videoTitle}</h2>
         <p><a href="${shortUrl}">${shortUrl}</a></p>
+        <p><img src="https://img.youtube.com/vi/${videoId}/mqdefault.jpg" alt="Video Thumbnail" style="max-width: 320px; border-radius: 8px;"></p>
         <hr>
         ${cleanSummaryHtml}
         ${promoHtml}

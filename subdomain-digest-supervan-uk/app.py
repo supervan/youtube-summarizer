@@ -685,10 +685,11 @@ def summarize():
 
         # Generate summary using helper with fallback
         response = generate_gemini_content(prompt)
-        
+        summary_text = response.text
+
         return jsonify({
             'success': True,
-            'summary': response.text
+            'summary': summary_text
         })
         
     except Exception as e:
@@ -991,9 +992,77 @@ Transcript:
         return jsonify({'success': True, 'steps': response.text})
         
     except Exception as e:
-        print(f"❌ Error in extract_steps: {str(e)}")
+        error_message = str(e)
+        print(f"❌ Error in summarize route: {error_message}")
         import traceback
         traceback.print_exc()
+        return jsonify({'error': error_message}), 500
+
+@app.route('/api/generate-infographic', methods=['POST'])
+def generate_infographic():
+    data = request.json
+    summary_text = data.get('summary', '')
+    tone = data.get('tone', 'conversational')
+    
+    if not summary_text:
+        return jsonify({'error': 'Summary text is required'}), 400
+        
+    print(f"📊 Generating Infographic for tone: {tone}")
+    
+    try:
+        # Style Mapping
+        TONE_STYLE_MAP = {
+            'conversational': "Friendly, hand-drawn whiteboard sketch with colorful marker icons and arrow connectors.",
+            'professional': "Clean Swiss design, corporate blue and slate palette, minimalist flat icons, and structured grid layout.",
+            'technical': "Schematic blueprint style, detailed wireframes, monospaced fonts, and data-heavy node-and-edge diagrams.",
+            'witty': "Vibrant pop-art style, bold typography, comic-book speech bubbles, and high-contrast saturated colors.",
+            'sarcastic': "Dark humor aesthetic, 'dystopian corporate' glitch art, cynical meme-inspired layout with ironic neon accents."
+        }
+        
+        # Get style based on tone, default to conversational
+        visual_style = TONE_STYLE_MAP.get(tone, TONE_STYLE_MAP['conversational'])
+        
+        # Construct Prompt
+        infographic_prompt = f"""
+        Create a comprehensive SVG infographic in the style: "{visual_style}"
+        
+        Task:
+        1. Extract the key concepts from the following transcript summary.
+        2. Visualize them using shapes, icons, and text appropriate for the requested style.
+        3. The Title of the infographic must include the literal string "INFOGRAPHIC".
+        
+        Visual Layout Constraints (CRITICAL):
+        - Aspect Ratio: Use a vertical 9:16 ratio (e.g., viewBox="0 0 900 1600").
+        - Safe Zones: Ensure all text and headings have at least 10% padding from all edges to prevent clipping.
+        - Heading Management: For long headings (e.g., "The AI Rube Goldberg Infographic"), force a multi-line stack or reduce font size to ensure it fits the width. Do NOT let text overflow.
+        - Text Contrast: Ensure high contrast for text on colorful blocks (e.g., use dark text on yellow/pink/orange, white text on dark backgrounds). Readability is paramount.
+        
+        Technical Requirements:
+        - Return ONLY raw SVG code.
+        - Start with <svg and end with </svg>.
+        - Width: 100%, Height: auto.
+        - Use a modern color palette compatible with the requested style.
+        
+        Transcript Summary:
+        {summary_text}
+        """
+        
+        # Use same model logic (fast/flash preferred)
+        infographic_response = generate_gemini_content(infographic_prompt)
+        raw_text = infographic_response.text
+        
+        # Extract SVG using regex
+        import re
+        svg_match = re.search(r'<svg.*?</svg>', raw_text, re.DOTALL | re.IGNORECASE)
+        infographic_text = svg_match.group(0) if svg_match else ""
+        
+        return jsonify({
+            'success': True,
+            'infographic': infographic_text
+        })
+        
+    except Exception as e:
+        print(f"❌ Error generating infographic: {e}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/quiz', methods=['POST'])

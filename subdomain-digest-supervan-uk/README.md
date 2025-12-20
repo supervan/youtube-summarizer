@@ -28,6 +28,8 @@ https://digest.supervan.uk/
 - 🎨 **Beautiful UI** - Modern dark mode design with glassmorphism effects and **YouTube-like layout**
 - 📋 **Copy to Clipboard** - Easy one-click summary copying with video title and **short URL** included
 - 🛡️ **Robust Error Handling** - Friendly "Video Unavailable" screen for timeouts and server errors
+- 📊 **Infographic Generation** - Auto-generates visual infographics summarising key points
+- 🖼️ **Rich Copy** - Copy summaries with **Video Thumbnails** and formatting included
 - 🚫 **Live Video Detection** - Automatically detects and blocks live streams (which are not supported) with a friendly message
 - ⏳ **Loading Animation** - Visual feedback while the AI is generating the summary
 - 🔄 **Watch Another Video** - Easy reset button to summarize multiple videos in a row

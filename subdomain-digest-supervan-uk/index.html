@@ -247,8 +247,19 @@
 
                 <!-- Loading Animation -->
                 <div id="summaryLoading" class="summary-loading hidden">
-                    <div class="loading-spinner"></div>
-                    <p>Generating Summary...</p>
+                    <div class="loading-icon-wrapper mb-4">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+                            class="text-slate-400 animate-pulse">
+                            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <line x1="10" y1="9" x2="8" y2="9"></line>
+                        </svg>
+                    </div>
+                    <div class="loading-spinner mb-2"></div>
+                    <p class="text-slate-300">Generating Summary...</p>
                 </div>
 
                 <div id="summaryText" class="summary-text">
@@ -562,7 +573,7 @@
             Install App
         </button>
     </div>
-    <div class="text-center p-4 text-xs text-slate-700 opacity-50">v2034.9 - SuperVan</div>
+    <!-- <div class="text-center p-4 text-xs text-slate-700 opacity-50">v2034.11 - SuperVan</div> -->
     </div>
 
 
@@ -571,8 +582,7 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
-    <script src="script.js?v=2034.9"></script>
-    <script src="sw.js"></script>
+    <script src="script.js?v=2034.11"></script>
     <script>
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js?t=' + Date.now());
