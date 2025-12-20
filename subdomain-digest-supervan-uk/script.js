@@ -536,7 +536,7 @@ function setupEventListeners() {
 
     // Action Buttons
     document.getElementById('readAloudBtn').addEventListener('click', toggleReadAloud);
-    document.getElementById('copyBtn').addEventListener('click', copySummary);
+
     // document.getElementById('podcastBtn').addEventListener('click', generatePodcast); // Old logic
     document.getElementById('podcastBtn').addEventListener('click', () => {
         // Podcast is now inside the Read Aloud/Podcast section, which has its own generate button.
@@ -2762,53 +2762,159 @@ function togglePodcastControls() {
 
 
 // Copy Summary
-function copySummary() {
-    const summaryElement = document.getElementById('summaryText');
-    const rawSummaryText = summaryElement.innerText;
-    const rawSummaryHtml = summaryElement.innerHTML;
-    const videoTitle = document.getElementById('videoTitle').textContent;
+// Helper: Convert SVG to PNG Data URL
+async function convertSvgToPngDataUrl(svgElement) {
+    if (!svgElement) return null;
 
-    const videoId = extractVideoId(youtubeUrlInput.value);
-    const shortUrl = videoId ? `https://youtu.be/${videoId}` : youtubeUrlInput.value;
+    return new Promise((resolve) => {
+        try {
+            const serializer = new XMLSerializer();
+            // Clone to avoid modifying live DOM
+            const clonedSvg = svgElement.cloneNode(true);
 
-    const promoText = "\n\nSummarized by TL;DW - https://yt.supervan.uk\n(Installable as an App on Mobile & Desktop)";
-    const promoHtml = "<br><br><p>Summarized by <a href='https://yt.supervan.uk'>TL;DW</a><br><em>(Installable as an App on Mobile & Desktop)</em></p>";
+            // 1. Determine natural size
+            let width = 800;
+            let height = 1200;
 
-    // --- Plain Text Version ---
-    // Remove timestamps [MM:SS] or [MM:SS-MM:SS, ...]
-    const cleanSummaryText = rawSummaryText.replace(/\[[\d:\s,\-]+\]\s*/g, '');
-    const clipboardText = `${videoTitle}\n${shortUrl}\n\n${cleanSummaryText}${promoText}`;
+            const viewBox = clonedSvg.getAttribute('viewBox');
+            if (viewBox) {
+                const parts = viewBox.split(' ').map(parseFloat);
+                if (parts.length === 4) {
+                    width = parts[2];
+                    height = parts[3];
+                }
+            } else {
+                width = clonedSvg.width.baseVal?.value || clonedSvg.clientWidth || 800;
+                height = clonedSvg.height.baseVal?.value || clonedSvg.clientHeight || 1200;
+            }
 
-    // --- HTML Version ---
-    // Convert internal timestamp links to external YouTube links
-    let cleanSummaryHtml = rawSummaryHtml;
+            // Ensure explicit dimensions on the clone
+            clonedSvg.setAttribute('width', width);
+            clonedSvg.setAttribute('height', height);
 
-    if (videoId) {
-        // Find formatMarkdown generated links: <a ... onclick="seekTo(123)...">text</a>
-        cleanSummaryHtml = cleanSummaryHtml.replace(/<a href="#" class="timestamp-link" onclick="seekTo\((\d+)\); return false;">(.*?)<\/a>/g, (match, seconds, text) => {
-            return `<a href="https://youtu.be/${videoId}?t=${seconds}" target="_blank">${text}</a>`;
-        });
-    }
+            // Clear any style that forces w/h
+            clonedSvg.style.width = null;
+            clonedSvg.style.height = null;
 
-    const clipboardHtml = `
-        <h2>${videoTitle}</h2>
-        <p><a href="${shortUrl}">${shortUrl}</a></p>
-        <p><img src="https://img.youtube.com/vi/${videoId}/mqdefault.jpg" alt="Video Thumbnail" style="max-width: 320px; border-radius: 8px;"></p>
-        <hr>
-        ${cleanSummaryHtml}
-        ${promoHtml}
+            const svgData = serializer.serializeToString(clonedSvg);
+            const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+
+            const img = new Image();
+            img.onload = () => {
+                try {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+
+                    // Fill background (Slate 900 to match app theme)
+                    ctx.fillStyle = '#0f172a';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                    ctx.drawImage(img, 0, 0, width, height);
+                    URL.revokeObjectURL(url);
+                    resolve(canvas.toDataURL('image/png'));
+                } catch (err) {
+                    console.warn("Canvas draw failed:", err);
+                    URL.revokeObjectURL(url);
+                    resolve(null);
+                }
+            };
+            img.onerror = (e) => {
+                console.error("SVG to PNG conversion failed", e);
+                URL.revokeObjectURL(url);
+                resolve(null);
+            };
+            img.src = url;
+        } catch (e) {
+            console.error("Error in convertSvgToPngDataUrl", e);
+            resolve(null);
+        }
+    });
+}
+
+// Copy Summary
+async function copySummary() {
+    const copyBtn = document.getElementById('copyBtn');
+    const originalContent = copyBtn.innerHTML;
+
+    // Show loading state on button
+    copyBtn.innerHTML = `
+        <div class="spinner-sm" style="border-width: 2px;"></div>
+        Copying...
     `;
 
-    // Create ClipboardItem with both formats
-    const item = new ClipboardItem({
-        'text/plain': new Blob([clipboardText], { type: 'text/plain' }),
-        'text/html': new Blob([clipboardHtml], { type: 'text/html' })
-    });
+    try {
+        const summaryElement = document.getElementById('summaryText');
 
-    navigator.clipboard.write([item]).then(() => {
-        const copyBtn = document.getElementById('copyBtn');
-        const originalContent = copyBtn.innerHTML;
+        // Clone the summary element to manipulate it for clipboard without affecting UI
+        const clone = summaryElement.cloneNode(true);
 
+        // Handle Infographic: Convert SVG to PNG
+        const infographicSvg = document.querySelector('.infographic-section svg'); // Get LIVE SVG for generation
+        // Find the place in the CLONE to replace
+        const svgInClone = clone.querySelector('.infographic-section svg');
+
+        if (infographicSvg && svgInClone) {
+            const pngDataUrl = await convertSvgToPngDataUrl(infographicSvg);
+            if (pngDataUrl) {
+                const img = document.createElement('img');
+                img.src = pngDataUrl;
+                img.alt = "Infographic";
+                img.style.maxWidth = "100%";
+                img.style.borderRadius = "8px";
+                img.style.marginTop = "20px";
+
+                // Replace SVG with IMG in the clone
+                svgInClone.parentNode.replaceChild(img, svgInClone);
+            }
+        }
+
+        const rawSummaryText = summaryElement.innerText; // Use original text for plain text version
+        const rawSummaryHtml = clone.innerHTML; // Use modified HTML for rich version
+        const videoTitle = document.getElementById('videoTitle').textContent;
+
+        const videoId = extractVideoId(youtubeUrlInput.value);
+        const shortUrl = videoId ? `https://youtu.be/${videoId}` : youtubeUrlInput.value;
+
+        const promoText = "\n\nSummarized by TL;DW - https://yt.supervan.uk\n(Installable as an App on Mobile & Desktop)";
+        const promoHtml = "<br><br><p>Summarized by <a href='https://yt.supervan.uk'>TL;DW</a><br><em>(Installable as an App on Mobile & Desktop)</em></p>";
+
+        // --- Plain Text Version ---
+        // Remove timestamps [MM:SS]
+        const cleanSummaryText = rawSummaryText.replace(/\[[\d:\s,\-]+\]\s*/g, '');
+        const clipboardText = `${videoTitle}\n${shortUrl}\n\n${cleanSummaryText}${promoText}`;
+
+        // --- HTML Version ---
+        // Convert internal timestamp links to external YouTube links
+        let cleanSummaryHtml = rawSummaryHtml;
+
+        if (videoId) {
+            // Find formatMarkdown generated links: <a ... onclick="seekTo(123)...">text</a>
+            cleanSummaryHtml = cleanSummaryHtml.replace(/<a href="#" class="timestamp-link" onclick="seekTo\((\d+)\); return false;">(.*?)<\/a>/g, (match, seconds, text) => {
+                return `<a href="https://youtu.be/${videoId}?t=${seconds}" target="_blank">${text}</a>`;
+            });
+        }
+
+        const clipboardHtml = `
+            <h2>${videoTitle}</h2>
+            <p><a href="${shortUrl}">${shortUrl}</a></p>
+            <p><img src="https://img.youtube.com/vi/${videoId}/mqdefault.jpg" alt="Video Thumbnail" style="max-width: 320px; border-radius: 8px;"></p>
+            <hr>
+            ${cleanSummaryHtml}
+            ${promoHtml}
+        `;
+
+        // Create ClipboardItem with both formats
+        const item = new ClipboardItem({
+            'text/plain': new Blob([clipboardText], { type: 'text/plain' }),
+            'text/html': new Blob([clipboardHtml], { type: 'text/html' })
+        });
+
+        await navigator.clipboard.write([item]);
+
+        // Success Feedback
         copyBtn.innerHTML = `
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="20 6 9 17 4 12"></polyline>
@@ -2819,10 +2925,12 @@ function copySummary() {
         setTimeout(() => {
             copyBtn.innerHTML = originalContent;
         }, 2000);
-    }).catch(err => {
+
+    } catch (err) {
         console.error('Copy failed:', err);
         showError('Failed to copy summary');
-    });
+        copyBtn.innerHTML = originalContent;
+    }
 }
 
 // Share Summary (Web Share API)
