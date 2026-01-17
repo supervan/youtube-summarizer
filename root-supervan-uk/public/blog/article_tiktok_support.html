@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikTok Support Now Live | SuperVan Blog</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-white text-slate-900">
+    <nav class="bg-white border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center"><a href="/blog"
+                class="font-bold text-indigo-600">← Back to Blog</a></div>
+    </nav>
+    <article class="max-w-3xl mx-auto px-4 py-12 prose prose-lg prose-indigo">
+        <h1>TikTok Support Now Live: Engineering the Viral Web</h1>
+        <p class="lead">The trifecta is complete! Following YouTube and Vimeo, we have now added full support for
+            <strong>TikTok</strong>.</p>
+
+        <p>You can now paste any TikTok URL (e.g., <code>tiktok.com/@user/video/123456...</code>) into the summarizer to
+            extract transcripts, generate summaries, and analyze viral content with AI.</p>
+
+        <h3>The Engineering Challenge</h3>
+        <p>TikTok presents a unique set of challenges compared to long-form video platforms. Here is how we solved them:
+        </p>
+
+        <h4>1. Aggressive Blocking & Smart Routing</h4>
+        <p>TikTok is notoriously strict about blocking datacenter IP addresses (like the ones our servers run on). Our
+            initial implementation faced immediate "100% timeout" rates.</p>
+        <p>We solved this with a <strong>hybrid fetch strategy</strong>. The system first attempts a direct, high-speed
+            connection. if that fails (as it often does for viral videos), it seamlessly fails over to our
+            <strong>rotating residential proxy network</strong>, retrying until it finds a clean path to the content.
+        </p>
+
+        <h4>2. Custom Player Integration</h4>
+        <p>While YouTube and Vimeo offer standard <code>iframe</code> embeds, TikTok uses a unique "blockquote" embed
+            style that requires injecting a dedicated JavaScript SDK. We had to rewrite our frontend player logic to
+            dynamically inject this SDK only when a TikTok video is loaded, keeping the site fast and lightweight.</p>
+
+        <h4>3. Metadata Nuances</h4>
+        <p>TikTok video IDs are massive (18+ digits) compared to Vimeo's shorter IDs. We updated our URL parsing engine
+            to distinguish between these formats instantly, ensuring the correct platform logic is applied before a
+            single network request is made. We also handle the lack of public thumbnails by using a smart fallback
+            system until the full metadata is retrieved.</p>
+
+        <p>Go ahead and try it out with your favorite educational (or entertaining) TikTok!</p>
+    </article>
+</body>
+
+</html>
