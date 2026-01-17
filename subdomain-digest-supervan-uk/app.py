@@ -385,6 +385,8 @@ def _get_youtube_transcript_with_cookies(video_id):
     start_time = time.time()
     video_url = f"https://www.youtube.com/watch?v={video_id}"
     
+    print(f"🔍 DEBUG: Starting transcript fetch for {video_id}")
+    
     # Handle cookies
     cookies_content = os.getenv('YOUTUBE_COOKIES')
     cookies_file = None
@@ -393,9 +395,12 @@ def _get_youtube_transcript_with_cookies(video_id):
             fd, cookies_file = tempfile.mkstemp(suffix='.txt', text=True)
             with os.fdopen(fd, 'w') as f:
                 f.write(cookies_content)
+            print("🔍 DEBUG: Created temporary cookies file")
         except Exception as e:
-            print(f"⚠️ Failed to create cookies file: {e}")
+            print(f"⚠️ DEBUG: Failed to create cookies file: {e}")
             cookies_file = None
+    else:
+        print("🔍 DEBUG: No YOUTUBE_COOKIES found in env")
             
     # Default metadata
     metadata = {
@@ -432,6 +437,7 @@ def _get_youtube_transcript_with_cookies(video_id):
             transcript_list = YouTubeTranscriptApi.get_transcript(video_id, cookies=cookies_file)
         except Exception as e:
             print(f"⚠️ Direct YouTubeTranscriptApi failed: {e}")
+            print(f"🔍 DEBUG: YouTubeTranscriptApi Exception: {e}")
             
             # METHOD 1.5: Try yt-dlp Direct Connection
             print("🚀 Attempting Method 1.5: yt-dlp Direct Connection...")
@@ -454,6 +460,7 @@ def _get_youtube_transcript_with_cookies(video_id):
                     }
                     if cookies_file:
                         ydl_opts['cookiefile'] = cookies_file
+                        print("🔍 DEBUG: Using cookies for yt-dlp")
                             
                     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                         info = ydl.extract_info(video_url, download=True)
@@ -618,11 +625,14 @@ def extract_transcript():
         data = request.json
         youtube_url = data.get('url', '')
         
+        print(f"🔍 DEBUG: /api/extract-transcript called with URL: {youtube_url}")
+        
         if not youtube_url:
             return jsonify({'error': 'YouTube URL is required'}), 400
         
         # Extract video ID
         video_id = extract_video_id(youtube_url)
+        print(f"🔍 DEBUG: Extracted Video ID: {video_id}")
         if not video_id:
             return jsonify({'error': 'Invalid YouTube URL'}), 400
         
@@ -651,6 +661,7 @@ def extract_transcript():
 @app.route('/api/diagnostics', methods=['GET'])
 def diagnostics():
     """Diagnostic endpoint to check configuration"""
+    print("🔍 DEBUG: /api/diagnostics called")
     cookies_content = os.getenv('YOUTUBE_COOKIES', '')
     scraperapi_key = os.getenv('SCRAPERAPI_KEY', '')
     
