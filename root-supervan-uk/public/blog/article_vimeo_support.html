@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vimeo Support Now Live | SuperVan Blog</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-white text-slate-900">
+    <nav class="bg-white border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center"><a href="/blog"
+                class="font-bold text-indigo-600">← Back to Blog</a></div>
+    </nav>
+    <article class="max-w-3xl mx-auto px-4 py-12 prose prose-lg prose-indigo">
+        <h1>Vimeo Support Now Live: How We Built It</h1>
+        <p class="lead">We've expanded beyond YouTube! Learn how we integrated Vimeo support into our summarizer and the
+            technical hurdles we overcame.</p>
+
+        <p>We are excited to announce that <strong>Top Level Domain/Watch (TL;DW)</strong> now supports
+            <strong>Vimeo</strong> videos! 🎉</p>
+
+        <p>You can now paste any Vimeo URL (e.g., <code>vimeo.com/123456789</code>) into the summarizer, and our AI will
+            extract the transcript, generate a summary, and even create a visual infographic just like it does for
+            YouTube.</p>
+
+        <h3>The Technical Journey</h3>
+        <p>Adding Vimeo support wasn't just a simple configuration change. It involved solving three key engineering
+            challenges:</p>
+
+        <h4>1. API vs. Cookies</h4>
+        <p>Unlike YouTube, which we access via a mix of API and standard web scraping, Vimeo often requires strict
+            authentication for high-quality metadata. We had to implement a secure, environment-based cookie injection
+            system (<code>VIMEO_COOKIES</code>) to allow our backend to "view" the videos as an authenticated user,
+            ensuring we can fetch accurate transcripts even for age-gated or sensitive content.</p>
+
+        <h4>2. Avoiding Regression</h4>
+        <p>Our YouTube fetcher is a complex beast, handling proxy rotation, bot detection (PO Token), and multiple
+            fallback methods. To ensure we didn't break our core feature while adding Vimeo, we strictly successfully
+            <strong>separated concerns</strong>. We built a dedicated <code>_fetch_vimeo_transcript</code> function that
+            operates completely independently from the YouTube logic. The main endpoint now acts as a smart router,
+            detecting the video platform and dispatching the request to the correct handler.</p>
+
+        <h4>3. Frontend Logic</h4>
+        <p>The frontend was originally hardcoded to reject any URL that didn't look like <code>youtube.com</code>. We
+            had to rewrite our validation regex to be platform-agnostic and update the video player logic. Since Vimeo
+            doesn't provide a public thumbnail endpoint like YouTube (without an API key), we updated our backend to
+            fetch the thumbnail during the scraping process and pass it to the frontend, ensuring a seamless visual
+            experience.</p>
+
+        <p>Try it out today with your favorite Vimeo creative commons video!</p>
+    </article>
+</body>
+
+</html>
