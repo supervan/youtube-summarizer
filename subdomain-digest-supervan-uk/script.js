@@ -533,7 +533,6 @@ function setupEventListeners() {
                 script.src = "https://www.tiktok.com/embed.js";
                 script.async = true;
                 playerDiv.appendChild(script);
-                `;
             }
         } else if (isVimeo) {
             // If Vimeo, ensure iframe is set (it might have been set in showVideoInfo but hidden)
@@ -587,15 +586,15 @@ function setupEventListeners() {
         const videoId = extractVideoId(youtubeUrlInput.value);
         const shortUrl = videoId ? `https://youtu.be/${videoId}` : youtubeUrlInput.value;
 
-                // Get Footer Info
-                const promoText = "\n\nSummarized by TL;DW - https://yt.supervan.uk\n(Installable as an App on Mobile & Desktop)";
-                const promoHtml = "<br><br><p>Summarized by <a href='https://yt.supervan.uk'>TL;DW</a><br><em>(Installable as an App on Mobile & Desktop)</em></p>";
+        // Get Footer Info
+        const promoText = "\n\nSummarized by TL;DW - https://yt.supervan.uk\n(Installable as an App on Mobile & Desktop)";
+        const promoHtml = "<br><br><p>Summarized by <a href='https://yt.supervan.uk'>TL;DW</a><br><em>(Installable as an App on Mobile & Desktop)</em></p>";
 
-                try {
-                    const stepsHtml = content.innerHTML;
+        try {
+            const stepsHtml = content.innerHTML;
 
-                    // Construct Rich HTML
-                    const fullHtml = `
+            // Construct Rich HTML
+            const fullHtml = `
                 <h2>${videoTitle}</h2>
                 <p><a href="${shortUrl}">${shortUrl}</a></p>
                 <hr>
@@ -603,31 +602,31 @@ function setupEventListeners() {
                 ${promoHtml}
             `;
 
-                    // Construct Plain Text
-                    const clone = content.cloneNode(true);
-                    const lis = clone.querySelectorAll('li');
-                    lis.forEach(li => {
-                        li.innerHTML = '• ' + li.innerHTML;
-                    });
-                    const blocks = clone.querySelectorAll('p, h2, h3, h4');
-                    blocks.forEach(b => b.innerHTML = b.innerHTML + '\n');
-                    const stepsText = clone.innerText;
-
-                    const fullText = `${videoTitle}\n${shortUrl}\n\n${stepsText}${promoText}`;
-
-                    const clipboardAuthentication = new ClipboardItem({
-                        "text/html": new Blob([fullHtml], { type: "text/html" }),
-                        "text/plain": new Blob([fullText], { type: "text/plain" })
-                    });
-
-                    await navigator.clipboard.write([clipboardAuthentication]);
-                    showToast('Steps copied to clipboard!');
-                } catch (err) {
-                    console.warn('Rich copy failed, falling back to plain text:', err);
-                    const text = content.innerText;
-                    navigator.clipboard.writeText(text).then(() => showToast('Steps copied to clipboard!'));
-                }
+            // Construct Plain Text
+            const clone = content.cloneNode(true);
+            const lis = clone.querySelectorAll('li');
+            lis.forEach(li => {
+                li.innerHTML = '• ' + li.innerHTML;
             });
+            const blocks = clone.querySelectorAll('p, h2, h3, h4');
+            blocks.forEach(b => b.innerHTML = b.innerHTML + '\n');
+            const stepsText = clone.innerText;
+
+            const fullText = `${videoTitle}\n${shortUrl}\n\n${stepsText}${promoText}`;
+
+            const clipboardAuthentication = new ClipboardItem({
+                "text/html": new Blob([fullHtml], { type: "text/html" }),
+                "text/plain": new Blob([fullText], { type: "text/plain" })
+            });
+
+            await navigator.clipboard.write([clipboardAuthentication]);
+            showToast('Steps copied to clipboard!');
+        } catch (err) {
+            console.warn('Rich copy failed, falling back to plain text:', err);
+            const text = content.innerText;
+            navigator.clipboard.writeText(text).then(() => showToast('Steps copied to clipboard!'));
+        }
+    });
 
     document.getElementById('generateStepsBtn').addEventListener('click', handleStepsRequest);
     document.getElementById('startQuizBtn').addEventListener('click', handleQuizRequest);
