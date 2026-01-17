@@ -12,6 +12,33 @@ export interface BlogPost {
 
 export const posts: BlogPost[] = [
     {
+        id: "vimeo-support-live",
+        slug: "vimeo-support-integration-challenges",
+        title: "Vimeo Support Now Live: How We Built It",
+        excerpt: "We've expanded beyond YouTube! Learn how we integrated Vimeo support into our summarizer and the technical hurdles we overcame.",
+        content: `We are excited to announce that **Top Level Domain/Watch (TL;DW)** now supports **Vimeo** videos! 🎉
+        
+You can now paste any Vimeo URL (e.g., \`vimeo.com/123456789\`) into the summarizer, and our AI will extract the transcript, generate a summary, and even create a visual infographic just like it does for YouTube.
+
+### The Technical Journey
+Adding Vimeo support wasn't just a simple configuration change. It involved solving three key engineering challenges:
+
+#### 1. API vs. Cookies
+Unlike YouTube, which we access via a mix of API and standard web scraping, Vimeo often requires strict authentication for high-quality metadata. We had to implement a secure, environment-based cookie injection system (\`VIMEO_COOKIES\`) to allow our backend to "view" the videos as an authenticated user, ensuring we can fetch accurate transcripts even for age-gated or sensitive content.
+
+#### 2. Avoiding Regression
+Our YouTube fetcher is a complex beast, handling proxy rotation, bot detection (PO Token), and multiple fallback methods. To ensure we didn't break our core feature while adding Vimeo, we strictly successfully **separated concerns**. We built a dedicated \`_fetch_vimeo_transcript\` function that operates completely independently from the YouTube logic. The main endpoint now acts as a smart router, detecting the video platform and dispatching the request to the correct handler.
+
+#### 3. Frontend Logic
+The frontend was originally hardcoded to reject any URL that didn't look like \`youtube.com\`. We had to rewrite our validation regex to be platform-agnostic and update the video player logic. Since Vimeo doesn't provide a public thumbnail endpoint like YouTube (without an API key), we updated our backend to fetch the thumbnail during the scraping process and pass it to the frontend, ensuring a seamless visual experience.
+
+Try it out today with your favorite Vimeo creative commons video!`,
+        date: "2026-01-17",
+        imageUrl: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=1200&q=80",
+        videoUrl: "",
+        category: "Engineering"
+    },
+    {
         id: "ai-infographics",
         slug: "introducing-ai-infographics",
         title: "Introducing AI Infographics: Turn Video Summaries into Visuals",
