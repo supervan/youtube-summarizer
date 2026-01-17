@@ -1887,7 +1887,7 @@ function extractVideoId(url) {
         /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/live\/)([^&\n?#]+)/,
         /youtube\.com\/watch\?.*v=([^&\n?#]+)/,
         /(?:vimeo\.com\/|player\.vimeo\.com\/video\/)(?:channels\/[\w]+\/)?([0-9]+)/,
-        /(?:tiktok\.com\/@[\w.-]+\/video\/|vm\.tiktok\.com\/)(\d+)/
+        /(?:tiktok\.com\/.*\/video\/|vm\.tiktok\.com\/)(\d+)/
     ];
 
     for (const pattern of patterns) {
