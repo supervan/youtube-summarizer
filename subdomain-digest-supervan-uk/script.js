@@ -519,8 +519,19 @@ function setupEventListeners() {
         if (badge) badge.classList.add('hidden');
 
         // Check platform
-        const isVimeo = /^\d+$/.test(currentVideoId);
-        if (isVimeo) {
+        const isTikTok = /^\d{15,}$/.test(currentVideoId);
+        const isVimeo = !isTikTok && /^\d+$/.test(currentVideoId);
+
+        if (isTikTok) {
+            if (!playerDiv.querySelector('blockquote')) {
+                playerDiv.innerHTML = `
+                    <blockquote class="tiktok-embed" cite="https://www.tiktok.com/@tiktok/video/${currentVideoId}" data-video-id="${currentVideoId}" style="max-width: 605px;min-width: 325px;" >
+                        <section></section>
+                    </blockquote>
+                    <script async src="https://www.tiktok.com/embed.js"></script>
+                 `;
+            }
+        } else if (isVimeo) {
             // If Vimeo, ensure iframe is set (it might have been set in showVideoInfo but hidden)
             // Or set it here if cleared
             if (!playerDiv.querySelector('iframe')) {
@@ -1820,10 +1831,12 @@ function showSkeletonLoading(videoId) {
 
     // Show Thumbnail immediately if we have ID
     if (videoId) {
-        if (/^\d+$/.test(videoId)) {
-            // Vimeo ID (numeric) - No standard public thumbnail endpoint without API
-            // Use a placeholder or keep hidden until metadata loads
-            videoThumbnail.src = 'favicon.png'; // Fallback
+        if (/^\d{15,}$/.test(videoId)) {
+            // TikTok ID (Long Numeric) - No public thumbnail, use placeholder
+            videoThumbnail.src = 'favicon.png';
+        } else if (/^\d+$/.test(videoId)) {
+            // Vimeo ID (Short Numeric) - No public thumbnail, use placeholder
+            videoThumbnail.src = 'favicon.png';
         } else {
             videoThumbnail.src = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
         }
@@ -1868,7 +1881,8 @@ function extractVideoId(url) {
     const patterns = [
         /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/live\/)([^&\n?#]+)/,
         /youtube\.com\/watch\?.*v=([^&\n?#]+)/,
-        /(?:vimeo\.com\/|player\.vimeo\.com\/video\/)([0-9]+)/
+        /(?:vimeo\.com\/|player\.vimeo\.com\/video\/)(?:channels\/[\w]+\/)?([0-9]+)/,
+        /(?:tiktok\.com\/@[\w.-]+\/video\/|vm\.tiktok\.com\/)(\d+)/
     ];
 
     for (const pattern of patterns) {
@@ -1916,7 +1930,7 @@ async function handleSubmit(e) {
         // Validate URL
         const videoId = extractVideoId(youtubeUrl);
         if (!videoId) {
-            showError('Invalid Video URL. Please enter a valid YouTube or Vimeo link.');
+            showError('Invalid Video URL. Please enter a valid YouTube, Vimeo, or TikTok link.');
             return;
         }
         currentVideoId = videoId; // Update global ID
@@ -2612,9 +2626,20 @@ function showVideoInfo(videoId, data) {
     badge.classList.remove('hidden');
 
     // Prepare player
-    const isVimeo = /^\d+$/.test(videoId);
+    const isTikTok = /^\d{15,}$/.test(videoId);
+    const isVimeo = !isTikTok && /^\d+$/.test(videoId);
 
-    if (isVimeo) {
+    if (isTikTok) {
+        if (playerDiv) {
+            // TikTok Embed
+            playerDiv.innerHTML = `
+                <blockquote class="tiktok-embed" cite="https://www.tiktok.com/@tiktok/video/${videoId}" data-video-id="${videoId}" style="max-width: 605px;min-width: 325px;" >
+                    <section></section>
+                </blockquote>
+                <script async src="https://www.tiktok.com/embed.js"></script>
+             `;
+        }
+    } else if (isVimeo) {
         // Handle Vimeo Player
         if (playerDiv) {
             playerDiv.innerHTML = `<iframe src="https://player.vimeo.com/video/${videoId}?autoplay=1" width="100%" height="100%" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;

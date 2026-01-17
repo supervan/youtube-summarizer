@@ -38,23 +38,19 @@ def add_header(response):
     return response
 
 def extract_video_id(url):
-    """Extract YouTube video ID from various URL formats"""
+    """Extract video ID from YouTube, Vimeo, and TikTok URL formats"""
     patterns = [
-        r'(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/live\/)([^&\n?#]+)',
-        r'youtube\.com\/watch\?.*v=([^&\n?#]+)'
+        (r'(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/live\/)([^&\n?#]+)', 'youtube'),
+        (r'youtube\.com\/watch\?.*v=([^&\n?#]+)', 'youtube'),
+        (r'(?:vimeo\.com\/|player\.vimeo\.com\/video\/)(?:channels\/[\w]+\/)?([0-9]+)', 'vimeo'),
+        (r'(?:tiktok\.com\/@[\w.-]+\/video\/|vm\.tiktok\.com\/)(\d+)', 'tiktok')
     ]
     
-    for pattern in patterns:
+    for pattern, platform in patterns:
         match = re.search(pattern, url)
         if match:
-            return match.group(1), 'youtube'
+            return match.group(1), platform
             
-    # Check for Vimeo
-    vimeo_pattern = r'vimeo\.com\/(?:channels\/[\w]+\/)?([0-9]+)'
-    vimeo_match = re.search(vimeo_pattern, url)
-    if vimeo_match:
-        return vimeo_match.group(1), 'vimeo'
-        
     return None, None
 
 @app.route('/')
@@ -704,6 +700,118 @@ def _fetch_vimeo_transcript(video_id):
                 pass
 
 
+
+def _fetch_tiktok_transcript(video_id):
+    """
+    Fetch transcript from TikTok using yt-dlp and cookies.
+    """
+    print(f"🔍 DEBUG: Starting TikTok transcript fetch for {video_id}")
+    
+    cookies_content = os.getenv('TIKTOK_COOKIES')
+    cookies_file = None
+    
+    if cookies_content:
+        try:
+            fd, cookies_file = tempfile.mkstemp(suffix='.txt', text=True)
+            with os.fdopen(fd, 'w') as f:
+                f.write(cookies_content)
+            print("🔍 DEBUG: Created temporary TikTok cookies file")
+        except Exception as e:
+            print(f"⚠️ DEBUG: Failed to create TikTok cookies file: {e}")
+            cookies_file = None
+    else:
+        print("🔍 DEBUG: No TIKTOK_COOKIES found in env")
+
+    # Try with proxies (mandatory for TikTok)
+    max_retries = 3
+    last_error = None
+
+    try:
+        for attempt in range(max_retries):
+            proxies = proxy_manager.get_proxy()
+            if not proxies:
+                 print("⚠️ No proxies available, trying direct (likely to fail)...")
+            
+            proxy_url = proxies['http'] if proxies else None
+            print(f"🚀 TikTok Attempt {attempt+1}/{max_retries}: Fetching via proxy {proxy_url}")
+
+            with tempfile.TemporaryDirectory() as temp_dir:
+                try:
+                    ydl_opts = {
+                        'skip_download': True,
+                        'writesubtitles': True, # TikTok often has them
+                        'writeautomaticsub': True,
+                        'subtitleslangs': ['en'],
+                        'subtitlesformat': 'vtt', 
+                        'outtmpl': os.path.join(temp_dir, '%(id)s'),
+                        'quiet': False,
+                        'no_warnings': False,
+                        'socket_timeout': 30,
+                    }
+                    if cookies_file:
+                        ydl_opts['cookiefile'] = cookies_file
+                    if proxy_url:
+                        ydl_opts['proxy'] = proxy_url
+
+                    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                        # Construct generic URL using just the ID
+                        target_url = f"https://www.tiktok.com/@user/video/{video_id}"
+                        
+                        info = ydl.extract_info(target_url, download=True)
+                        
+                        # Extract metadata
+                        metadata = {
+                            'title': info.get('title', 'Unknown TikTok'),
+                            'uploader': info.get('uploader', 'Unknown User'),
+                            'upload_date': info.get('upload_date'),
+                            'view_count': info.get('view_count', 0),
+                            'channel_follower_count': 0,
+                            'description': info.get('description', ''),
+                            'thumbnail': info.get('thumbnail', '')
+                        }
+                        
+                        # Check for subtitles
+                        vtt_file = None
+                        files_in_dir = os.listdir(temp_dir)
+                        for filename in files_in_dir:
+                            if filename.endswith('.vtt'):
+                                vtt_file = os.path.join(temp_dir, filename)
+                                break
+                        
+                        full_text = ""
+                        if vtt_file:
+                            with open(vtt_file, 'r', encoding='utf-8') as f:
+                                print("✅ TikTok Success! Downloaded VTT file.")
+                                full_text = _parse_vtt(f.read())
+                        else:
+                             # Fallback: Description is often the "text" for TikToks
+                             print("⚠️ No subtitles found for TikTok. Using description/title as transcript.")
+                             full_text = f"{info.get('title', '')}\n\n{info.get('description', '')}"
+
+                        if not full_text:
+                            raise Exception("No text content found (captions or description)")
+
+                        if proxy_url:
+                            proxy_manager.report_success(proxy_url)
+                            
+                        return full_text, metadata, len(cookies_content) if cookies_content else 0
+
+                except Exception as e:
+                    print(f"❌ TikTok fetch failed (Attempt {attempt+1}): {e}")
+                    last_error = e
+                    if proxy_url:
+                        proxy_manager.mark_failed(proxies)
+        
+        raise Exception(f"All TikTok attempts failed. Last error: {last_error}")
+
+    finally:
+        if cookies_file and os.path.exists(cookies_file):
+            try:
+                os.unlink(cookies_file)
+            except:
+                pass
+
+
 @app.route('/api/extract-transcript', methods=['POST'])
 def extract_transcript():
     """Extract transcript from YouTube video"""
@@ -727,6 +835,8 @@ def extract_transcript():
         try:
             if platform == 'vimeo':
                 full_transcript, metadata, cookie_count = _fetch_vimeo_transcript(video_id)
+            elif platform == 'tiktok':
+                full_transcript, metadata, cookie_count = _fetch_tiktok_transcript(video_id)
             else:
                 full_transcript, metadata, cookie_count = _get_youtube_transcript_with_cookies(video_id)
             

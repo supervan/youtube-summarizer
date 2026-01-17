@@ -9,7 +9,7 @@ https://digest.supervan.uk/
 
 ## ✨ Features
 
-- 🎬 **YouTube Transcript Extraction** - Automatically extracts video transcripts
+- 🎬 **YouTube, Vimeo & TikTok Support** - Automatically extracts video transcripts from multiple platforms
 - 🤖 **AI-Powered Summaries** - Uses Google Gemini AI for intelligent summarization
 - 🎧 **Audio Podcast Generation** - Converts summaries into engaging 2-host audio dialogues
 - 📜 **History Log** - Automatically saves your recent summaries for easy access with **pagination**
