@@ -723,6 +723,7 @@ def _fetch_tiktok_transcript(video_id):
         print("🔍 DEBUG: No TIKTOK_COOKIES found in env")
 
     # Try direct connection first, then fallback to proxies
+    max_retries = 3
     # attempts_list = [None] (Direct) + [proxies...]
     attempts = [None] + [proxy_manager.get_proxy() for _ in range(max_retries)]
     
