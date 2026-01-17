@@ -4,7 +4,7 @@ import os
 
 # Example TikTok URL (Trending/Viral video)
 # Note: TikTok URLs can be tricky with redirects (vm.tiktok.com vs www.tiktok.com)
-TEST_URL = "https://www.tiktok.com/@dailymail/video/7338426036123454753" # Daily Mail news clip (likely has speech/captions)
+TEST_URL = "https://www.tiktok.com/@user/video/7595891987564301623" # Testing constructed URL pattern
 
 def test_tiktok_fetch():
     print(f"--- Testing TikTok Fetch for {TEST_URL} ---")

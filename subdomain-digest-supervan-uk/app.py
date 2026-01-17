@@ -722,18 +722,17 @@ def _fetch_tiktok_transcript(video_id):
     else:
         print("🔍 DEBUG: No TIKTOK_COOKIES found in env")
 
-    # Try with proxies (mandatory for TikTok)
-    max_retries = 3
+    # Try direct connection first, then fallback to proxies
+    # attempts_list = [None] (Direct) + [proxies...]
+    attempts = [None] + [proxy_manager.get_proxy() for _ in range(max_retries)]
+    
     last_error = None
 
     try:
-        for attempt in range(max_retries):
-            proxies = proxy_manager.get_proxy()
-            if not proxies:
-                 print("⚠️ No proxies available, trying direct (likely to fail)...")
-            
+        for i, proxies in enumerate(attempts):
             proxy_url = proxies['http'] if proxies else None
-            print(f"🚀 TikTok Attempt {attempt+1}/{max_retries}: Fetching via proxy {proxy_url}")
+            conn_type = "DIRECT" if not proxy_url else f"PROXY ({proxy_url})"
+            print(f"🚀 TikTok Attempt {i+1}/{len(attempts)}: Fetching via {conn_type}")
 
             with tempfile.TemporaryDirectory() as temp_dir:
                 try:
