@@ -538,7 +538,7 @@ function setupEventListeners() {
             // If Vimeo, ensure iframe is set (it might have been set in showVideoInfo but hidden)
             // Or set it here if cleared
             if (!playerDiv.querySelector('iframe')) {
-                playerDiv.innerHTML = `< iframe src = "https://player.vimeo.com/video/${currentVideoId}?autoplay=1" width = "100%" height = "100%" frameborder = "0" allow = "autoplay; fullscreen; picture-in-picture" allowfullscreen ></iframe > `;
+                playerDiv.innerHTML = `<iframe src="https://player.vimeo.com/video/${currentVideoId}?autoplay=1" width="100%" height="100%" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
             }
         } else {
             if (player && player.playVideo) {
@@ -2645,12 +2645,11 @@ function showVideoInfo(videoId, data) {
             script.src = "https://www.tiktok.com/embed.js";
             script.async = true;
             playerDiv.appendChild(script);
-            `;
         }
     } else if (isVimeo) {
         // Handle Vimeo Player
         if (playerDiv) {
-            playerDiv.innerHTML = `< iframe src = "https://player.vimeo.com/video/${videoId}?autoplay=1" width = "100%" height = "100%" frameborder = "0" allow = "autoplay; fullscreen; picture-in-picture" allowfullscreen ></iframe > `;
+            playerDiv.innerHTML = `<iframe src="https://player.vimeo.com/video/${videoId}?autoplay=1" width="100%" height="100%" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe> `;
             // Note: We don't verify autoplay here, but the click listener on wrapper handles 'hidden' toggling.
             // But verify interaction logic below.
         }
@@ -2689,7 +2688,7 @@ function showVideoInfo(videoId, data) {
 
     // Use a generic channel icon
     const channelIcon = `
-                < div class="channel-icon-placeholder" >
+                <div class="channel-icon-placeholder">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
                     </svg>
@@ -2697,7 +2696,7 @@ function showVideoInfo(videoId, data) {
                 `;
 
     metaContainer.innerHTML = `
-                < h3 class="video-info-title" > ${ data.title || `Video ID: ${videoId}` }</h3 >
+                <h3 class="video-info-title" > ${ data.title || `Video ID: ${videoId}` }</h3>
                     <div class="video-metadata-row">
                         <div class="meta-left">
                             ${channelIcon}
@@ -2735,7 +2734,7 @@ function showSummary(text, infographic) {
     // Append Infographic if available
     if (infographic && (infographic.trim().startsWith('<svg') || infographic.includes('</svg>'))) {
         html += `
-                < div class="infographic-section mt-8 pt-8 border-t border-slate-700 w-full" >
+                <div class="infographic-section mt-8 pt-8 border-t border-slate-700 w-full">
                 <h3 class="text-xl font-bold text-slate-200 mb-4 flex items-center gap-2">
                     Infographic
                 </h3>
@@ -2910,7 +2909,7 @@ async function copySummary() {
 
     // Show loading state on button
     copyBtn.innerHTML = `
-                < div class="spinner-sm" style = "border-width: 2px;" ></div >
+                <div class="spinner-sm" style = "border-width: 2px;"></div>
                     Copying...
             `;
 
