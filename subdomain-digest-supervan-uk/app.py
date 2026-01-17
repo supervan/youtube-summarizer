@@ -479,6 +479,7 @@ def _get_youtube_transcript_with_cookies(video_id):
                         metadata['view_count'] = info.get('view_count', 0)
                         metadata['channel_follower_count'] = info.get('channel_follower_count', 0)
                         metadata['description'] = info.get('description', '')
+                        metadata['thumbnail'] = info.get('thumbnail', '')
                         
                         vtt_file = None
                         files_in_dir = os.listdir(temp_dir)
@@ -535,6 +536,7 @@ def _get_youtube_transcript_with_cookies(video_id):
                 metadata['view_count'] = info.get('view_count', 0)
                 metadata['channel_follower_count'] = info.get('channel_follower_count', 0)
                 metadata['description'] = info.get('description', '')
+                metadata['thumbnail'] = info.get('thumbnail', '')
         except:
             pass
             
@@ -589,6 +591,7 @@ def _get_youtube_transcript_with_cookies(video_id):
                         metadata['view_count'] = info.get('view_count', 0)
                         metadata['channel_follower_count'] = info.get('channel_follower_count', 0)
                         metadata['description'] = info.get('description', '')
+                        metadata['thumbnail'] = info.get('thumbnail', '')
                         
                         vtt_file = None
                         files_in_dir = os.listdir(temp_dir)
@@ -671,7 +674,8 @@ def _fetch_vimeo_transcript(video_id):
                     'upload_date': info.get('upload_date'),
                     'view_count': info.get('view_count', 0),
                     'channel_follower_count': 0,
-                    'description': info.get('description', '')
+                    'description': info.get('description', ''),
+                    'thumbnail': info.get('thumbnail', '')
                 }
                 
                 vtt_file = None

@@ -504,7 +504,10 @@ function setupEventListeners() {
     });
 
     // Video Player Interaction
-    videoPlayerWrapper.addEventListener('click', () => {
+    videoPlayerWrapper.addEventListener('click', (e) => {
+        // Prevent if clicking on metadata buttons
+        if (e.target.closest('button')) return;
+
         const playerDiv = document.getElementById('player');
         const thumb = document.getElementById('videoThumbnail');
         const overlay = videoPlayerWrapper.querySelector('.play-overlay');
@@ -515,8 +518,18 @@ function setupEventListeners() {
         if (overlay) overlay.classList.add('hidden');
         if (badge) badge.classList.add('hidden');
 
-        if (player && player.playVideo) {
-            player.playVideo();
+        // Check platform
+        const isVimeo = /^\d+$/.test(currentVideoId);
+        if (isVimeo) {
+            // If Vimeo, ensure iframe is set (it might have been set in showVideoInfo but hidden)
+            // Or set it here if cleared
+            if (!playerDiv.querySelector('iframe')) {
+                playerDiv.innerHTML = `<iframe src="https://player.vimeo.com/video/${currentVideoId}?autoplay=1" width="100%" height="100%" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+            }
+        } else {
+            if (player && player.playVideo) {
+                player.playVideo();
+            }
         }
     });
 
@@ -1807,7 +1820,13 @@ function showSkeletonLoading(videoId) {
 
     // Show Thumbnail immediately if we have ID
     if (videoId) {
-        videoThumbnail.src = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+        if (/^\d+$/.test(videoId)) {
+            // Vimeo ID (numeric) - No standard public thumbnail endpoint without API
+            // Use a placeholder or keep hidden until metadata loads
+            videoThumbnail.src = 'favicon.png'; // Fallback
+        } else {
+            videoThumbnail.src = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+        }
         videoThumbnail.classList.remove('hidden');
 
         // Reset player wrapper to show thumbnail
@@ -1848,7 +1867,8 @@ function showSkeletonLoading(videoId) {
 function extractVideoId(url) {
     const patterns = [
         /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/live\/)([^&\n?#]+)/,
-        /youtube\.com\/watch\?.*v=([^&\n?#]+)/
+        /youtube\.com\/watch\?.*v=([^&\n?#]+)/,
+        /(?:vimeo\.com\/|player\.vimeo\.com\/video\/)([0-9]+)/
     ];
 
     for (const pattern of patterns) {
@@ -1896,7 +1916,7 @@ async function handleSubmit(e) {
         // Validate URL
         const videoId = extractVideoId(youtubeUrl);
         if (!videoId) {
-            showError('Invalid YouTube URL. Please enter a valid YouTube video link.');
+            showError('Invalid Video URL. Please enter a valid YouTube or Vimeo link.');
             return;
         }
         currentVideoId = videoId; // Update global ID
@@ -2237,7 +2257,7 @@ function saveToHistory(data) {
         length: data.length,
         tone: data.tone,
         metadata: data.metadata,
-        thumbnail: `https://img.youtube.com/vi/${data.id}/mqdefault.jpg`,
+        thumbnail: data.metadata?.thumbnail || `https://img.youtube.com/vi/${data.id}/mqdefault.jpg`,
         timestamp: timestamp
     };
 
@@ -2574,7 +2594,11 @@ function formatDate(dateStr) {
 // Show video information
 function showVideoInfo(videoId, data) {
     // Update thumbnail
-    videoThumbnail.src = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+    if (data.metadata && data.metadata.thumbnail) {
+        videoThumbnail.src = data.metadata.thumbnail;
+    } else {
+        videoThumbnail.src = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+    }
 
     // Reset player
     const playerDiv = document.getElementById('player');
@@ -2588,12 +2612,24 @@ function showVideoInfo(videoId, data) {
     badge.classList.remove('hidden');
 
     // Prepare player
-    if (player && player.cueVideoById) {
-        player.cueVideoById(videoId);
+    const isVimeo = /^\d+$/.test(videoId);
+
+    if (isVimeo) {
+        // Handle Vimeo Player
+        if (playerDiv) {
+            playerDiv.innerHTML = `<iframe src="https://player.vimeo.com/video/${videoId}?autoplay=1" width="100%" height="100%" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+            // Note: We don't verify autoplay here, but the click listener on wrapper handles 'hidden' toggling.
+            // But verify interaction logic below.
+        }
     } else {
-        setTimeout(() => {
-            if (player && player.cueVideoById) player.cueVideoById(videoId);
-        }, 1000);
+        // YouTube Player
+        if (player && player.cueVideoById) {
+            player.cueVideoById(videoId);
+        } else {
+            setTimeout(() => {
+                if (player && player.cueVideoById) player.cueVideoById(videoId);
+            }, 1000);
+        }
     }
 
     const videoTitle = document.getElementById('videoTitle');
