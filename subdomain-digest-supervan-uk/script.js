@@ -691,8 +691,9 @@ function setupEventListeners() {
             }
         }
 
-        // Enable/Disable based on URL presence
-        if (url.trim().length > 0) {
+        // Enable/Disable based on valid Video ID
+        const videoId = extractVideoId(url);
+        if (videoId) {
             submitBtn.disabled = false;
         } else {
             submitBtn.disabled = true;
