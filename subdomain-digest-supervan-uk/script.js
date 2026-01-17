@@ -2944,7 +2944,18 @@ async function copySummary() {
         const videoTitle = document.getElementById('videoTitle').textContent;
 
         const videoId = extractVideoId(youtubeUrlInput.value);
-        const shortUrl = videoId ? `https://youtu.be/${videoId}` : youtubeUrlInput.value;
+
+        // Determine Platform
+        const isTikTok = /^\d{15,}$/.test(videoId);
+        const isVimeo = !isTikTok && /^\d+$/.test(videoId);
+        const isYouTube = !isTikTok && !isVimeo;
+
+        let shortUrl = youtubeUrlInput.value;
+        if (videoId) {
+            if (isYouTube) shortUrl = `https://youtu.be/${videoId}`;
+            else if (isVimeo) shortUrl = `https://vimeo.com/${videoId}`;
+            // TikTok keeps original input URL
+        }
 
         const promoText = "\n\nSummarized by TL;DW - https://yt.supervan.uk\n(Installable as an App on Mobile & Desktop)";
         const promoHtml = "<br><br><p>Summarized by <a href='https://yt.supervan.uk'>TL;DW</a><br><em>(Installable as an App on Mobile & Desktop)</em></p>";
@@ -2955,20 +2966,30 @@ async function copySummary() {
         const clipboardText = `${videoTitle}\n${shortUrl}\n\n${cleanSummaryText}${promoText}`;
 
         // --- HTML Version ---
-        // Convert internal timestamp links to external YouTube links
+        // Convert internal timestamp links to external links (Platform aware)
         let cleanSummaryHtml = rawSummaryHtml;
 
         if (videoId) {
             // Find formatMarkdown generated links: <a ... onclick="seekTo(123)...">text</a>
             cleanSummaryHtml = cleanSummaryHtml.replace(/<a href="#" class="timestamp-link" onclick="seekTo\((\d+)\); return false;">(.*?)<\/a>/g, (match, seconds, text) => {
-                return `<a href="https://youtu.be/${videoId}?t=${seconds}" target="_blank">${text}</a>`;
+                if (isYouTube) return `<a href="https://youtu.be/${videoId}?t=${seconds}" target="_blank">${text}</a>`;
+                if (isVimeo) return `<a href="https://vimeo.com/${videoId}#t=${seconds}s" target="_blank">${text}</a>`;
+                return text; // TikTok does not support timestamp links easily
             });
+        }
+
+        // Determine Thumbnail
+        let thumbSrc = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+        if (!isYouTube) {
+            // Use a generic placeholder for others since we don't have a public hosted thumbnail URL easily
+            // Using the site's favicon or logo as fallback
+            thumbSrc = 'https://yt.supervan.uk/favicon.png';
         }
 
         const clipboardHtml = `
             <h2>${videoTitle}</h2>
             <p><a href="${shortUrl}">${shortUrl}</a></p>
-            <p><img src="https://img.youtube.com/vi/${videoId}/mqdefault.jpg" alt="Video Thumbnail" style="max-width: 320px; border-radius: 8px;"></p>
+            <p><img src="${thumbSrc}" alt="Video Thumbnail" style="max-width: 320px; border-radius: 8px;"></p>
             <hr>
             ${cleanSummaryHtml}
             ${promoHtml}
