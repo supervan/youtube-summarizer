@@ -47,8 +47,15 @@ def extract_video_id(url):
     for pattern in patterns:
         match = re.search(pattern, url)
         if match:
-            return match.group(1)
-    return None
+            return match.group(1), 'youtube'
+            
+    # Check for Vimeo
+    vimeo_pattern = r'vimeo\.com\/(?:channels\/[\w]+\/)?([0-9]+)'
+    vimeo_match = re.search(vimeo_pattern, url)
+    if vimeo_match:
+        return vimeo_match.group(1), 'vimeo'
+        
+    return None, None
 
 @app.route('/')
 def index():
@@ -617,6 +624,82 @@ def _get_youtube_transcript_with_cookies(video_id):
             except:
                 pass
 
+
+def _fetch_vimeo_transcript(video_id):
+    """
+    Fetch transcript from Vimeo using yt-dlp and cookies.
+    """
+    print(f"🔍 DEBUG: Starting Vimeo transcript fetch for {video_id}")
+    
+    cookies_content = os.getenv('VIMEO_COOKIES')
+    cookies_file = None
+    
+    if cookies_content:
+        try:
+            fd, cookies_file = tempfile.mkstemp(suffix='.txt', text=True)
+            with os.fdopen(fd, 'w') as f:
+                f.write(cookies_content)
+            print("🔍 DEBUG: Created temporary Vimeo cookies file")
+        except Exception as e:
+            print(f"⚠️ DEBUG: Failed to create Vimeo cookies file: {e}")
+            cookies_file = None
+    else:
+        print("🔍 DEBUG: No VIMEO_COOKIES found in env")
+
+    try:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            ydl_opts = {
+                'skip_download': True,
+                'writesubtitles': True,
+                'writeautomaticsub': True,
+                'subtitleslangs': ['en'],
+                'subtitlesformat': 'vtt',
+                'outtmpl': os.path.join(temp_dir, '%(id)s'),
+                'quiet': False,
+                'no_warnings': False,
+            }
+            if cookies_file:
+                ydl_opts['cookiefile'] = cookies_file
+                
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(f"https://vimeo.com/{video_id}", download=True)
+                
+                # Extract metadata
+                metadata = {
+                    'title': info.get('title', 'Unknown Title'),
+                    'uploader': info.get('uploader', 'Unknown Uploader'),
+                    'upload_date': info.get('upload_date'),
+                    'view_count': info.get('view_count', 0),
+                    'channel_follower_count': 0,
+                    'description': info.get('description', '')
+                }
+                
+                vtt_file = None
+                files_in_dir = os.listdir(temp_dir)
+                for filename in files_in_dir:
+                    if filename.endswith('.vtt'):
+                        vtt_file = os.path.join(temp_dir, filename)
+                        break
+                
+                if vtt_file:
+                    with open(vtt_file, 'r', encoding='utf-8') as f:
+                        print("✅ Vimeo Success! Downloaded VTT file.")
+                        return _parse_vtt(f.read()), metadata, len(cookies_content) if cookies_content else 0
+                else:
+                     raise Exception("No subtitle file downloaded from Vimeo")
+                     
+    except Exception as e:
+        print(f"❌ Vimeo fetch failed: {e}")
+        raise e
+        
+    finally:
+        if cookies_file and os.path.exists(cookies_file):
+            try:
+                os.unlink(cookies_file)
+            except:
+                pass
+
+
 @app.route('/api/extract-transcript', methods=['POST'])
 def extract_transcript():
     """Extract transcript from YouTube video"""
@@ -631,14 +714,17 @@ def extract_transcript():
             return jsonify({'error': 'YouTube URL is required'}), 400
         
         # Extract video ID
-        video_id = extract_video_id(youtube_url)
-        print(f"🔍 DEBUG: Extracted Video ID: {video_id}")
+        video_id, platform = extract_video_id(youtube_url)
+        print(f"🔍 DEBUG: Extracted Video ID: {video_id}, Platform: {platform}")
         if not video_id:
-            return jsonify({'error': 'Invalid YouTube URL'}), 400
+            return jsonify({'error': 'Invalid URL'}), 400
         
         # Get transcript and metadata
         try:
-            full_transcript, metadata, cookie_count = _get_youtube_transcript_with_cookies(video_id)
+            if platform == 'vimeo':
+                full_transcript, metadata, cookie_count = _fetch_vimeo_transcript(video_id)
+            else:
+                full_transcript, metadata, cookie_count = _get_youtube_transcript_with_cookies(video_id)
             
             return jsonify({
                 'success': True,
