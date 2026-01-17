@@ -528,14 +528,18 @@ function setupEventListeners() {
                     <blockquote class="tiktok-embed" cite="https://www.tiktok.com/@tiktok/video/${currentVideoId}" data-video-id="${currentVideoId}" style="max-width: 605px;min-width: 325px;" >
                         <section></section>
                     </blockquote>
-                    <script async src="https://www.tiktok.com/embed.js"></script>
                  `;
+                const script = document.createElement('script');
+                script.src = "https://www.tiktok.com/embed.js";
+                script.async = true;
+                playerDiv.appendChild(script);
+                `;
             }
         } else if (isVimeo) {
             // If Vimeo, ensure iframe is set (it might have been set in showVideoInfo but hidden)
             // Or set it here if cleared
             if (!playerDiv.querySelector('iframe')) {
-                playerDiv.innerHTML = `<iframe src="https://player.vimeo.com/video/${currentVideoId}?autoplay=1" width="100%" height="100%" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+                playerDiv.innerHTML = `< iframe src = "https://player.vimeo.com/video/${currentVideoId}?autoplay=1" width = "100%" height = "100%" frameborder = "0" allow = "autoplay; fullscreen; picture-in-picture" allowfullscreen ></iframe > `;
             }
         } else {
             if (player && player.playVideo) {
@@ -583,15 +587,15 @@ function setupEventListeners() {
         const videoId = extractVideoId(youtubeUrlInput.value);
         const shortUrl = videoId ? `https://youtu.be/${videoId}` : youtubeUrlInput.value;
 
-        // Get Footer Info
-        const promoText = "\n\nSummarized by TL;DW - https://yt.supervan.uk\n(Installable as an App on Mobile & Desktop)";
-        const promoHtml = "<br><br><p>Summarized by <a href='https://yt.supervan.uk'>TL;DW</a><br><em>(Installable as an App on Mobile & Desktop)</em></p>";
+                // Get Footer Info
+                const promoText = "\n\nSummarized by TL;DW - https://yt.supervan.uk\n(Installable as an App on Mobile & Desktop)";
+                const promoHtml = "<br><br><p>Summarized by <a href='https://yt.supervan.uk'>TL;DW</a><br><em>(Installable as an App on Mobile & Desktop)</em></p>";
 
-        try {
-            const stepsHtml = content.innerHTML;
+                try {
+                    const stepsHtml = content.innerHTML;
 
-            // Construct Rich HTML
-            const fullHtml = `
+                    // Construct Rich HTML
+                    const fullHtml = `
                 <h2>${videoTitle}</h2>
                 <p><a href="${shortUrl}">${shortUrl}</a></p>
                 <hr>
@@ -599,31 +603,31 @@ function setupEventListeners() {
                 ${promoHtml}
             `;
 
-            // Construct Plain Text
-            const clone = content.cloneNode(true);
-            const lis = clone.querySelectorAll('li');
-            lis.forEach(li => {
-                li.innerHTML = '• ' + li.innerHTML;
+                    // Construct Plain Text
+                    const clone = content.cloneNode(true);
+                    const lis = clone.querySelectorAll('li');
+                    lis.forEach(li => {
+                        li.innerHTML = '• ' + li.innerHTML;
+                    });
+                    const blocks = clone.querySelectorAll('p, h2, h3, h4');
+                    blocks.forEach(b => b.innerHTML = b.innerHTML + '\n');
+                    const stepsText = clone.innerText;
+
+                    const fullText = `${videoTitle}\n${shortUrl}\n\n${stepsText}${promoText}`;
+
+                    const clipboardAuthentication = new ClipboardItem({
+                        "text/html": new Blob([fullHtml], { type: "text/html" }),
+                        "text/plain": new Blob([fullText], { type: "text/plain" })
+                    });
+
+                    await navigator.clipboard.write([clipboardAuthentication]);
+                    showToast('Steps copied to clipboard!');
+                } catch (err) {
+                    console.warn('Rich copy failed, falling back to plain text:', err);
+                    const text = content.innerText;
+                    navigator.clipboard.writeText(text).then(() => showToast('Steps copied to clipboard!'));
+                }
             });
-            const blocks = clone.querySelectorAll('p, h2, h3, h4');
-            blocks.forEach(b => b.innerHTML = b.innerHTML + '\n');
-            const stepsText = clone.innerText;
-
-            const fullText = `${videoTitle}\n${shortUrl}\n\n${stepsText}${promoText}`;
-
-            const clipboardAuthentication = new ClipboardItem({
-                "text/html": new Blob([fullHtml], { type: "text/html" }),
-                "text/plain": new Blob([fullText], { type: "text/plain" })
-            });
-
-            await navigator.clipboard.write([clipboardAuthentication]);
-            showToast('Steps copied to clipboard!');
-        } catch (err) {
-            console.warn('Rich copy failed, falling back to plain text:', err);
-            const text = content.innerText;
-            navigator.clipboard.writeText(text).then(() => showToast('Steps copied to clipboard!'));
-        }
-    });
 
     document.getElementById('generateStepsBtn').addEventListener('click', handleStepsRequest);
     document.getElementById('startQuizBtn').addEventListener('click', handleQuizRequest);
@@ -2636,13 +2640,17 @@ function showVideoInfo(videoId, data) {
                 <blockquote class="tiktok-embed" cite="https://www.tiktok.com/@tiktok/video/${videoId}" data-video-id="${videoId}" style="max-width: 605px;min-width: 325px;" >
                     <section></section>
                 </blockquote>
-                <script async src="https://www.tiktok.com/embed.js"></script>
              `;
+            const script = document.createElement('script');
+            script.src = "https://www.tiktok.com/embed.js";
+            script.async = true;
+            playerDiv.appendChild(script);
+            `;
         }
     } else if (isVimeo) {
         // Handle Vimeo Player
         if (playerDiv) {
-            playerDiv.innerHTML = `<iframe src="https://player.vimeo.com/video/${videoId}?autoplay=1" width="100%" height="100%" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+            playerDiv.innerHTML = `< iframe src = "https://player.vimeo.com/video/${videoId}?autoplay=1" width = "100%" height = "100%" frameborder = "0" allow = "autoplay; fullscreen; picture-in-picture" allowfullscreen ></iframe > `;
             // Note: We don't verify autoplay here, but the click listener on wrapper handles 'hidden' toggling.
             // But verify interaction logic below.
         }
@@ -2659,7 +2667,7 @@ function showVideoInfo(videoId, data) {
 
     const videoTitle = document.getElementById('videoTitle');
     if (videoTitle) {
-        videoTitle.textContent = data.title || `Video ID: ${videoId}`;
+        videoTitle.textContent = data.title || `Video ID: ${ videoId } `;
     }
 
     // Render Metadata if available
@@ -2681,36 +2689,36 @@ function showVideoInfo(videoId, data) {
 
     // Use a generic channel icon
     const channelIcon = `
-        <div class="channel-icon-placeholder">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-            </svg>
-        </div>
-    `;
+                < div class="channel-icon-placeholder" >
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                    </svg>
+        </div >
+                `;
 
     metaContainer.innerHTML = `
-        <h3 class="video-info-title">${data.title || `Video ID: ${videoId}`}</h3>
-        <div class="video-metadata-row">
-            <div class="meta-left">
-                ${channelIcon}
-                <div class="meta-channel-info">
-                    <div class="meta-channel-name">
-                        ${uploader}
-                        <svg class="verified-icon" viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-                            <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-1.9 14.7L6 12.6l1.5-1.5 2.6 2.6 6.4-6.4 1.5 1.5-7.9 7.9z"/>
-                        </svg>
+                < h3 class="video-info-title" > ${ data.title || `Video ID: ${videoId}` }</h3 >
+                    <div class="video-metadata-row">
+                        <div class="meta-left">
+                            ${channelIcon}
+                            <div class="meta-channel-info">
+                                <div class="meta-channel-name">
+                                    ${uploader}
+                                    <svg class="verified-icon" viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                                        <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-1.9 14.7L6 12.6l1.5-1.5 2.6 2.6 6.4-6.4 1.5 1.5-7.9 7.9z" />
+                                    </svg>
+                                </div>
+                                <div class="meta-sub-count">${subscribers}</div>
+                            </div>
+                            <button class="subscribe-btn">Subscribe</button>
+                        </div>
+                        <div class="meta-right">
+                            <span class="meta-views">${views}</span>
+                            ${(views && uploadDate) ? '<span class="meta-dot">•</span>' : ''}
+                            <span class="meta-date">${uploadDate}</span>
+                        </div>
                     </div>
-                    <div class="meta-sub-count">${subscribers}</div>
-                </div>
-                <button class="subscribe-btn">Subscribe</button>
-            </div>
-            <div class="meta-right">
-                <span class="meta-views">${views}</span>
-                ${(views && uploadDate) ? '<span class="meta-dot">•</span>' : ''}
-                <span class="meta-date">${uploadDate}</span>
-            </div>
-        </div>
-    `;
+            `;
 
     // Show results container
     resultsContainer.classList.remove('hidden');
@@ -2727,15 +2735,15 @@ function showSummary(text, infographic) {
     // Append Infographic if available
     if (infographic && (infographic.trim().startsWith('<svg') || infographic.includes('</svg>'))) {
         html += `
-            <div class="infographic-section mt-8 pt-8 border-t border-slate-700 w-full">
+                < div class="infographic-section mt-8 pt-8 border-t border-slate-700 w-full" >
                 <h3 class="text-xl font-bold text-slate-200 mb-4 flex items-center gap-2">
                     Infographic
                 </h3>
                 <div class="infographic-container w-full bg-slate-900/50 p-4 rounded-lg overflow-hidden flex justify-center">
                     ${infographic}
                 </div>
-            </div>
-        `;
+            </div >
+                `;
     }
 
     // Update summary text
@@ -2757,9 +2765,9 @@ function showSummary(text, infographic) {
         const toneLabel = toneVal.charAt(0).toUpperCase() + toneVal.slice(1);
 
         summaryFooter.innerHTML = `
-            ${lengthVal ? `<span class="meta-badge ${lengthVal}">${lengthIcon} ${lengthLabel}</span>` : ''}
-            ${toneVal ? `<span class="meta-badge ${toneVal}">${toneIcon} ${toneLabel}</span>` : ''}
-        `;
+            ${ lengthVal ? `<span class="meta-badge ${lengthVal}">${lengthIcon} ${lengthLabel}</span>` : '' }
+            ${ toneVal ? `<span class="meta-badge ${toneVal}">${toneIcon} ${toneLabel}</span>` : '' }
+            `;
         // Show results
         resultsContainer.classList.remove('hidden');
 
@@ -2902,9 +2910,9 @@ async function copySummary() {
 
     // Show loading state on button
     copyBtn.innerHTML = `
-        <div class="spinner-sm" style="border-width: 2px;"></div>
-        Copying...
-    `;
+                < div class="spinner-sm" style = "border-width: 2px;" ></div >
+                    Copying...
+            `;
 
     try {
         const summaryElement = document.getElementById('summaryText');
@@ -2939,26 +2947,26 @@ async function copySummary() {
         const videoId = extractVideoId(youtubeUrlInput.value);
         const shortUrl = videoId ? `https://youtu.be/${videoId}` : youtubeUrlInput.value;
 
-        const promoText = "\n\nSummarized by TL;DW - https://yt.supervan.uk\n(Installable as an App on Mobile & Desktop)";
-        const promoHtml = "<br><br><p>Summarized by <a href='https://yt.supervan.uk'>TL;DW</a><br><em>(Installable as an App on Mobile & Desktop)</em></p>";
+            const promoText = "\n\nSummarized by TL;DW - https://yt.supervan.uk\n(Installable as an App on Mobile & Desktop)";
+            const promoHtml = "<br><br><p>Summarized by <a href='https://yt.supervan.uk'>TL;DW</a><br><em>(Installable as an App on Mobile & Desktop)</em></p>";
 
-        // --- Plain Text Version ---
-        // Remove timestamps [MM:SS]
-        const cleanSummaryText = rawSummaryText.replace(/\[[\d:\s,\-]+\]\s*/g, '');
-        const clipboardText = `${videoTitle}\n${shortUrl}\n\n${cleanSummaryText}${promoText}`;
+            // --- Plain Text Version ---
+            // Remove timestamps [MM:SS]
+            const cleanSummaryText = rawSummaryText.replace(/\[[\d:\s,\-]+\]\s*/g, '');
+            const clipboardText = `${videoTitle}\n${shortUrl}\n\n${cleanSummaryText}${promoText}`;
 
-        // --- HTML Version ---
-        // Convert internal timestamp links to external YouTube links
-        let cleanSummaryHtml = rawSummaryHtml;
+            // --- HTML Version ---
+            // Convert internal timestamp links to external YouTube links
+            let cleanSummaryHtml = rawSummaryHtml;
 
-        if (videoId) {
-            // Find formatMarkdown generated links: <a ... onclick="seekTo(123)...">text</a>
-            cleanSummaryHtml = cleanSummaryHtml.replace(/<a href="#" class="timestamp-link" onclick="seekTo\((\d+)\); return false;">(.*?)<\/a>/g, (match, seconds, text) => {
-                return `<a href="https://youtu.be/${videoId}?t=${seconds}" target="_blank">${text}</a>`;
-            });
-        }
+            if (videoId) {
+                // Find formatMarkdown generated links: <a ... onclick="seekTo(123)...">text</a>
+                cleanSummaryHtml = cleanSummaryHtml.replace(/<a href="#" class="timestamp-link" onclick="seekTo\((\d+)\); return false;">(.*?)<\/a>/g, (match, seconds, text) => {
+                    return `<a href="https://youtu.be/${videoId}?t=${seconds}" target="_blank">${text}</a>`;
+                });
+            }
 
-        const clipboardHtml = `
+            const clipboardHtml = `
             <h2>${videoTitle}</h2>
             <p><a href="${shortUrl}">${shortUrl}</a></p>
             <p><img src="https://img.youtube.com/vi/${videoId}/mqdefault.jpg" alt="Video Thumbnail" style="max-width: 320px; border-radius: 8px;"></p>
@@ -2967,202 +2975,202 @@ async function copySummary() {
             ${promoHtml}
         `;
 
-        // Create ClipboardItem with both formats
-        const item = new ClipboardItem({
-            'text/plain': new Blob([clipboardText], { type: 'text/plain' }),
-            'text/html': new Blob([clipboardHtml], { type: 'text/html' })
-        });
+            // Create ClipboardItem with both formats
+            const item = new ClipboardItem({
+                'text/plain': new Blob([clipboardText], { type: 'text/plain' }),
+                'text/html': new Blob([clipboardHtml], { type: 'text/html' })
+            });
 
-        await navigator.clipboard.write([item]);
+            await navigator.clipboard.write([item]);
 
-        // Success Feedback
-        copyBtn.innerHTML = `
+            // Success Feedback
+            copyBtn.innerHTML = `
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="20 6 9 17 4 12"></polyline>
             </svg>
             Copied!
         `;
 
-        setTimeout(() => {
-            copyBtn.innerHTML = originalContent;
-        }, 2000);
-
-    } catch (err) {
-        console.error('Copy failed:', err);
-        showError('Failed to copy summary');
-        copyBtn.innerHTML = originalContent;
-    }
-}
-
-// Share Summary (Web Share API)
-async function shareSummary() {
-    const summaryElement = document.getElementById('summaryText');
-    const rawSummaryText = summaryElement.innerText;
-    const videoTitle = document.getElementById('videoTitle').textContent;
-    const videoId = extractVideoId(youtubeUrlInput.value);
-    const shortUrl = videoId ? `https://youtu.be/${videoId}` : youtubeUrlInput.value;
-
-    // Clean text (remove timestamps for cleaner share)
-    // Clean text (remove timestamps for cleaner share)
-    const cleanSummaryText = rawSummaryText.replace(/\[[\d:\s,\-]+\]\s*/g, '');
-
-    const shareData = {
-        title: `Summary: ${videoTitle}`,
-        text: `${videoTitle}\n\n${cleanSummaryText.substring(0, 2000)}...`, // Limit text length for safety
-        url: shortUrl
-    };
-
-    try {
-        if (navigator.share) {
-            // Notify user about plain text limitation
-            showToast('Sharing plain text. For rich text, use Copy & Paste.', 'info');
-            // Delay to let toast appear and be read
-            setTimeout(async () => {
-                await navigator.share(shareData);
+            setTimeout(() => {
+                copyBtn.innerHTML = originalContent;
             }, 2000);
-        } else {
-            showError('Sharing not supported on this device');
-        }
-    } catch (err) {
-        if (err.name !== 'AbortError') {
-            console.error('Share failed:', err);
-            showError('Failed to share');
+
+        } catch (err) {
+            console.error('Copy failed:', err);
+            showError('Failed to copy summary');
+            copyBtn.innerHTML = originalContent;
         }
     }
-}
 
-// Format markdown to HTML (improved implementation)
-function formatMarkdown(text) {
-    if (!text) return '';
+    // Share Summary (Web Share API)
+    async function shareSummary() {
+        const summaryElement = document.getElementById('summaryText');
+        const rawSummaryText = summaryElement.innerText;
+        const videoTitle = document.getElementById('videoTitle').textContent;
+        const videoId = extractVideoId(youtubeUrlInput.value);
+        const shortUrl = videoId ? `https://youtu.be/${videoId}` : youtubeUrlInput.value;
 
-    // 1. Code blocks
-    text = text.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+        // Clean text (remove timestamps for cleaner share)
+        // Clean text (remove timestamps for cleaner share)
+        const cleanSummaryText = rawSummaryText.replace(/\[[\d:\s,\-]+\]\s*/g, '');
 
-    // 2. Inline code
-    text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+        const shareData = {
+            title: `Summary: ${videoTitle}`,
+            text: `${videoTitle}\n\n${cleanSummaryText.substring(0, 2000)}...`, // Limit text length for safety
+            url: shortUrl
+        };
 
-    // 3. Headers
-    text = text.replace(/^### (.*$)/gm, '<h4>$1</h4>');
-    text = text.replace(/^## (.*$)/gm, '<h3>$1</h3>');
-    text = text.replace(/^# (.*$)/gm, '<h2>$1</h2>');
-
-    // 4. Bold and Italic
-    text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
-
-    // 5. Blockquotes
-    text = text.replace(/^> (.*$)/gm, '<blockquote>$1</blockquote>');
-
-    // 6. Lists (Unordered) - Simple implementation
-    // Replace lines starting with * or - with <li>
-    text = text.replace(/^[\*\-] (.*$)/gm, '<li>$1</li>');
-
-    // Wrap adjacent <li> in <ul> (This is a bit tricky with regex only, but let's try a simple approach)
-    // We'll wrap the whole block of <li>s
-    text = text.replace(/(<li>.*<\/li>(\n|$))+/g, '<ul>$&</ul>');
-
-    // 6b. Lists (Ordered)
-    // Replace lines starting with 1. 2. etc with <li class="ordered">
-    text = text.replace(/^\d+\.\s+(.*$)/gm, '<li class="ordered">$1</li>');
-
-    // Wrap adjacent <li class="ordered"> in <ol>
-    text = text.replace(/(<li class="ordered">.*<\/li>(\n|$))+/g, '<ol>$&</ol>');
-
-    // Clean up class="ordered" (optional, but keeps HTML clean)
-    text = text.replace(/class="ordered"/g, '');
-
-    // 7. Timestamps
-    // Improved regex to handle timestamps inside or outside brackets, ranges, etc.
-    // We match individual timestamps to linkify them.
-    text = text.replace(/(\d{1,2}):(\d{2})(?::(\d{2}))?/g, (match, p1, p2, p3) => {
-        let seconds = 0;
-        if (p3) {
-            // HH:MM:SS
-            seconds = parseInt(p1) * 3600 + parseInt(p2) * 60 + parseInt(p3);
-        } else {
-            // MM:SS
-            seconds = parseInt(p1) * 60 + parseInt(p2);
+        try {
+            if (navigator.share) {
+                // Notify user about plain text limitation
+                showToast('Sharing plain text. For rich text, use Copy & Paste.', 'info');
+                // Delay to let toast appear and be read
+                setTimeout(async () => {
+                    await navigator.share(shareData);
+                }, 2000);
+            } else {
+                showError('Sharing not supported on this device');
+            }
+        } catch (err) {
+            if (err.name !== 'AbortError') {
+                console.error('Share failed:', err);
+                showError('Failed to share');
+            }
         }
-        return `<a href="#" class="timestamp-link" onclick="seekTo(${seconds}); return false;">${match}</a>`;
-    });
-
-    // 8. Paragraphs (double newlines)
-    text = text.replace(/\n\n/g, '<br><br>');
-
-    // 9. Cleanup excessive whitespace after headers
-    // If a header is followed by <br><br>, remove the breaks because CSS margins handle the spacing
-    text = text.replace(/(<\/h[2-4]>)\s*(<br>\s*){1,2}/g, '$1');
-
-    // Cleanup <ul><br> and <ol><br> issues if any
-    text = text.replace(/<\/ul><br><br>/g, '</ul>');
-    text = text.replace(/<\/ol><br><br>/g, '</ol>');
-
-    return text;
-}
-
-// Start video playback (switch from thumbnail to player)
-function startVideo() {
-    // Hide thumbnail and overlay
-    videoThumbnail.classList.add('hidden');
-    const overlay = videoPlayerWrapper.querySelector('.play-overlay');
-    if (overlay) overlay.classList.add('hidden');
-    const badge = videoPlayerWrapper.querySelector('.live-badge');
-    if (badge) badge.classList.add('hidden');
-
-    // Show player
-    const playerElement = document.getElementById('player');
-    if (playerElement) playerElement.classList.remove('hidden');
-
-    if (player && player.playVideo) {
-        player.playVideo();
-    }
-}
-
-// Seek video to timestamp
-window.seekTo = function (seconds) {
-    startVideo();
-    if (player && player.seekTo) {
-        player.seekTo(seconds, true);
-        player.playVideo();
-    }
-};
-
-
-// --- Podcast Feature ---
-async function handlePodcastRequest(e) {
-    // Use event target if available, fallback to ID
-    const btn = e ? e.currentTarget : document.getElementById('podcastBtn');
-    if (!btn) return;
-
-    const originalText = btn.innerHTML;
-
-    if (window.speechSynthesis.speaking) {
-        window.speechSynthesis.cancel();
-        btn.innerHTML = originalText.replace('Stop', 'Podcast');
-        btn.classList.remove('btn-active');
-        return;
     }
 
-    btn.disabled = true;
-    btn.innerHTML = 'Generating...';
+    // Format markdown to HTML (improved implementation)
+    function formatMarkdown(text) {
+        if (!text) return '';
 
-    try {
-        const response = await fetch(`${API_BASE}/api/podcast`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                transcript: currentTranscript,
-                length: summaryLengthSelect.value,
-                tone: summaryToneSelect.value
-            })
+        // 1. Code blocks
+        text = text.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+
+        // 2. Inline code
+        text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+        // 3. Headers
+        text = text.replace(/^### (.*$)/gm, '<h4>$1</h4>');
+        text = text.replace(/^## (.*$)/gm, '<h3>$1</h3>');
+        text = text.replace(/^# (.*$)/gm, '<h2>$1</h2>');
+
+        // 4. Bold and Italic
+        text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+        // 5. Blockquotes
+        text = text.replace(/^> (.*$)/gm, '<blockquote>$1</blockquote>');
+
+        // 6. Lists (Unordered) - Simple implementation
+        // Replace lines starting with * or - with <li>
+        text = text.replace(/^[\*\-] (.*$)/gm, '<li>$1</li>');
+
+        // Wrap adjacent <li> in <ul> (This is a bit tricky with regex only, but let's try a simple approach)
+        // We'll wrap the whole block of <li>s
+        text = text.replace(/(<li>.*<\/li>(\n|$))+/g, '<ul>$&</ul>');
+
+        // 6b. Lists (Ordered)
+        // Replace lines starting with 1. 2. etc with <li class="ordered">
+        text = text.replace(/^\d+\.\s+(.*$)/gm, '<li class="ordered">$1</li>');
+
+        // Wrap adjacent <li class="ordered"> in <ol>
+        text = text.replace(/(<li class="ordered">.*<\/li>(\n|$))+/g, '<ol>$&</ol>');
+
+        // Clean up class="ordered" (optional, but keeps HTML clean)
+        text = text.replace(/class="ordered"/g, '');
+
+        // 7. Timestamps
+        // Improved regex to handle timestamps inside or outside brackets, ranges, etc.
+        // We match individual timestamps to linkify them.
+        text = text.replace(/(\d{1,2}):(\d{2})(?::(\d{2}))?/g, (match, p1, p2, p3) => {
+            let seconds = 0;
+            if (p3) {
+                // HH:MM:SS
+                seconds = parseInt(p1) * 3600 + parseInt(p2) * 60 + parseInt(p3);
+            } else {
+                // MM:SS
+                seconds = parseInt(p1) * 60 + parseInt(p2);
+            }
+            return `<a href="#" class="timestamp-link" onclick="seekTo(${seconds}); return false;">${match}</a>`;
         });
 
-        const data = await response.json();
+        // 8. Paragraphs (double newlines)
+        text = text.replace(/\n\n/g, '<br><br>');
 
-        if (data.success) {
-            btn.disabled = false;
-            btn.classList.add('btn-active');
-            btn.innerHTML = `
+        // 9. Cleanup excessive whitespace after headers
+        // If a header is followed by <br><br>, remove the breaks because CSS margins handle the spacing
+        text = text.replace(/(<\/h[2-4]>)\s*(<br>\s*){1,2}/g, '$1');
+
+        // Cleanup <ul><br> and <ol><br> issues if any
+        text = text.replace(/<\/ul><br><br>/g, '</ul>');
+        text = text.replace(/<\/ol><br><br>/g, '</ol>');
+
+        return text;
+    }
+
+    // Start video playback (switch from thumbnail to player)
+    function startVideo() {
+        // Hide thumbnail and overlay
+        videoThumbnail.classList.add('hidden');
+        const overlay = videoPlayerWrapper.querySelector('.play-overlay');
+        if (overlay) overlay.classList.add('hidden');
+        const badge = videoPlayerWrapper.querySelector('.live-badge');
+        if (badge) badge.classList.add('hidden');
+
+        // Show player
+        const playerElement = document.getElementById('player');
+        if (playerElement) playerElement.classList.remove('hidden');
+
+        if (player && player.playVideo) {
+            player.playVideo();
+        }
+    }
+
+    // Seek video to timestamp
+    window.seekTo = function (seconds) {
+        startVideo();
+        if (player && player.seekTo) {
+            player.seekTo(seconds, true);
+            player.playVideo();
+        }
+    };
+
+
+    // --- Podcast Feature ---
+    async function handlePodcastRequest(e) {
+        // Use event target if available, fallback to ID
+        const btn = e ? e.currentTarget : document.getElementById('podcastBtn');
+        if (!btn) return;
+
+        const originalText = btn.innerHTML;
+
+        if (window.speechSynthesis.speaking) {
+            window.speechSynthesis.cancel();
+            btn.innerHTML = originalText.replace('Stop', 'Podcast');
+            btn.classList.remove('btn-active');
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = 'Generating...';
+
+        try {
+            const response = await fetch(`${API_BASE}/api/podcast`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    transcript: currentTranscript,
+                    length: summaryLengthSelect.value,
+                    tone: summaryToneSelect.value
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                btn.disabled = false;
+                btn.classList.add('btn-active');
+                btn.innerHTML = `
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <rect x="6" y="4" width="4" height="16"></rect>
                     <rect x="14" y="4" width="4" height="16"></rect>
@@ -3170,302 +3178,302 @@ async function handlePodcastRequest(e) {
                 Stop Podcast
             `;
 
-            // Show controls
-            const controls = document.getElementById('podcastControls');
-            controls.classList.remove('hidden');
-            controls.style.display = 'flex';
+                // Show controls
+                const controls = document.getElementById('podcastControls');
+                controls.classList.remove('hidden');
+                controls.style.display = 'flex';
 
-            playPodcastScript(data.script, () => {
-                // On end
-                btn.classList.remove('btn-active');
-                btn.innerHTML = originalText;
-            });
-        } else {
-            showToast(data.error || 'Failed to generate podcast', 'error');
+                playPodcastScript(data.script, () => {
+                    // On end
+                    btn.classList.remove('btn-active');
+                    btn.innerHTML = originalText;
+                });
+            } else {
+                showToast(data.error || 'Failed to generate podcast', 'error');
+            }
+        } catch (error) {
+            console.error('Podcast generation failed:', error);
+            showToast('Network error', 'error');
+        } finally {
+            // Ensure button is re-enabled and text restored in all cases
+            btn.disabled = false;
+            btn.innerHTML = originalText;
         }
-    } catch (error) {
-        console.error('Podcast generation failed:', error);
-        showToast('Network error', 'error');
-    } finally {
-        // Ensure button is re-enabled and text restored in all cases
-        btn.disabled = false;
-        btn.innerHTML = originalText;
-    }
-}
-
-// --- Podcast Feature ---
-let isPodcastPlaying = false;
-let isPodcastPaused = false;
-let podcastScript = [];
-let currentLineIndex = 0;
-let podcastVoices = { a: null, b: null };
-let podcastOnEndCallback = null;
-let podcastTimer = null;
-let podcastStartTime = 0;
-let podcastElapsedTime = 0;
-let podcastTotalDuration = 0;
-
-function calculateDuration(script) {
-    // Estimate duration: ~150 words per minute (2.5 words/sec)
-    const totalWords = script.reduce((acc, line) => acc + line.text.split(/\s+/).length, 0);
-    return Math.ceil(totalWords / 2.5);
-}
-
-function formatTime(seconds) {
-    const m = Math.floor(seconds / 60);
-    const s = Math.floor(seconds % 60);
-    return `${m}:${s.toString().padStart(2, '0')}`;
-}
-
-function updatePodcastTime() {
-    const timeDisplay = document.getElementById('podcastTimeDisplay');
-    if (timeDisplay) {
-        timeDisplay.textContent = `${formatTime(podcastElapsedTime)} / ${formatTime(podcastTotalDuration)}`;
-    }
-}
-
-function startPodcastTimer() {
-    stopPodcastTimer();
-    podcastStartTime = Date.now() - (podcastElapsedTime * 1000);
-    podcastTimer = setInterval(() => {
-        podcastElapsedTime = Math.floor((Date.now() - podcastStartTime) / 1000);
-        // Cap at total duration
-        if (podcastElapsedTime > podcastTotalDuration) podcastElapsedTime = podcastTotalDuration;
-        updatePodcastTime();
-    }, 1000);
-}
-
-function stopPodcastTimer() {
-    if (podcastTimer) {
-        clearInterval(podcastTimer);
-        podcastTimer = null;
-    }
-}
-
-
-
-function playPodcastScript(script, onEnd) {
-    // Update global script
-    podcastScript = script;
-    podcastOnEndCallback = onEnd;
-
-    // Calculate duration
-    podcastTotalDuration = calculateDuration(script);
-    podcastElapsedTime = 0;
-
-    // Reset state
-    window.speechSynthesis.cancel();
-    isPodcastPlaying = true;
-    isPodcastPaused = false;
-    currentLineIndex = 0;
-
-    // Update UI
-    updatePodcastUI('playing');
-    updatePodcastTime();
-    startPodcastTimer();
-
-    const voices = window.speechSynthesis.getVoices();
-    // Select two distinct voices
-    podcastVoices.a = voices.find(v => v.name.includes('Male') || v.name.includes('Google US English')) || voices[0];
-    podcastVoices.b = voices.find(v => v.name.includes('Female') || v.name.includes('Google UK English Female')) || voices[1] || voices[0];
-
-    speakNextLine();
-}
-
-function speakNextLine() {
-    if (!isPodcastPlaying || isPodcastPaused) return;
-
-    if (currentLineIndex >= podcastScript.length) {
-        stopPodcast();
-        return;
     }
 
-    const line = podcastScript[currentLineIndex];
-    const utterance = new SpeechSynthesisUtterance(line.text);
+    // --- Podcast Feature ---
+    let isPodcastPlaying = false;
+    let isPodcastPaused = false;
+    let podcastScript = [];
+    let currentLineIndex = 0;
+    let podcastVoices = { a: null, b: null };
+    let podcastOnEndCallback = null;
+    let podcastTimer = null;
+    let podcastStartTime = 0;
+    let podcastElapsedTime = 0;
+    let podcastTotalDuration = 0;
 
-    // Assign voice based on speaker
-    utterance.voice = (line.speaker === 'Alex') ? podcastVoices.a : podcastVoices.b;
+    function calculateDuration(script) {
+        // Estimate duration: ~150 words per minute (2.5 words/sec)
+        const totalWords = script.reduce((acc, line) => acc + line.text.split(/\s+/).length, 0);
+        return Math.ceil(totalWords / 2.5);
+    }
 
-    utterance.onend = () => {
-        if (isPodcastPlaying && !isPodcastPaused) {
-            currentLineIndex++;
-            // updatePodcastProgress(); // Removed
-            speakNextLine();
+    function formatTime(seconds) {
+        const m = Math.floor(seconds / 60);
+        const s = Math.floor(seconds % 60);
+        return `${m}:${s.toString().padStart(2, '0')}`;
+    }
+
+    function updatePodcastTime() {
+        const timeDisplay = document.getElementById('podcastTimeDisplay');
+        if (timeDisplay) {
+            timeDisplay.textContent = `${formatTime(podcastElapsedTime)} / ${formatTime(podcastTotalDuration)}`;
         }
-    };
+    }
 
-    utterance.onerror = (e) => {
-        console.error('Speech error:', e);
-        if (isPodcastPlaying && !isPodcastPaused) {
-            currentLineIndex++;
-            // updatePodcastProgress(); // Removed
-            speakNextLine();
-        }
-    };
-
-    window.speechSynthesis.speak(utterance);
-}
-
-function togglePodcastPlayback() {
-    if (!isPodcastPlaying) return;
-
-    if (isPodcastPaused) {
-        // Resume
-        isPodcastPaused = false;
-        window.speechSynthesis.resume();
-        // If nothing was speaking (e.g. paused between lines), start next line
-        if (!window.speechSynthesis.speaking) {
-            speakNextLine();
-        }
-        startPodcastTimer();
-        updatePodcastUI('playing');
-    } else {
-        // Pause
-        isPodcastPaused = true;
-        window.speechSynthesis.pause();
+    function startPodcastTimer() {
         stopPodcastTimer();
-        updatePodcastUI('paused');
+        podcastStartTime = Date.now() - (podcastElapsedTime * 1000);
+        podcastTimer = setInterval(() => {
+            podcastElapsedTime = Math.floor((Date.now() - podcastStartTime) / 1000);
+            // Cap at total duration
+            if (podcastElapsedTime > podcastTotalDuration) podcastElapsedTime = podcastTotalDuration;
+            updatePodcastTime();
+        }, 1000);
     }
-}
 
-function stopPodcast() {
-    isPodcastPlaying = false;
-    isPodcastPaused = false;
-    currentLineIndex = 0;
-    window.speechSynthesis.cancel();
-    stopPodcastTimer();
-    podcastElapsedTime = 0;
-    updatePodcastTime();
-
-    // Hide controls
-    document.getElementById('podcastControls').classList.add('hidden');
-
-    if (podcastOnEndCallback) {
-        podcastOnEndCallback();
-        podcastOnEndCallback = null;
+    function stopPodcastTimer() {
+        if (podcastTimer) {
+            clearInterval(podcastTimer);
+            podcastTimer = null;
+        }
     }
-}
 
-function updatePodcastUI(state) {
-    const playPauseBtn = document.getElementById('podcastPlayPauseBtn');
-    const statusText = document.getElementById('podcastStatus');
 
-    if (state === 'playing') {
-        playPauseBtn.innerHTML = `
+
+    function playPodcastScript(script, onEnd) {
+        // Update global script
+        podcastScript = script;
+        podcastOnEndCallback = onEnd;
+
+        // Calculate duration
+        podcastTotalDuration = calculateDuration(script);
+        podcastElapsedTime = 0;
+
+        // Reset state
+        window.speechSynthesis.cancel();
+        isPodcastPlaying = true;
+        isPodcastPaused = false;
+        currentLineIndex = 0;
+
+        // Update UI
+        updatePodcastUI('playing');
+        updatePodcastTime();
+        startPodcastTimer();
+
+        const voices = window.speechSynthesis.getVoices();
+        // Select two distinct voices
+        podcastVoices.a = voices.find(v => v.name.includes('Male') || v.name.includes('Google US English')) || voices[0];
+        podcastVoices.b = voices.find(v => v.name.includes('Female') || v.name.includes('Google UK English Female')) || voices[1] || voices[0];
+
+        speakNextLine();
+    }
+
+    function speakNextLine() {
+        if (!isPodcastPlaying || isPodcastPaused) return;
+
+        if (currentLineIndex >= podcastScript.length) {
+            stopPodcast();
+            return;
+        }
+
+        const line = podcastScript[currentLineIndex];
+        const utterance = new SpeechSynthesisUtterance(line.text);
+
+        // Assign voice based on speaker
+        utterance.voice = (line.speaker === 'Alex') ? podcastVoices.a : podcastVoices.b;
+
+        utterance.onend = () => {
+            if (isPodcastPlaying && !isPodcastPaused) {
+                currentLineIndex++;
+                // updatePodcastProgress(); // Removed
+                speakNextLine();
+            }
+        };
+
+        utterance.onerror = (e) => {
+            console.error('Speech error:', e);
+            if (isPodcastPlaying && !isPodcastPaused) {
+                currentLineIndex++;
+                // updatePodcastProgress(); // Removed
+                speakNextLine();
+            }
+        };
+
+        window.speechSynthesis.speak(utterance);
+    }
+
+    function togglePodcastPlayback() {
+        if (!isPodcastPlaying) return;
+
+        if (isPodcastPaused) {
+            // Resume
+            isPodcastPaused = false;
+            window.speechSynthesis.resume();
+            // If nothing was speaking (e.g. paused between lines), start next line
+            if (!window.speechSynthesis.speaking) {
+                speakNextLine();
+            }
+            startPodcastTimer();
+            updatePodcastUI('playing');
+        } else {
+            // Pause
+            isPodcastPaused = true;
+            window.speechSynthesis.pause();
+            stopPodcastTimer();
+            updatePodcastUI('paused');
+        }
+    }
+
+    function stopPodcast() {
+        isPodcastPlaying = false;
+        isPodcastPaused = false;
+        currentLineIndex = 0;
+        window.speechSynthesis.cancel();
+        stopPodcastTimer();
+        podcastElapsedTime = 0;
+        updatePodcastTime();
+
+        // Hide controls
+        document.getElementById('podcastControls').classList.add('hidden');
+
+        if (podcastOnEndCallback) {
+            podcastOnEndCallback();
+            podcastOnEndCallback = null;
+        }
+    }
+
+    function updatePodcastUI(state) {
+        const playPauseBtn = document.getElementById('podcastPlayPauseBtn');
+        const statusText = document.getElementById('podcastStatus');
+
+        if (state === 'playing') {
+            playPauseBtn.innerHTML = `
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="6" y="4" width="4" height="16"></rect>
                 <rect x="14" y="4" width="4" height="16"></rect>
             </svg>
         `;
-        statusText.textContent = 'Playing...';
-    } else {
-        playPauseBtn.innerHTML = `
+            statusText.textContent = 'Playing...';
+        } else {
+            playPauseBtn.innerHTML = `
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none">
                 <polygon points="5 3 19 12 5 21 5 3"></polygon>
             </svg>
         `;
-        statusText.textContent = 'Paused';
+            statusText.textContent = 'Paused';
+        }
     }
-}
 
-// function updatePodcastProgress() { ... } // Removed
+    // function updatePodcastProgress() { ... } // Removed
 
-// Handle shared content from Web Share Target
-function handleSharedContent() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const sharedUrl = urlParams.get('url') || urlParams.get('text') || urlParams.get('title');
+    // Handle shared content from Web Share Target
+    function handleSharedContent() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const sharedUrl = urlParams.get('url') || urlParams.get('text') || urlParams.get('title');
 
-    if (sharedUrl) {
-        // Check if it's a YouTube URL
-        let videoId = extractVideoId(sharedUrl);
+        if (sharedUrl) {
+            // Check if it's a YouTube URL
+            let videoId = extractVideoId(sharedUrl);
 
-        // If direct extraction failed, try to find a URL inside the text
-        if (!videoId) {
-            const urlMatch = sharedUrl.match(/https?:\/\/[^\s]+/);
-            if (urlMatch) {
-                videoId = extractVideoId(urlMatch[0]);
-                if (videoId) {
-                    youtubeUrlInput.value = urlMatch[0];
+            // If direct extraction failed, try to find a URL inside the text
+            if (!videoId) {
+                const urlMatch = sharedUrl.match(/https?:\/\/[^\s]+/);
+                if (urlMatch) {
+                    videoId = extractVideoId(urlMatch[0]);
+                    if (videoId) {
+                        youtubeUrlInput.value = urlMatch[0];
+                    }
                 }
-            }
-        } else {
-            youtubeUrlInput.value = sharedUrl;
-        }
-
-        if (videoId) {
-            // Scroll to input
-            youtubeUrlInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-
-        // Clean up URL (remove query params)
-        window.history.replaceState({}, document.title, '/');
-    }
-}
-
-// --- Initialization ---
-
-
-
-// PWA Logic - Global Scope
-let deferredPrompt;
-
-window.addEventListener('beforeinstallprompt', (e) => {
-    // Prevent the mini-infobar from appearing on mobile
-    e.preventDefault();
-    // Stash the event so it can be triggered later.
-    deferredPrompt = e;
-
-    // Update UI notify the user they can install the PWA
-    const installContainer = document.getElementById('installContainer');
-    const isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-
-    if (installContainer && !isInstalled) {
-        installContainer.classList.remove('hidden');
-    }
-});
-
-// Initial check on load
-document.addEventListener('DOMContentLoaded', () => {
-    handleSharedContent();
-    fetchFeatures();
-
-    const installButton = document.getElementById('installBtn');
-    const installContainer = document.getElementById('installContainer');
-    const isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-
-    // If event fired before DOMContentLoaded, show button now
-    if (deferredPrompt && installContainer && !isInstalled) {
-        installContainer.classList.remove('hidden');
-    }
-
-    // Handle click
-    if (installButton) {
-        installButton.addEventListener('click', async () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                deferredPrompt = null;
-                if (installContainer) installContainer.classList.add('hidden');
             } else {
-                // Manual Instructions Fallback (only if button is somehow visible without prompt)
-                const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-                const msg = isIOS
-                    ? 'Tap Share -> "Add to Home Screen"'
-                    : 'Tap Menu (⋮) -> "Install App"';
-                alert(msg);
+                youtubeUrlInput.value = sharedUrl;
             }
-        });
-    }
-});
 
-// Toast Notification
-function showToast(message, type = 'info') {
-    // Create toast container if not exists
-    let toastContainer = document.getElementById('toastContainer');
-    if (!toastContainer) {
-        toastContainer = document.createElement('div');
-        toastContainer.id = 'toastContainer';
-        toastContainer.style.cssText = `
+            if (videoId) {
+                // Scroll to input
+                youtubeUrlInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            // Clean up URL (remove query params)
+            window.history.replaceState({}, document.title, '/');
+        }
+    }
+
+    // --- Initialization ---
+
+
+
+    // PWA Logic - Global Scope
+    let deferredPrompt;
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        // Prevent the mini-infobar from appearing on mobile
+        e.preventDefault();
+        // Stash the event so it can be triggered later.
+        deferredPrompt = e;
+
+        // Update UI notify the user they can install the PWA
+        const installContainer = document.getElementById('installContainer');
+        const isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+        if (installContainer && !isInstalled) {
+            installContainer.classList.remove('hidden');
+        }
+    });
+
+    // Initial check on load
+    document.addEventListener('DOMContentLoaded', () => {
+        handleSharedContent();
+        fetchFeatures();
+
+        const installButton = document.getElementById('installBtn');
+        const installContainer = document.getElementById('installContainer');
+        const isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+        // If event fired before DOMContentLoaded, show button now
+        if (deferredPrompt && installContainer && !isInstalled) {
+            installContainer.classList.remove('hidden');
+        }
+
+        // Handle click
+        if (installButton) {
+            installButton.addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    deferredPrompt = null;
+                    if (installContainer) installContainer.classList.add('hidden');
+                } else {
+                    // Manual Instructions Fallback (only if button is somehow visible without prompt)
+                    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+                    const msg = isIOS
+                        ? 'Tap Share -> "Add to Home Screen"'
+                        : 'Tap Menu (⋮) -> "Install App"';
+                    alert(msg);
+                }
+            });
+        }
+    });
+
+    // Toast Notification
+    function showToast(message, type = 'info') {
+        // Create toast container if not exists
+        let toastContainer = document.getElementById('toastContainer');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.id = 'toastContainer';
+            toastContainer.style.cssText = `
             position: fixed;
             bottom: 24px;
             left: 50%;
@@ -3476,17 +3484,17 @@ function showToast(message, type = 'info') {
             gap: 12px;
             pointer-events: none;
         `;
-        document.body.appendChild(toastContainer);
-    }
+            document.body.appendChild(toastContainer);
+        }
 
-    // Create toast element
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
+        // Create toast element
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
 
-    // Icon based on type
-    const icon = type === 'error' ? '❌' : (type === 'success' ? '✅' : 'ℹ️');
+        // Icon based on type
+        const icon = type === 'error' ? '❌' : (type === 'success' ? '✅' : 'ℹ️');
 
-    toast.style.cssText = `
+        toast.style.cssText = `
         background: ${type === 'error' ? '#ef4444' : '#1e293b'};
         color: white;
         padding: 12px 24px;
@@ -3502,22 +3510,22 @@ function showToast(message, type = 'info') {
         border: 1px solid rgba(255,255,255,0.1);
     `;
 
-    toast.innerHTML = `<span>${icon}</span> ${message}`;
+        toast.innerHTML = `<span>${icon}</span> ${message}`;
 
-    // Add to container
-    toastContainer.appendChild(toast);
+        // Add to container
+        toastContainer.appendChild(toast);
 
-    // Remove after 3 seconds
-    setTimeout(() => {
-        toast.style.animation = 'fadeOut 0.3s ease-in forwards';
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
-}
-
-function clearHistory() {
-    if (confirm('Are you sure you want to clear your entire history?')) {
-        localStorage.removeItem('yt_summary_history');
-        loadHistory();
-        showToast('History cleared.');
+        // Remove after 3 seconds
+        setTimeout(() => {
+            toast.style.animation = 'fadeOut 0.3s ease-in forwards';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
     }
-}
+
+    function clearHistory() {
+        if (confirm('Are you sure you want to clear your entire history?')) {
+            localStorage.removeItem('yt_summary_history');
+            loadHistory();
+            showToast('History cleared.');
+        }
+    }
