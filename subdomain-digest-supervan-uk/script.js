@@ -2971,47 +2971,50 @@ async function copySummary() {
         const videoId = extractVideoId(youtubeUrlInput.value);
 
         // Determine Platform
-        const isTikTok = /^\d{15,}$/.test(videoId);
+        const isTikTok = /^\d{15,}$/.test(videoId) || /^[\w-]{9}$/.test(videoId);
         const isVimeo = !isTikTok && /^\d+$/.test(videoId);
         const isYouTube = !isTikTok && !isVimeo;
 
         let shortUrl = youtubeUrlInput.value;
         if (videoId) {
             if (isYouTube) shortUrl = `https://youtu.be/${videoId}`;
-            else if (isVimeo) shortUrl = `https://vimeo.com/${videoId}`;
-            // TikTok keeps original input URL
+            if (isVimeo) shortUrl = `https://vimeo.com/${videoId}`;
+            // TikTok uses the input value (original URL) or we could reconstruct it
         }
+        else if (isVimeo) shortUrl = `https://vimeo.com/${videoId}`;
+        // TikTok keeps original input URL
+    }
 
         const promoText = "\n\nSummarized by TL;DW - https://yt.supervan.uk\n(Installable as an App on Mobile & Desktop)";
-        const promoHtml = "<br><br><p>Summarized by <a href='https://yt.supervan.uk'>TL;DW</a><br><em>(Installable as an App on Mobile & Desktop)</em></p>";
+    const promoHtml = "<br><br><p>Summarized by <a href='https://yt.supervan.uk'>TL;DW</a><br><em>(Installable as an App on Mobile & Desktop)</em></p>";
 
-        // --- Plain Text Version ---
-        // Remove timestamps [MM:SS]
-        const cleanSummaryText = rawSummaryText.replace(/\[[\d:\s,\-]+\]\s*/g, '');
-        const clipboardText = `${videoTitle}\n${shortUrl}\n\n${cleanSummaryText}${promoText}`;
+    // --- Plain Text Version ---
+    // Remove timestamps [MM:SS]
+    const cleanSummaryText = rawSummaryText.replace(/\[[\d:\s,\-]+\]\s*/g, '');
+    const clipboardText = `${videoTitle}\n${shortUrl}\n\n${cleanSummaryText}${promoText}`;
 
-        // --- HTML Version ---
-        // Convert internal timestamp links to external links (Platform aware)
-        let cleanSummaryHtml = rawSummaryHtml;
+    // --- HTML Version ---
+    // Convert internal timestamp links to external links (Platform aware)
+    let cleanSummaryHtml = rawSummaryHtml;
 
-        if (videoId) {
-            // Find formatMarkdown generated links: <a ... onclick="seekTo(123)...">text</a>
-            cleanSummaryHtml = cleanSummaryHtml.replace(/<a href="#" class="timestamp-link" onclick="seekTo\((\d+)\); return false;">(.*?)<\/a>/g, (match, seconds, text) => {
-                if (isYouTube) return `<a href="https://youtu.be/${videoId}?t=${seconds}" target="_blank">${text}</a>`;
-                if (isVimeo) return `<a href="https://vimeo.com/${videoId}#t=${seconds}s" target="_blank">${text}</a>`;
-                return text; // TikTok does not support timestamp links easily
-            });
-        }
+    if (videoId) {
+        // Find formatMarkdown generated links: <a ... onclick="seekTo(123)...">text</a>
+        cleanSummaryHtml = cleanSummaryHtml.replace(/<a href="#" class="timestamp-link" onclick="seekTo\((\d+)\); return false;">(.*?)<\/a>/g, (match, seconds, text) => {
+            if (isYouTube) return `<a href="https://youtu.be/${videoId}?t=${seconds}" target="_blank">${text}</a>`;
+            if (isVimeo) return `<a href="https://vimeo.com/${videoId}#t=${seconds}s" target="_blank">${text}</a>`;
+            return text; // TikTok does not support timestamp links easily
+        });
+    }
 
-        // Determine Thumbnail
-        let thumbSrc = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
-        if (!isYouTube) {
-            // Use a generic placeholder for others since we don't have a public hosted thumbnail URL easily
-            // Using the site's favicon or logo as fallback
-            thumbSrc = 'https://yt.supervan.uk/favicon.png';
-        }
+    // Determine Thumbnail
+    let thumbSrc = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+    if (!isYouTube) {
+        // Use a generic placeholder for others since we don't have a public hosted thumbnail URL easily
+        // Using the site's favicon or logo as fallback
+        thumbSrc = 'https://yt.supervan.uk/favicon.png';
+    }
 
-        const clipboardHtml = `
+    const clipboardHtml = `
             <h2>${videoTitle}</h2>
             <p><a href="${shortUrl}">${shortUrl}</a></p>
             <p><img src="${thumbSrc}" alt="Video Thumbnail" style="max-width: 320px; border-radius: 8px;"></p>
@@ -3020,31 +3023,31 @@ async function copySummary() {
             ${promoHtml}
         `;
 
-        // Create ClipboardItem with both formats
-        const item = new ClipboardItem({
-            'text/plain': new Blob([clipboardText], { type: 'text/plain' }),
-            'text/html': new Blob([clipboardHtml], { type: 'text/html' })
-        });
+    // Create ClipboardItem with both formats
+    const item = new ClipboardItem({
+        'text/plain': new Blob([clipboardText], { type: 'text/plain' }),
+        'text/html': new Blob([clipboardHtml], { type: 'text/html' })
+    });
 
-        await navigator.clipboard.write([item]);
+    await navigator.clipboard.write([item]);
 
-        // Success Feedback
-        copyBtn.innerHTML = `
+    // Success Feedback
+    copyBtn.innerHTML = `
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="20 6 9 17 4 12"></polyline>
             </svg>
             Copied!
         `;
 
-        setTimeout(() => {
-            copyBtn.innerHTML = originalContent;
-        }, 2000);
-
-    } catch (err) {
-        console.error('Copy failed:', err);
-        showError('Failed to copy summary');
+    setTimeout(() => {
         copyBtn.innerHTML = originalContent;
-    }
+    }, 2000);
+
+} catch (err) {
+    console.error('Copy failed:', err);
+    showError('Failed to copy summary');
+    copyBtn.innerHTML = originalContent;
+}
 }
 
 // Share Summary (Web Share API)
