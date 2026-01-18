@@ -733,7 +733,7 @@ def _fetch_tiktok_transcript(video_id):
         for attempt, proxies in enumerate(attempts):
             proxy_url = proxies['http'] if proxies else None
             conn_type = "DIRECT" if not proxy_url else f"PROXY ({proxy_url})"
-            print(f"🚀 TikTok Attempt {i+1}/{len(attempts)}: Fetching via {conn_type}")
+            print(f"🚀 TikTok Attempt {attempt+1}/{len(attempts)}: Fetching via {conn_type}")
 
             with tempfile.TemporaryDirectory() as temp_dir:
                 try:
