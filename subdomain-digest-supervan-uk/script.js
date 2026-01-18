@@ -1836,12 +1836,16 @@ function showSkeletonLoading(videoId) {
     // Show Thumbnail immediately if we have ID
     if (videoId) {
         if (/^\d{15,}$/.test(videoId)) {
-            // TikTok ID (Long Numeric) - No public thumbnail, use placeholder
+            // TikTok ID (Long Numeric)
             videoThumbnail.src = 'favicon.png';
         } else if (/^\d+$/.test(videoId)) {
-            // Vimeo ID (Short Numeric) - No public thumbnail, use placeholder
+            // Vimeo ID (Short Numeric)
+            videoThumbnail.src = 'favicon.png';
+        } else if (/^[\w-]{9}$/.test(videoId)) {
+            // TikTok Short ID (Alphanumeric) - Use placeholder
             videoThumbnail.src = 'favicon.png';
         } else {
+            // Assume YouTube for anything else (legacy default)
             videoThumbnail.src = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
         }
         videoThumbnail.classList.remove('hidden');

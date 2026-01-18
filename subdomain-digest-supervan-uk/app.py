@@ -150,22 +150,27 @@ class FreeProxyManager:
         self.working_proxy = None
         self.verified_proxies = []
         
-    def get_proxy(self):
+    def get_proxy(self, protocol_filter=None):
         """
         Get a working proxy, refreshing pool if needed.
         
-        Returns:
-            dict: A dictionary containing 'http' and 'https' keys with the proxy URL.
-            None: If no proxy is available.
+        Args:
+            protocol_filter (str): Optional. 'http' to enforce HTTP/HTTPS proxies only.
         """
         # If we have a known working proxy, try it first
         if self.working_proxy:
-            return self.working_proxy
+            if not protocol_filter or (protocol_filter == 'http' and not self.working_proxy['http'].startswith('socks')):
+                return self.working_proxy
             
         # If we have verified proxies, return one
         if self.verified_proxies:
-            proxy = random.choice(self.verified_proxies)
-            return {'http': proxy, 'https': proxy}
+            candidates = self.verified_proxies
+            if protocol_filter == 'http':
+                candidates = [p for p in candidates if not p.startswith('socks')]
+            
+            if candidates:
+                proxy = random.choice(candidates)
+                return {'http': proxy, 'https': proxy}
             
         # Update pool if empty or old (older than 30 minutes)
         if not self.proxies or time.time() - self.last_update > 1800:
@@ -173,8 +178,13 @@ class FreeProxyManager:
             
         # If we still have no verified proxies, try unverified ones as fallback
         if self.proxies:
-            proxy = random.choice(self.proxies)
-            return {'http': proxy, 'https': proxy}
+            candidates = self.proxies
+            if protocol_filter == 'http':
+                candidates = [p for p in candidates if not p.startswith('socks')]
+                
+            if candidates:
+                proxy = random.choice(candidates)
+                return {'http': proxy, 'https': proxy}
         return None
         
     def _refresh_proxies(self):
@@ -726,7 +736,7 @@ def _fetch_tiktok_transcript(video_id):
     # Try direct connection first, then fallback to proxies
     max_retries = 5
     # attempts_list = [None] (Direct) + [proxies...]
-    attempts = [None] + [proxy_manager.get_proxy() for _ in range(max_retries)]
+    attempts = [None] + [proxy_manager.get_proxy(protocol_filter='http') for _ in range(max_retries)]
     
     last_error = None
 
