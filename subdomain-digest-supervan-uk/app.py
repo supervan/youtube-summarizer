@@ -766,7 +766,12 @@ def _fetch_tiktok_transcript(video_id):
 
                     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                         # Construct generic URL using just the ID
-                        target_url = f"https://www.tiktok.com/@user/video/{video_id}"
+                        # Construct URL based on ID format
+                        if video_id.isdigit():
+                            target_url = f"https://www.tiktok.com/@user/video/{video_id}"
+                        else:
+                            # Short ID (e.g. ZNRkprvPT) -> use vm.tiktok.com
+                            target_url = f"https://vm.tiktok.com/{video_id}"
                         
                         info = ydl.extract_info(target_url, download=True)
                         
