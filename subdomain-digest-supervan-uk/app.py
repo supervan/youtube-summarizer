@@ -43,7 +43,7 @@ def extract_video_id(url):
         (r'(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/live\/)([^&\n?#]+)', 'youtube'),
         (r'youtube\.com\/watch\?.*v=([^&\n?#]+)', 'youtube'),
         (r'(?:vimeo\.com\/|player\.vimeo\.com\/video\/)(?:channels\/[\w]+\/)?([0-9]+)', 'vimeo'),
-        (r'(?:tiktok\.com\/@[\w.-]+\/video\/|vm\.tiktok\.com\/)(\d+)', 'tiktok')
+        (r'(?:tiktok\.com\/.*\/video\/|vm\.tiktok\.com\/)([\w-]+)', 'tiktok')
     ]
     
     for pattern, platform in patterns:
