@@ -1886,7 +1886,7 @@ function extractVideoId(url) {
         /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/live\/)([^&\n?#]+)/,
         /youtube\.com\/watch\?.*v=([^&\n?#]+)/,
         /(?:vimeo\.com\/|player\.vimeo\.com\/video\/)(?:channels\/[\w]+\/)?([0-9]+)/,
-        /(?:tiktok\.com\/.*\/video\/|vm\.tiktok\.com\/)(\d+)/
+        /(?:tiktok\.com\/.*\/video\/|vm\.tiktok\.com\/)([\w-]+)/
     ];
 
     for (const pattern of patterns) {
@@ -2077,6 +2077,7 @@ async function handleSubmit(e) {
                 summary: summaryData.summary,
                 infographic: finalInfographic,
                 transcript: transcriptData.transcript,
+                url: youtubeUrlInput.value,
                 metadata: transcriptData.metadata
             });
 
@@ -2096,6 +2097,7 @@ async function handleSubmit(e) {
                 summary: summaryData.summary,
                 infographic: null,
                 transcript: transcriptData.transcript,
+                url: youtubeUrlInput.value,
                 metadata: transcriptData.metadata
             });
         }
@@ -2276,6 +2278,7 @@ function saveToHistory(data) {
         tone: data.tone,
         metadata: data.metadata,
         thumbnail: data.metadata?.thumbnail || `https://img.youtube.com/vi/${data.id}/mqdefault.jpg`,
+        url: data.url || `https://www.youtube.com/watch?v=${data.id}`,
         timestamp: timestamp
     };
 
@@ -2538,7 +2541,25 @@ function loadHistoryItem(item) {
 
     // Set global state
     currentTranscript = item.transcript;
-    youtubeUrlInput.value = `https://www.youtube.com/watch?v=${item.id}`;
+    // Set correct URL based on saved item or heuristic
+    if (item.url) {
+        youtubeUrlInput.value = item.url;
+    } else {
+        // Fallback for legacy items
+        if (/^\d{15,}$/.test(item.id)) {
+            // TikTok Long ID
+            youtubeUrlInput.value = `https://www.tiktok.com/@tiktok/video/${item.id}`;
+        } else if (/^\d+$/.test(item.id)) {
+            // Vimeo (assuming < 15 digits)
+            youtubeUrlInput.value = `https://vimeo.com/${item.id}`;
+        } else if (/^[\w-]{9}$/.test(item.id)) {
+            // TikTok Short ID (heuristic)
+            youtubeUrlInput.value = `https://vm.tiktok.com/${item.id}/`;
+        } else {
+            // Default to YouTube
+            youtubeUrlInput.value = `https://www.youtube.com/watch?v=${item.id}`;
+        }
+    }
 
     // Explicitly enable submit button since we have a valid URL
     if (submitBtn) submitBtn.disabled = false;
