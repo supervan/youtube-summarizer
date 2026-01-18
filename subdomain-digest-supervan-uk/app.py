@@ -230,8 +230,8 @@ class FreeProxyManager:
         # Deduplicate
         self.proxies = list(set(self.proxies))
         
-        # Sort to put SOCKS proxies first
-        self.proxies.sort(key=lambda x: 0 if x.startswith('socks') else 1)
+        # Sort to put HTTP proxies first (more reliable protocol-wise)
+        self.proxies.sort(key=lambda x: 1 if x.startswith('socks') else 0)
         
         print(f"✅ Total unique proxies found: {len(self.proxies)}")
         
@@ -246,12 +246,13 @@ class FreeProxyManager:
         """
         print("🕵️ Validating random subset of proxies...")
         
-        # Take top 50 (mostly SOCKS due to sort) and some random ones
+        # Take top 50 (mostly HTTP due to sort) and some random ones
         top_proxies = self.proxies[:50]
         random_proxies = random.sample(self.proxies[50:], min(50, len(self.proxies[50:]))) if len(self.proxies) > 50 else []
         
         test_batch = top_proxies + random_proxies
         random.shuffle(test_batch)
+
         
         # Limit the number of checks to avoid hanging for too long
         max_checks = 15 
@@ -723,7 +724,7 @@ def _fetch_tiktok_transcript(video_id):
         print("🔍 DEBUG: No TIKTOK_COOKIES found in env")
 
     # Try direct connection first, then fallback to proxies
-    max_retries = 3
+    max_retries = 5
     # attempts_list = [None] (Direct) + [proxies...]
     attempts = [None] + [proxy_manager.get_proxy() for _ in range(max_retries)]
     
