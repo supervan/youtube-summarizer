@@ -476,7 +476,6 @@ def _get_youtube_transcript_with_cookies(video_id):
                         'ignore_no_formats_error': True,
                         'allow_unplayable_formats': True,
                         'force_ipv4': True,
-                        'extractor_args': {'youtube': {'player_client': ['android', 'web']}},
                     }
                     if cookies_file:
                         ydl_opts['cookiefile'] = cookies_file
@@ -847,7 +846,7 @@ def _fetch_tiktok_transcript(video_id):
 @app.route('/api/extract-transcript', methods=['POST'])
 def extract_transcript():
     """Extract transcript from YouTube video"""
-    DEPLOYMENT_ID = "v2025.11.21.35"
+    DEPLOYMENT_ID = "v2025.11.21.36"
     try:
         data = request.json
         youtube_url = data.get('url', '')

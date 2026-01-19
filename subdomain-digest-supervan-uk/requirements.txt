@@ -6,5 +6,5 @@ python-dotenv==1.0.0
 youtube-transcript-api==0.6.3
 requests>=2.31.0
 PySocks>=1.7.1
-curl-cffi>=0.5.10
+
 
