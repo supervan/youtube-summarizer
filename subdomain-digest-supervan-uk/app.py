@@ -15,8 +15,8 @@ from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled, No
 import logging
 import socket
 
-# Set global default socket timeout (90s) to prevent indefinite hangs
-socket.setdefaulttimeout(90.0)
+# Set global default socket timeout (30s) to prevent indefinite hangs
+socket.setdefaulttimeout(30.0)
 
 # Load environment variables from .env file
 load_dotenv()
@@ -474,9 +474,10 @@ def _get_youtube_transcript_with_cookies(video_id):
                         'subtitleslangs': ['en'],
                         'subtitlesformat': 'vtt',
                         'outtmpl': os.path.join(temp_dir, '%(id)s'),
-                        'quiet': False,
-                        'no_warnings': False,
-                        'socket_timeout': 10,
+                        'quiet': True,
+                        'no_warnings': True,
+                        'socket_timeout': 10, # Strict 10s timeout
+                        'retries': 2,
                         'format': 'worst',
                         'ignore_no_formats_error': True,
                         'allow_unplayable_formats': True,
@@ -873,7 +874,7 @@ def _fetch_tiktok_transcript(video_id):
 @app.route('/api/extract-transcript', methods=['POST'])
 def extract_transcript():
     """Extract transcript from YouTube video"""
-    DEPLOYMENT_ID = "v2025.11.21.48"
+    DEPLOYMENT_ID = "v2025.11.21.49"
     
     try:
         data = request.json
