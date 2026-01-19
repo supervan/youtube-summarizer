@@ -22,7 +22,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 MAX_TRANSCRIPT_LENGTH = 50000 # Limit for context window
-DEPLOYMENT_ID = "v2025.11.21.42"
+DEPLOYMENT_ID = "v2025.11.21.43"
 
 app = Flask(__name__, static_folder='.', template_folder='.')
 CORS(app)
@@ -477,7 +477,8 @@ def _get_youtube_transcript_with_cookies(video_id):
                         'ignore_no_formats_error': True,
                         'allow_unplayable_formats': True,
                         'force_ipv4': True,
-                        'extractor_args': {'youtube': {'player_client': ['android', 'ios', 'web']}},
+                        'allow_unplayable_formats': True,
+                        'force_ipv4': True,
                     }
                     if cookies_file:
                         ydl_opts['cookiefile'] = cookies_file
