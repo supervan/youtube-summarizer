@@ -22,7 +22,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 MAX_TRANSCRIPT_LENGTH = 50000 # Limit for context window
-DEPLOYMENT_ID = "v2025.11.21.39"
+DEPLOYMENT_ID = "v2025.11.21.40"
 
 app = Flask(__name__, static_folder='.', template_folder='.')
 CORS(app)
@@ -484,7 +484,18 @@ def _get_youtube_transcript_with_cookies(video_id):
                         print("🔍 DEBUG: Using cookies for yt-dlp")
                             
                     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                        info = ydl.extract_info(video_url, download=True)
+                        try:
+                            info = ydl.extract_info(video_url, download=True)
+                        except Exception as e:
+                            # If blocked (e.g. 403 or Sign in confirmed), try one more time WITHOUT cookies
+                            # YouTube sometimes aggressively blocks Datacenter IPs when logged in
+                            if cookies_file and ("Sign in" in str(e) or "403" in str(e) or "private" in str(e).lower()):
+                                print("⚠️ Cookies might be causing block. Retrying WITHOUT cookies...")
+                                ydl_opts.pop('cookiefile', None)
+                                with yt_dlp.YoutubeDL(ydl_opts) as ydl_retry:
+                                    info = ydl_retry.extract_info(video_url, download=True)
+                            else:
+                                raise e
                         
                         # Extract metadata
                         metadata['title'] = info.get('title', 'Unknown Title')
@@ -641,8 +652,17 @@ def _get_youtube_transcript_with_cookies(video_id):
                     last_error = e
                     proxy_manager.mark_failed(proxies)
         
-        final_error = last_error or method_1_5_error or method_1_error or "Unknown Error"
-        raise Exception(f"Failed after {max_retries} attempts. {final_error}")
+        # If we get here, all attempts failed.
+        # Report ALL errors to help diagnostics
+        error_msg = f"Failed after {max_retries} attempts."
+        if method_1_5_error:
+            error_msg += f" Method 1.5 Error: {method_1_5_error}."
+        if last_error:
+            error_msg += f" Method 2 Last Error: {last_error}."
+        if method_1_error and not method_1_5_error:
+            error_msg += f" Method 1 Error: {method_1_error}."
+            
+        raise Exception(error_msg)
         
     finally:
         if cookies_file and os.path.exists(cookies_file):
