@@ -471,6 +471,7 @@ def _get_youtube_transcript_with_cookies(video_id):
                         'ignore_no_formats_error': True,
                         'allow_unplayable_formats': True,
                         'force_ipv4': True,
+                        'extractor_args': {'youtube': {'player_client': ['android', 'web']}},
                     }
                     if cookies_file:
                         ydl_opts['cookiefile'] = cookies_file
