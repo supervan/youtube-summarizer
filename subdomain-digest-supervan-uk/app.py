@@ -22,7 +22,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 MAX_TRANSCRIPT_LENGTH = 50000 # Limit for context window
-DEPLOYMENT_ID = "v2025.11.21.43"
+DEPLOYMENT_ID = "v2025.11.21.44"
 
 app = Flask(__name__, static_folder='.', template_folder='.')
 CORS(app)
@@ -394,8 +394,8 @@ def _get_youtube_transcript_with_cookies(video_id):
         tuple: (transcript_text, metadata_dict, cookie_count)
     """
     
-    # Try up to 5 times with different proxies
-    max_retries = 5
+    # Try up to 3 times with different proxies
+    max_retries = 3
     last_error = None
     start_time = time.time()
     video_url = f"https://www.youtube.com/watch?v={video_id}"
