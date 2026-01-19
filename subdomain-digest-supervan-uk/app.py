@@ -22,6 +22,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 MAX_TRANSCRIPT_LENGTH = 50000 # Limit for context window
+DEPLOYMENT_ID = "v2025.11.21.37"
 
 app = Flask(__name__, static_folder='.', template_folder='.')
 CORS(app)
@@ -63,7 +64,7 @@ def index():
     
     # Note: PWA support is handled entirely on the frontend via manifest.json, sw.js, and script.js.
     # The backend simply serves these static files.
-    return render_template('index.html', enable_ads=enable_ads)
+    return render_template('index.html', enable_ads=enable_ads, deployment_id=DEPLOYMENT_ID)
 
 @app.route('/ads.txt')
 def ads_txt():
@@ -846,7 +847,6 @@ def _fetch_tiktok_transcript(video_id):
 @app.route('/api/extract-transcript', methods=['POST'])
 def extract_transcript():
     """Extract transcript from YouTube video"""
-    DEPLOYMENT_ID = "v2025.11.21.36"
     try:
         data = request.json
         youtube_url = data.get('url', '')

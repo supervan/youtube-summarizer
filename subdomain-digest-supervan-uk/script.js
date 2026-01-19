@@ -3,10 +3,16 @@
  * 
  * This script handles:
  * 1. User interactions (clicking buttons, submitting forms).
- * 2. API calls to the backend (extracting transcripts, generating summaries).
  * 3. UI updates (showing loading states, displaying results).
  * 4. Managing the chat interface for querying the video content.
  */
+
+// Log Deployment ID
+if (window.DEPLOYMENT_ID) {
+    console.log(`🚀 App Version: ${window.DEPLOYMENT_ID}`);
+} else {
+    console.log("🚀 App Version: Unknown (Local/Dev)");
+}
 
 // Global Error Handler
 window.onerror = function (msg, url, line, col, error) {
