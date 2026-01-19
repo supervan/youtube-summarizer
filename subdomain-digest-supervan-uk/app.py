@@ -504,6 +504,8 @@ def _get_youtube_transcript_with_cookies(video_id):
                             with open(vtt_file, 'r', encoding='utf-8') as f:
                                 print("✅ Method 1.5 Success! yt-dlp direct worked.")
                                 return _parse_vtt(f.read()), metadata, 0
+                        else:
+                            raise Exception("Method 1.5: No transcript file downloaded (likely no subs found)")
             except Exception as ydl_e:
                 method_1_5_error = ydl_e
                 print(f"⚠️ Method 1.5 failed: {ydl_e}")
@@ -845,7 +847,7 @@ def _fetch_tiktok_transcript(video_id):
 @app.route('/api/extract-transcript', methods=['POST'])
 def extract_transcript():
     """Extract transcript from YouTube video"""
-    DEPLOYMENT_ID = "v2025.11.21.34"
+    DEPLOYMENT_ID = "v2025.11.21.35"
     try:
         data = request.json
         youtube_url = data.get('url', '')
