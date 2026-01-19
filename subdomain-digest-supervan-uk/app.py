@@ -13,6 +13,7 @@ import json
 from dotenv import load_dotenv
 from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled, NoTranscriptFound
 import logging
+import signal
 
 # Load environment variables from .env file
 load_dotenv()
@@ -22,7 +23,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 MAX_TRANSCRIPT_LENGTH = 50000 # Limit for context window
-DEPLOYMENT_ID = "v2025.11.21.44"
+DEPLOYMENT_ID = "v2025.11.21.45"
 
 app = Flask(__name__, static_folder='.', template_folder='.')
 CORS(app)
@@ -869,6 +870,15 @@ def _fetch_tiktok_transcript(video_id):
 @app.route('/api/extract-transcript', methods=['POST'])
 def extract_transcript():
     """Extract transcript from YouTube video"""
+    DEPLOYMENT_ID = "v2025.11.21.45"
+    
+    # Define cleaner timeout handler
+    def handler(signum, frame):
+        raise TimeoutError("Hard Execution Timeout")
+    
+    signal.signal(signal.SIGALRM, handler)
+    signal.alarm(90) # Hard limit 90s (Cloudflare/Gateway is usually 100s)
+
     try:
         data = request.json
         youtube_url = data.get('url', '')
@@ -885,13 +895,17 @@ def extract_transcript():
             return jsonify({'error': 'Invalid URL'}), 400
         
         # Get transcript and metadata
+        # Get transcript and metadata
         try:
             if platform == 'vimeo':
                 full_transcript, metadata, cookie_count = _fetch_vimeo_transcript(video_id)
             elif platform == 'tiktok':
                 full_transcript, metadata, cookie_count = _fetch_tiktok_transcript(video_id)
             else:
-                full_transcript, metadata, cookie_count = _get_youtube_transcript_with_cookies(video_id)
+                try:
+                    full_transcript, metadata, cookie_count = _get_youtube_transcript_with_cookies(video_id)
+                except TimeoutError:
+                    raise Exception("Server Timeout (90s Limit Reached) - YouTube is blocking connections properly.")
             
             return jsonify({
                 'success': True,
