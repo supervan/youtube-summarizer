@@ -505,6 +505,10 @@ def _get_youtube_transcript_with_cookies(video_id):
             # Try with proxies
             transcript_list = None
             for attempt in range(3):
+                if time.time() - start_time > 45: # Global timeout safety (leave buffer for response)
+                    print("⚠️ Method 1 Proxy loop timed out")
+                    break
+                    
                 proxy = proxy_manager.get_proxy()
                 if not proxy:
                     break
@@ -555,7 +559,9 @@ def _get_youtube_transcript_with_cookies(video_id):
     # METHOD 2: yt-dlp with Proxy Rotation
     try:
         for attempt in range(max_retries):
-            if time.time() - start_time > 30:
+            # 45s cutoff to ensure we respond before 60s/100s gateway timeouts
+            if time.time() - start_time > 45: 
+                print("⚠️ Method 2 timed out")
                 break
                 
             proxies = proxy_manager.get_proxy()

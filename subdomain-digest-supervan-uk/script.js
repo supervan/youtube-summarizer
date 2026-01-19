@@ -2000,7 +2000,14 @@ async function handleSubmit(e) {
 
         clearTimeout(timeoutId); // Clear timeout on response
 
-        const transcriptData = await transcriptResponse.json();
+        const text = await transcriptResponse.text();
+        let transcriptData;
+        try {
+            transcriptData = JSON.parse(text);
+        } catch (e) {
+            console.error('Failed to parse transcript response:', text.substring(0, 200));
+            throw new Error(`Server Error (${transcriptResponse.status}): The server timed out or returned an invalid response.`);
+        }
 
         if (!transcriptResponse.ok) {
             throw new Error(transcriptData.error || 'Failed to extract transcript');
@@ -2025,7 +2032,14 @@ async function handleSubmit(e) {
             })
         });
 
-        const summaryData = await summaryResponse.json();
+        const summaryTextRaw = await summaryResponse.text();
+        let summaryData;
+        try {
+            summaryData = JSON.parse(summaryTextRaw);
+        } catch (e) {
+            console.error('Failed to parse summary response:', summaryTextRaw.substring(0, 200));
+            throw new Error(`Server Error (${summaryResponse.status}): The server timed out generating the summary.`);
+        }
 
         if (!summaryResponse.ok) {
             throw new Error(summaryData.error || 'Failed to generate summary');
