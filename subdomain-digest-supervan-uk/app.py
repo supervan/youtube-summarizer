@@ -23,7 +23,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 MAX_TRANSCRIPT_LENGTH = 50000 # Limit for context window
-DEPLOYMENT_ID = "v2025.11.21.45"
+DEPLOYMENT_ID = "v2025.11.21.46"
 
 app = Flask(__name__, static_folder='.', template_folder='.')
 CORS(app)
@@ -867,14 +867,17 @@ def _fetch_tiktok_transcript(video_id):
                 pass
 
 
+class ExecutionTimeout(Exception):
+    pass
+
 @app.route('/api/extract-transcript', methods=['POST'])
 def extract_transcript():
     """Extract transcript from YouTube video"""
-    DEPLOYMENT_ID = "v2025.11.21.45"
+    DEPLOYMENT_ID = "v2025.11.21.46"
     
     # Define cleaner timeout handler
     def handler(signum, frame):
-        raise TimeoutError("Hard Execution Timeout")
+        raise ExecutionTimeout("Hard Execution Timeout")
     
     signal.signal(signal.SIGALRM, handler)
     signal.alarm(90) # Hard limit 90s (Cloudflare/Gateway is usually 100s)
@@ -895,7 +898,6 @@ def extract_transcript():
             return jsonify({'error': 'Invalid URL'}), 400
         
         # Get transcript and metadata
-        # Get transcript and metadata
         try:
             if platform == 'vimeo':
                 full_transcript, metadata, cookie_count = _fetch_vimeo_transcript(video_id)
@@ -904,8 +906,9 @@ def extract_transcript():
             else:
                 try:
                     full_transcript, metadata, cookie_count = _get_youtube_transcript_with_cookies(video_id)
-                except TimeoutError:
-                    raise Exception("Server Timeout (90s Limit Reached) - YouTube is blocking connections properly.")
+                except ExecutionTimeout:
+                     # This catches the signal interrupt directly inside the function call
+                     raise Exception("Server Timeout (90s Limit Reached) - Connection Forcefully Terminated")
             
             return jsonify({
                 'success': True,
@@ -922,8 +925,13 @@ def extract_transcript():
                 return jsonify({'error': 'LIVE_VIDEO_NOT_SUPPORTED'}), 400
             return jsonify({'error': f'Error fetching transcript: {str(e)} [Deployment ID: {DEPLOYMENT_ID}]'}), 500
             
-    except Exception as e:
-        return jsonify({'error': f'Server error: {str(e)} [Deployment ID: {DEPLOYMENT_ID}]'}), 500
+    except BaseException as e: # Catch ALL errors including SystemExit/Signals to ensure JSON response
+        logger.error(f"Critical Error in extract-transcript: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Critical Server Error: {str(e)} [Deployment ID: {DEPLOYMENT_ID}]'}), 500
+    finally:
+        signal.alarm(0) # Disable alarm
 
 @app.route('/api/diagnostics', methods=['GET'])
 def diagnostics():
