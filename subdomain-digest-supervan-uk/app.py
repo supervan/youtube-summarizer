@@ -11,6 +11,8 @@ import random
 import requests
 import json
 from dotenv import load_dotenv
+import threading
+import queue
 from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled, NoTranscriptFound
 import logging
 import socket
@@ -874,7 +876,7 @@ def _fetch_tiktok_transcript(video_id):
 @app.route('/api/extract-transcript', methods=['POST'])
 def extract_transcript():
     """Extract transcript from YouTube video"""
-    DEPLOYMENT_ID = "v2025.11.21.49"
+    DEPLOYMENT_ID = "v2025.11.21.51"
     
     try:
         data = request.json
@@ -891,14 +893,30 @@ def extract_transcript():
         if not video_id:
             return jsonify({'error': 'Invalid URL'}), 400
         
-        # Get transcript and metadata
-        try:
-            if platform == 'vimeo':
-                full_transcript, metadata, cookie_count = _fetch_vimeo_transcript(video_id)
-            elif platform == 'tiktok':
-                full_transcript, metadata, cookie_count = _fetch_tiktok_transcript(video_id)
             else:
-                full_transcript, metadata, cookie_count = _get_youtube_transcript_with_cookies(video_id)
+                 # Wrap YouTube extraction in a thread with timeout
+                result_queue = queue.Queue()
+                
+                def worker():
+                    try:
+                        res = _get_youtube_transcript_with_cookies(video_id)
+                        result_queue.put(('success', res))
+                    except Exception as e:
+                        result_queue.put(('error', e))
+
+                t = threading.Thread(target=worker)
+                t.daemon = True # Daemon thread dies when main process dies (though Flask workers persist)
+                t.start()
+                
+                try:
+                    # Wait 45s max
+                    result = result_queue.get(timeout=45)
+                    status, data = result
+                    if status == 'error':
+                        raise data
+                    full_transcript, metadata, cookie_count = data
+                except queue.Empty:
+                    raise Exception("Server Timeout (45s Limit) - Processing took too long")
             
             return jsonify({
                 'success': True,
