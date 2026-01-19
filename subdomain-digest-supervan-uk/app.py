@@ -443,6 +443,10 @@ def _get_youtube_transcript_with_cookies(video_id):
         pass
 
     # METHOD 1: Try YouTubeTranscriptApi (Fastest)
+    method_1_error = None
+    method_1_5_error = None
+    last_error = None
+
     try:
         print(f"🚀 Attempting Method 1: YouTubeTranscriptApi for {video_id}...")
         
@@ -450,6 +454,7 @@ def _get_youtube_transcript_with_cookies(video_id):
         try:
             transcript_list = YouTubeTranscriptApi.get_transcript(video_id, cookies=cookies_file)
         except Exception as e:
+            method_1_error = e
             print(f"⚠️ Direct YouTubeTranscriptApi failed: {e}")
             print(f"🔍 DEBUG: YouTubeTranscriptApi Exception: {e}")
             
@@ -500,6 +505,7 @@ def _get_youtube_transcript_with_cookies(video_id):
                                 print("✅ Method 1.5 Success! yt-dlp direct worked.")
                                 return _parse_vtt(f.read()), metadata, 0
             except Exception as ydl_e:
+                method_1_5_error = ydl_e
                 print(f"⚠️ Method 1.5 failed: {ydl_e}")
                 print("🔄 Falling back to proxies...")
 
@@ -632,7 +638,8 @@ def _get_youtube_transcript_with_cookies(video_id):
                     last_error = e
                     proxy_manager.mark_failed(proxies)
         
-        raise Exception(f"Failed after {max_retries} attempts. {last_error}")
+        final_error = last_error or method_1_5_error or method_1_error or "Unknown Error"
+        raise Exception(f"Failed after {max_retries} attempts. {final_error}")
         
     finally:
         if cookies_file and os.path.exists(cookies_file):
@@ -838,7 +845,7 @@ def _fetch_tiktok_transcript(video_id):
 @app.route('/api/extract-transcript', methods=['POST'])
 def extract_transcript():
     """Extract transcript from YouTube video"""
-    DEPLOYMENT_ID = "v2025.11.21.33"
+    DEPLOYMENT_ID = "v2025.11.21.34"
     try:
         data = request.json
         youtube_url = data.get('url', '')
