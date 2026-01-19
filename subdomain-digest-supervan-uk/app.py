@@ -873,7 +873,7 @@ class ExecutionTimeout(Exception):
 @app.route('/api/extract-transcript', methods=['POST'])
 def extract_transcript():
     """Extract transcript from YouTube video"""
-    DEPLOYMENT_ID = "v2025.11.21.46"
+    DEPLOYMENT_ID = "v2025.11.21.47"
     
     # Define cleaner timeout handler
     def handler(signum, frame):
@@ -1473,6 +1473,11 @@ def generate_podcast():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
+@app.errorhandler(500)
+def internal_error(error):
+    logger.error(f"Uncaught 500 Error: {error}")
+    return jsonify({'error': 'Internal Server Error (Uncaught Exception)', 'details': str(error)}), 500
+
 if __name__ == '__main__':
     print("🚀 YouTube Summarizer Server Starting...")
     print("📍 Server running at: http://localhost:5000")
@@ -1480,7 +1485,7 @@ if __name__ == '__main__':
     print("✨ Ready to summarize YouTube videos!")
     
     # Get port from environment variable (for deployment) or use 5000 for local
-    port = int(os.getenv('PORT', 5000))
+    port = int(os.environ.get('PORT', 10000))
     
     # Run the Flask app
     # Use 0.0.0.0 to allow external connections (required for deployment)
