@@ -838,7 +838,7 @@ def _fetch_tiktok_transcript(video_id):
 @app.route('/api/extract-transcript', methods=['POST'])
 def extract_transcript():
     """Extract transcript from YouTube video"""
-    DEPLOYMENT_ID = "v2025.11.21.32"
+    DEPLOYMENT_ID = "v2025.11.21.33"
     try:
         data = request.json
         youtube_url = data.get('url', '')
