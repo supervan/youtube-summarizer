@@ -28,7 +28,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 MAX_TRANSCRIPT_LENGTH = 50000 # Limit for context window
-DEPLOYMENT_ID = "v2025.11.21.50"
+DEPLOYMENT_ID = "v2025.11.21.51"
 
 app = Flask(__name__, static_folder='.', template_folder='.')
 CORS(app)
