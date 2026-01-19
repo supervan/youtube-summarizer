@@ -2006,13 +2006,17 @@ async function handleSubmit(e) {
 
         clearTimeout(timeoutId); // Clear timeout on response
 
-        const text = await transcriptResponse.text();
         let transcriptData;
-        try {
-            transcriptData = JSON.parse(text);
-        } catch (e) {
-            console.error('Failed to parse transcript response:', text.substring(0, 200));
-            throw new Error(`Server Error (${transcriptResponse.status}): The server timed out or returned an invalid response.`);
+        const contentType = transcriptResponse.headers.get("content-type");
+        if (contentType && contentType.indexOf("application/json") !== -1) {
+            transcriptData = await transcriptResponse.json();
+        } else {
+            const text = await transcriptResponse.text();
+            console.error("Non-JSON Response:", text);
+            let errorMsg = "Server returned non-JSON response";
+            if (text.includes("Internal Server Error")) errorMsg = "Internal Server Error (500)";
+            if (text.includes("Gateway Timeout")) errorMsg = "Gateway Timeout (524)";
+            throw new Error(`${errorMsg}. raw_response_length=${text.length}`);
         }
 
         if (!transcriptResponse.ok) {

@@ -13,7 +13,10 @@ import json
 from dotenv import load_dotenv
 from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled, NoTranscriptFound
 import logging
-import signal
+import socket
+
+# Set global default socket timeout (90s) to prevent indefinite hangs
+socket.setdefaulttimeout(90.0)
 
 # Load environment variables from .env file
 load_dotenv()
@@ -867,21 +870,11 @@ def _fetch_tiktok_transcript(video_id):
                 pass
 
 
-class ExecutionTimeout(Exception):
-    pass
-
 @app.route('/api/extract-transcript', methods=['POST'])
 def extract_transcript():
     """Extract transcript from YouTube video"""
-    DEPLOYMENT_ID = "v2025.11.21.47"
+    DEPLOYMENT_ID = "v2025.11.21.48"
     
-    # Define cleaner timeout handler
-    def handler(signum, frame):
-        raise ExecutionTimeout("Hard Execution Timeout")
-    
-    signal.signal(signal.SIGALRM, handler)
-    signal.alarm(90) # Hard limit 90s (Cloudflare/Gateway is usually 100s)
-
     try:
         data = request.json
         youtube_url = data.get('url', '')
@@ -904,11 +897,7 @@ def extract_transcript():
             elif platform == 'tiktok':
                 full_transcript, metadata, cookie_count = _fetch_tiktok_transcript(video_id)
             else:
-                try:
-                    full_transcript, metadata, cookie_count = _get_youtube_transcript_with_cookies(video_id)
-                except ExecutionTimeout:
-                     # This catches the signal interrupt directly inside the function call
-                     raise Exception("Server Timeout (90s Limit Reached) - Connection Forcefully Terminated")
+                full_transcript, metadata, cookie_count = _get_youtube_transcript_with_cookies(video_id)
             
             return jsonify({
                 'success': True,
@@ -925,13 +914,11 @@ def extract_transcript():
                 return jsonify({'error': 'LIVE_VIDEO_NOT_SUPPORTED'}), 400
             return jsonify({'error': f'Error fetching transcript: {str(e)} [Deployment ID: {DEPLOYMENT_ID}]'}), 500
             
-    except BaseException as e: # Catch ALL errors including SystemExit/Signals to ensure JSON response
+    except BaseException as e: # Catch ALL errors to ensure JSON response
         logger.error(f"Critical Error in extract-transcript: {str(e)}")
         import traceback
         traceback.print_exc()
         return jsonify({'error': f'Critical Server Error: {str(e)} [Deployment ID: {DEPLOYMENT_ID}]'}), 500
-    finally:
-        signal.alarm(0) # Disable alarm
 
 @app.route('/api/diagnostics', methods=['GET'])
 def diagnostics():
